@@ -1,118 +1,1400 @@
-import { useState } from "react";
-import { Check, X as XIcon, Clock3, Save, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
+
+import {
+  Check,
+  X as XIcon,
+  Clock3,
+  Save,
+  CheckCircle2,
+  AlertTriangle,
+  Phone,
+  FileText,
+  ShieldCheck,
+  CalendarDays,
+  GraduationCap,
+  Users,
+} from "lucide-react";
+
 import DashboardLayout from "../../layouts/DashboardLayout";
 
-const classrooms = ["صف الفراشات", "صف النجوم", "صف القمر", "صف الشمس"];
+import { useChildren } from "../../context/ChildrenContext";
+import { useAttendance } from "../../context/AttendanceContext";
+import { useParents } from "../../context/ParentsContext";
+import { useTeachers } from "../../context/TeachersContext";
+import { useUser } from "../../context/UserContext";
 
-const mockChildrenByClass = {
-  "صف الفراشات": [
-    { id: 1, name: "رهف يوسف" },
-    { id: 2, name: "زين محمود" },
-    { id: 3, name: "لجين قاسم" },
-  ],
-  "صف النجوم": [
-    { id: 4, name: "يزن الأحمد" },
-    { id: 5, name: "سيلين خالد" },
-  ],
-  "صف القمر": [
-    { id: 6, name: "كريم فارس" },
-    { id: 7, name: "دانة سعيد" },
-  ],
-  "صف الشمس": [
-    { id: 8, name: "آدم نمر" },
-  ],
-};
+// ======================================================
+// حالات حضور الأطفال
+// ======================================================
 
 const STATUS_OPTIONS = [
-  { key: "present", label: "حاضر", icon: Check, color: "#4C8577" },
-  { key: "absent", label: "غائب", icon: XIcon, color: "#C25B4A" },
-  { key: "late", label: "متأخر", icon: Clock3, color: "#E8B24D" },
+  {
+    key: "present",
+    label: "حاضر",
+    icon: Check,
+    color: "#4C8577",
+  },
+  {
+    key: "absent",
+    label: "غائب",
+    icon: XIcon,
+    color: "#C25B4A",
+  },
+  {
+    key: "late",
+    label: "متأخر",
+    icon: Clock3,
+    color: "#E8B24D",
+  },
 ];
 
-export default function AttendancePage({ onNavigate }) {
-  const [activeClass, setActiveClass] = useState(classrooms[0]);
-  const [attendance, setAttendance] = useState({});
-  const [savedMessage, setSavedMessage] = useState(false);
+// ======================================================
+// حالات حضور المعلمة
+// ======================================================
 
-  const children = mockChildrenByClass[activeClass] || [];
+const TEACHER_STATUS_OPTIONS = [
+  {
+    key: "present",
+    label: "حاضرة",
+    icon: Check,
+    color: "#4C8577",
+  },
+  {
+    key: "absent",
+    label: "غائبة",
+    icon: XIcon,
+    color: "#C25B4A",
+  },
+  {
+    key: "late",
+    label: "متأخرة",
+    icon: Clock3,
+    color: "#E8B24D",
+  },
+];
 
-  const setStatus = (childId, status) => {
-    setAttendance((prev) => ({ ...prev, [childId]: status }));
-    setSavedMessage(false); 
+export default function AttendancePage({
+  onNavigate,
+  onLogout,
+}) {
+  const { user } = useUser();
+
+  const { childrenList } = useChildren();
+
+  const { parentsList } = useParents();
+
+  const { teachersList } = useTeachers();
+
+  const {
+    records,
+    recordDailyAttendance,
+    getAbsenceCount,
+
+    teacherRecords,
+    recordTeacherAttendance,
+    getTeacherAttendance,
+  } = useAttendance();
+
+  // ====================================================
+  // الصلاحيات
+  // ====================================================
+
+  const isParent =
+    user?.roleType === "parent";
+
+  const isTeacher =
+    user?.roleType === "teacher";
+
+  const isAdmin =
+    user?.roleType === "admin";
+
+  const isSecretary =
+    user?.roleType === "secretary";
+
+  const canEditAttendance =
+    isAdmin || isTeacher;
+
+  const canManageTeacherAttendance =
+    isAdmin || isSecretary;
+
+  // ====================================================
+  // الأطفال الذين يستطيع المستخدم رؤيتهم
+  // ====================================================
+
+  const visibleChildren = useMemo(() => {
+    if (isParent) {
+      return childrenList.filter((child) =>
+        user.childIds?.includes(child.id)
+      );
+    }
+
+    if (isTeacher) {
+      return childrenList.filter(
+        (child) =>
+          child.classroom === user.classroom
+      );
+    }
+
+    return childrenList;
+  }, [
+    childrenList,
+    user,
+    isParent,
+    isTeacher,
+  ]);
+
+  // ====================================================
+  // الصفوف
+  // ====================================================
+
+  const classrooms = useMemo(() => {
+    if (isParent || isTeacher) {
+      return [];
+    }
+
+    return [
+      ...new Set(
+        visibleChildren.map(
+          (child) => child.classroom
+        )
+      ),
+    ];
+  }, [
+    visibleChildren,
+    isParent,
+    isTeacher,
+  ]);
+
+  const [activeClass, setActiveClass] =
+    useState("");
+
+  // ====================================================
+  // حالات الأطفال
+  // ====================================================
+
+  const [attendance, setAttendance] =
+    useState({});
+
+  const [savedMessage, setSavedMessage] =
+    useState(false);
+
+  const [alertChildren, setAlertChildren] =
+    useState([]);
+
+  // ====================================================
+  // حالة حضور المعلمة
+  // ====================================================
+
+  const [teacherStatus, setTeacherStatus] =
+    useState("");
+
+  const [teacherSavedMessage, setTeacherSavedMessage] =
+    useState(false);
+
+  // ====================================================
+  // الصف الافتراضي
+  // ====================================================
+
+  const selectedClass =
+    activeClass ||
+    classrooms[0] ||
+    "";
+
+  // ====================================================
+  // الأطفال المعروضون
+  // ====================================================
+
+  const children = useMemo(() => {
+    if (isParent || isTeacher) {
+      return visibleChildren;
+    }
+
+    return visibleChildren.filter(
+      (child) =>
+        child.classroom === selectedClass
+    );
+  }, [
+    visibleChildren,
+    selectedClass,
+    isParent,
+    isTeacher,
+  ]);
+
+  // ====================================================
+  // التاريخ
+  // ====================================================
+
+  const todayISO = new Date()
+    .toISOString()
+    .slice(0, 10);
+
+  const today = new Date().toLocaleDateString(
+    "ar-EG",
+    {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
+
+  // ====================================================
+  // حضور المعلمة المسجل اليوم
+  // ====================================================
+
+  const currentTeacherAttendance =
+    isTeacher
+      ? getTeacherAttendance(
+          user.name,
+          todayISO
+        )
+      : null;
+
+  // ====================================================
+  // تغيير حالة طفل
+  // ====================================================
+
+  const setStatus = (
+    childId,
+    status
+  ) => {
+    if (!canEditAttendance) return;
+
+    setAttendance((prev) => ({
+      ...prev,
+      [childId]: {
+        status,
+        excuse:
+          status === "absent"
+            ? prev[childId]?.excuse || ""
+            : "",
+      },
+    }));
+
+    setSavedMessage(false);
   };
+
+  // ====================================================
+  // سبب الغياب
+  // ====================================================
+
+  const setExcuse = (
+    childId,
+    excuse
+  ) => {
+    if (!canEditAttendance) return;
+
+    setAttendance((prev) => ({
+      ...prev,
+      [childId]: {
+        ...(prev[childId] || {
+          status: "absent",
+        }),
+        excuse,
+      },
+    }));
+  };
+
+  // ====================================================
+  // حفظ حضور الأطفال
+  // ====================================================
 
   const handleSaveAttendance = () => {
-    console.log("تم حفظ الحضور:", { activeClass, attendance });
+    if (!canEditAttendance) return;
+
+    const attendanceMap = {};
+
+    children.forEach((child) => {
+      const data =
+        attendance[child.id] || {
+          status: "present",
+          excuse: "",
+        };
+
+      let finalStatus = "present";
+
+      if (data.status === "absent") {
+        finalStatus =
+          data.excuse?.trim()
+            ? "absent_excused"
+            : "absent_unexcused";
+      }
+
+      if (data.status === "late") {
+        finalStatus = "late";
+      }
+
+      attendanceMap[child.id] = {
+        status: finalStatus,
+        excuse: data.excuse || "",
+      };
+    });
+
+    const newAlerts =
+      recordDailyAttendance(
+        todayISO,
+        attendanceMap
+      );
+
+    // -----------------------------------------------
+    // بناء التنبيهات
+    // -----------------------------------------------
+
+    const alerts = newAlerts
+      .map((item) => {
+        const child =
+          childrenList.find(
+            (c) =>
+              c.id === item.childId
+          );
+
+        if (!child) return null;
+
+        const parent =
+          parentsList.find(
+            (p) =>
+              p.name === child.parent
+          );
+
+        return {
+          childId: child.id,
+          childName: child.name,
+          absenceCount:
+            item.absenceCount,
+
+          parentName:
+            parent?.name ||
+            child.parent ||
+            "ولي الأمر",
+
+          parentPhone:
+            parent?.phone ||
+            child.parentPhone ||
+            "",
+        };
+      })
+      .filter(Boolean);
+
+    setAlertChildren(alerts);
+
     setSavedMessage(true);
-    setTimeout(() => setSavedMessage(false), 2500);
+
+    setTimeout(() => {
+      setSavedMessage(false);
+    }, 3000);
   };
 
-  const today = new Date().toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  // ====================================================
+  // حفظ حضور المعلمة
+  // ====================================================
+
+  const handleSaveTeacherAttendance = () => {
+    if (!isTeacher) return;
+
+    if (!teacherStatus) return;
+
+    recordTeacherAttendance(
+      user.name,
+      todayISO,
+      teacherStatus
+    );
+
+    setTeacherSavedMessage(true);
+
+    setTimeout(() => {
+      setTeacherSavedMessage(false);
+    }, 3000);
+  };
+
+  // ====================================================
+  // الغياب اليوم
+  // ====================================================
+
+  const todayAbsences = children.filter(
+    (child) => {
+      const record = records.find(
+        (r) =>
+          r.childId === child.id &&
+          r.date === todayISO
+      );
+
+      return (
+        record?.status ===
+          "absent_excused" ||
+        record?.status ===
+          "absent_unexcused"
+      );
+    }
+  ).length;
+
+  // ====================================================
+  // إذا لا يوجد أطفال
+  // ====================================================
+
+  if (
+    children.length === 0 &&
+    !isSecretary
+  ) {
+    return (
+      <DashboardLayout
+        activePage="attendance"
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        pageTitle="الحضور"
+      >
+        <div
+          className="rounded-2xl bg-white p-10 text-center"
+          style={{
+            border:
+              "1px solid #EDE7D9",
+          }}
+        >
+          <CalendarDays
+            size={34}
+            className="mx-auto mb-3"
+            style={{
+              color: "#A8B0AB",
+            }}
+          />
+
+          <p
+            className="text-sm"
+            style={{
+              color: "#A8B0AB",
+            }}
+          >
+            لا يوجد أطفال مسجلين
+            ببياناتك حاليًا.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
-    <DashboardLayout activePage="attendance" onNavigate={onNavigate} pageTitle="الحضور">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-sm" style={{ color: "#7A8580" }}>{today}</p>
-      </div>
+    <DashboardLayout
+      activePage="attendance"
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      pageTitle={
+        isParent
+          ? "سجل حضور أطفالي"
+          : "الحضور"
+      }
+    >
+      {/* ==================================================
+          رأس الصفحة
+      ================================================== */}
 
-      <div className="flex items-center justify-between mb-5 mt-3 gap-3 flex-wrap">
-        <div className="flex gap-2 flex-wrap">
-          {classrooms.map((c) => (
-            <button key={c} onClick={() => setActiveClass(c)}
-              className="px-4 py-2 rounded-xl text-sm font-medium"
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <CalendarDays
+              size={18}
               style={{
-                backgroundColor: activeClass === c ? "#4C8577" : "#FFFFFF",
-                color: activeClass === c ? "#FBF7EF" : "#4A5551",
-                border: "1px solid #EDE7D9",
-              }}>
-              {c}
-            </button>
-          ))}
+                color: "#4C8577",
+              }}
+            />
+
+            <p
+              className="text-sm font-semibold"
+              style={{
+                color: "#2F3A36",
+              }}
+            >
+              {today}
+            </p>
+          </div>
+
+          <p
+            className="text-xs mt-1"
+            style={{
+              color: "#A8B0AB",
+            }}
+          >
+            {isParent
+              ? "يمكنك متابعة حضور أطفالك وسجل الغياب"
+              : isTeacher
+              ? `تسجيل حضور ${user.classroom}`
+              : isSecretary
+              ? "متابعة حضور الأطفال والمعلمات"
+              : "إدارة ومتابعة حضور أطفال الروضة"}
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {savedMessage && (
-            <span className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "#4C8577" }}>
-              <CheckCircle2 size={16} />
-              تم الحفظ
-            </span>
-          )}
-          <button onClick={handleSaveAttendance} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: "#4C8577" }}>
-            <Save size={16} />
-            حفظ الحضور
-          </button>
+        <div
+          className="rounded-xl px-4 py-2.5 flex items-center gap-2"
+          style={{
+            backgroundColor: "#FFFFFF",
+            border:
+              "1px solid #EDE7D9",
+          }}
+        >
+          <span
+            className="text-sm font-bold"
+            style={{
+              color: "#C25B4A",
+            }}
+          >
+            {todayAbsences}
+          </span>
+
+          <span
+            className="text-xs"
+            style={{
+              color: "#7A8580",
+            }}
+          >
+            غياب اليوم
+          </span>
         </div>
       </div>
 
-      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}>
-        {children.map((child, idx) => {
-          const current = attendance[child.id] || "present";
-          return (
-            <div key={child.id} className="flex items-center justify-between px-5 py-3.5"
-              style={{ borderBottom: idx < children.length - 1 ? "1px solid #F3EFE3" : "none" }}>
-              <span className="text-sm font-medium" style={{ color: "#2F3A36" }}>{child.name}</span>
-              <div className="flex items-center gap-2">
-                {STATUS_OPTIONS.map(({ key, label, icon: Icon, color }) => {
-                  const isActive = current === key;
-                  return (
-                    <button key={key} onClick={() => setStatus(child.id, key)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
-                      style={{
-                        backgroundColor: isActive ? `${color}20` : "transparent",
-                        color: isActive ? color : "#A8B0AB",
-                        border: `1px solid ${isActive ? color : "#EDE7D9"}`,
-                      }}>
-                      <Icon size={13} />
-                      {label}
-                    </button>
-                  );
-                })}
+      {/* ==================================================
+          حضور المعلمة
+      ================================================== */}
+
+      {!isParent && (
+        <div
+          className="rounded-2xl p-5 mb-5"
+          style={{
+            backgroundColor: "#FFFFFF",
+            border:
+              "1px solid #EDE7D9",
+          }}
+        >
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex items-start gap-3">
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  backgroundColor:
+                    "#EAF2EF",
+                  color: "#4C8577",
+                }}
+              >
+                <GraduationCap
+                  size={21}
+                />
+              </div>
+
+              <div>
+                <h3
+                  className="text-sm font-bold"
+                  style={{
+                    color: "#2F3A36",
+                  }}
+                >
+                  حضور المعلمة
+                </h3>
+
+                <p
+                  className="text-xs mt-1"
+                  style={{
+                    color: "#A8B0AB",
+                  }}
+                >
+                  تسجيل ومتابعة حضور
+                  المعلمات لهذا اليوم
+                </p>
               </div>
             </div>
-          );
-        })}
-        {children.length === 0 && (
-          <p className="text-center text-sm py-10" style={{ color: "#A8B0AB" }}>لا يوجد أطفال بهذا الصف</p>
+
+            {isTeacher && (
+              <span
+                className="text-xs px-3 py-1.5 rounded-full font-medium"
+                style={{
+                  backgroundColor:
+                    "#FCFAF4",
+                  color: "#7A8580",
+                }}
+              >
+                {user.name}
+              </span>
+            )}
+          </div>
+
+          {/* ==========================================
+              المعلمة تسجل حضورها
+          ========================================== */}
+
+          {isTeacher && (
+            <div className="mt-5">
+              <div className="flex flex-wrap gap-2">
+                {TEACHER_STATUS_OPTIONS.map(
+                  ({
+                    key,
+                    label,
+                    icon: Icon,
+                    color,
+                  }) => {
+                    const isActive =
+                      teacherStatus ===
+                      key ||
+                      currentTeacherAttendance?.status ===
+                        key;
+
+                    return (
+                      <button
+                        key={key}
+                        onClick={() =>
+                          setTeacherStatus(
+                            key
+                          )
+                        }
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
+                        style={{
+                          backgroundColor:
+                            isActive
+                              ? `${color}20`
+                              : "#FFFFFF",
+
+                          color: isActive
+                            ? color
+                            : "#7A8580",
+
+                          border: `1px solid ${
+                            isActive
+                              ? color
+                              : "#EDE7D9"
+                          }`,
+                        }}
+                      >
+                        <Icon
+                          size={15}
+                        />
+
+                        {label}
+                      </button>
+                    );
+                  }
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 mt-4">
+                <button
+                  onClick={
+                    handleSaveTeacherAttendance
+                  }
+                  className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white"
+                  style={{
+                    backgroundColor:
+                      "#4C8577",
+                  }}
+                >
+                  <Save size={15} />
+                  حفظ حضور المعلمة
+                </button>
+
+                {teacherSavedMessage && (
+                  <span
+                    className="flex items-center gap-1.5 text-xs font-medium"
+                    style={{
+                      color: "#4C8577",
+                    }}
+                  >
+                    <CheckCircle2
+                      size={15}
+                    />
+                    تم حفظ الحضور
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ==========================================
+              المدير والسكرتيرة يشوفوا حالة المعلمات
+          ========================================== */}
+
+          {canManageTeacherAttendance && (
+            <div className="mt-5">
+              {teachersList.length === 0 ? (
+                <p
+                  className="text-xs"
+                  style={{
+                    color: "#A8B0AB",
+                  }}
+                >
+                  لا توجد معلمات مسجلات.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {teachersList.map(
+                    (teacher) => {
+                      const record =
+                        getTeacherAttendance(
+                          teacher.name,
+                          todayISO
+                        );
+
+                      return (
+                        <div
+                          key={
+                            teacher.id ||
+                            teacher.name
+                          }
+                          className="flex items-center justify-between gap-3 p-3 rounded-xl"
+                          style={{
+                            backgroundColor:
+                              "#FCFAF4",
+                          }}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center"
+                              style={{
+                                backgroundColor:
+                                  "#EAF2EF",
+                                color:
+                                  "#4C8577",
+                              }}
+                            >
+                              <GraduationCap
+                                size={15}
+                              />
+                            </div>
+
+                            <div>
+                              <p
+                                className="text-sm font-semibold"
+                                style={{
+                                  color:
+                                    "#2F3A36",
+                                }}
+                              >
+                                {
+                                  teacher.name
+                                }
+                              </p>
+
+                              <p
+                                className="text-[11px]"
+                                style={{
+                                  color:
+                                    "#A8B0AB",
+                                }}
+                              >
+                                {teacher.classroom ||
+                                  "معلمة"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <span
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                            style={{
+                              backgroundColor:
+                                !record
+                                  ? "#F3EFE3"
+                                  : record.status ===
+                                    "present"
+                                  ? "#EAF2EF"
+                                  : record.status ===
+                                    "late"
+                                  ? "#FFF7E6"
+                                  : "#FBEAE7",
+
+                              color:
+                                !record
+                                  ? "#A8B0AB"
+                                  : record.status ===
+                                    "present"
+                                  ? "#4C8577"
+                                  : record.status ===
+                                    "late"
+                                  ? "#B27A19"
+                                  : "#C25B4A",
+                            }}
+                          >
+                            {!record
+                              ? "لم يسجل"
+                              : record.status ===
+                                "present"
+                              ? "حاضرة"
+                              : record.status ===
+                                "late"
+                              ? "متأخرة"
+                              : "غائبة"}
+                          </span>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ==================================================
+          رسالة ولي الأمر
+      ================================================== */}
+
+      {isParent && (
+        <div
+          className="rounded-2xl p-4 mb-5 flex items-start gap-3"
+          style={{
+            backgroundColor: "#EEF6F3",
+            border:
+              "1px solid #D5E8E2",
+          }}
+        >
+          <ShieldCheck
+            size={20}
+            style={{
+              color: "#4C8577",
+              marginTop: 2,
+            }}
+          />
+
+          <div>
+            <p
+              className="text-sm font-semibold"
+              style={{
+                color: "#2F3A36",
+              }}
+            >
+              سجل الحضور للمتابعة فقط
+            </p>
+
+            <p
+              className="text-xs mt-1"
+              style={{
+                color: "#7A8580",
+              }}
+            >
+              يمكنك الاطلاع على حضور طفلك
+              وغياباته، بينما تسجيل الحضور
+              من صلاحية المعلمة وإدارة الروضة.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================
+          تنبيه الغياب المتكرر
+      ================================================== */}
+
+      {alertChildren.length > 0 && (
+        <div
+          className="rounded-2xl p-5 mb-5"
+          style={{
+            backgroundColor: "#FBEAE7",
+            border:
+              "1px solid #E8B9AF",
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{
+                backgroundColor:
+                  "#C25B4A20",
+              }}
+            >
+              <AlertTriangle
+                size={20}
+                style={{
+                  color: "#C25B4A",
+                }}
+              />
+            </div>
+
+            <div className="flex-1">
+              <h3
+                className="text-sm font-bold"
+                style={{
+                  color: "#C25B4A",
+                }}
+              >
+                متابعة غياب مطلوبة
+              </h3>
+
+              <p
+                className="text-xs mt-1"
+                style={{
+                  color: "#7A8580",
+                }}
+              >
+                تم تجاوز 3 غيابات.
+                يُنصح بالتواصل مع ولي
+                الأمر لمتابعة السبب.
+              </p>
+
+              <div className="space-y-3 mt-4">
+                {alertChildren.map(
+                  (child) => (
+                    <div
+                      key={child.childId}
+                      className="rounded-xl p-4"
+                      style={{
+                        backgroundColor:
+                          "#FFFFFF",
+                        border:
+                          "1px solid #E8B9AF",
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                          <p
+                            className="text-sm font-bold"
+                            style={{
+                              color:
+                                "#2F3A36",
+                            }}
+                          >
+                            {
+                              child.childName
+                            }
+                          </p>
+
+                          <p
+                            className="text-xs mt-1"
+                            style={{
+                              color:
+                                "#C25B4A",
+                            }}
+                          >
+                            {
+                              child.absenceCount
+                            }{" "}
+                            غيابات — يحتاج
+                            متابعة
+                          </p>
+                        </div>
+
+                        {child.parentPhone && (
+                          <a
+                            href={`tel:${child.parentPhone}`}
+                            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white"
+                            style={{
+                              backgroundColor:
+                                "#C25B4A",
+                            }}
+                          >
+                            <Phone
+                              size={15}
+                            />
+                            التواصل مع ولي
+                            الأمر
+                          </a>
+                        )}
+                      </div>
+
+                      <div
+                        className="mt-3 pt-3"
+                        style={{
+                          borderTop:
+                            "1px solid #F3EFE3",
+                        }}
+                      >
+                        <p
+                          className="text-xs"
+                          style={{
+                            color:
+                              "#7A8580",
+                          }}
+                        >
+                          ولي الأمر:{" "}
+                          <strong
+                            style={{
+                              color:
+                                "#2F3A36",
+                            }}
+                          >
+                            {
+                              child.parentName
+                            }
+                          </strong>
+                        </p>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================
+          اختيار الصف للمدير
+      ================================================== */}
+
+      {!isParent &&
+        !isTeacher &&
+        classrooms.length > 0 && (
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-5">
+            <div className="flex gap-2 flex-wrap">
+              {classrooms.map(
+                (classroom) => (
+                  <button
+                    key={classroom}
+                    onClick={() =>
+                      setActiveClass(
+                        classroom
+                      )
+                    }
+                    className="px-4 py-2 rounded-xl text-sm font-medium"
+                    style={{
+                      backgroundColor:
+                        selectedClass ===
+                        classroom
+                          ? "#4C8577"
+                          : "#FFFFFF",
+
+                      color:
+                        selectedClass ===
+                        classroom
+                          ? "#FBF7EF"
+                          : "#4A5551",
+
+                      border:
+                        "1px solid #EDE7D9",
+                    }}
+                  >
+                    {classroom}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        )}
+
+      {/* ==================================================
+          زر حفظ حضور الأطفال
+      ================================================== */}
+
+      {canEditAttendance && (
+        <div className="flex items-center justify-end mb-5">
+          <div className="flex items-center gap-3">
+            {savedMessage && (
+              <span
+                className="flex items-center gap-1.5 text-sm font-medium"
+                style={{
+                  color: "#4C8577",
+                }}
+              >
+                <CheckCircle2
+                  size={16}
+                />
+                تم حفظ الحضور
+              </span>
+            )}
+
+            <button
+              onClick={
+                handleSaveAttendance
+              }
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+              style={{
+                backgroundColor:
+                  "#4C8577",
+              }}
+            >
+              <Save size={16} />
+              حفظ حضور الأطفال
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================
+          قائمة الأطفال
+      ================================================== */}
+
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: "#FFFFFF",
+          border:
+            "1px solid #EDE7D9",
+        }}
+      >
+        {children.map(
+          (child, index) => {
+            const current =
+              attendance[child.id]
+                ?.status || "present";
+
+            const excuse =
+              attendance[child.id]
+                ?.excuse || "";
+
+            const absenceCount =
+              getAbsenceCount(child.id);
+
+            const latestRecord =
+              records
+                .filter(
+                  (record) =>
+                    record.childId ===
+                    child.id
+                )
+                .sort((a, b) =>
+                  b.date.localeCompare(
+                    a.date
+                  )
+                )[0];
+
+            return (
+              <div
+                key={child.id}
+                className="px-5 py-4"
+                style={{
+                  borderBottom:
+                    index <
+                    children.length - 1
+                      ? "1px solid #F3EFE3"
+                      : "none",
+                }}
+              >
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center font-bold"
+                      style={{
+                        backgroundColor:
+                          "#EEF6F3",
+                        color:
+                          "#4C8577",
+                      }}
+                    >
+                      {child.name.charAt(
+                        0
+                      )}
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-sm font-bold"
+                          style={{
+                            color:
+                              "#2F3A36",
+                          }}
+                        >
+                          {child.name}
+                        </span>
+
+                        {absenceCount >
+                          0 && (
+                          <span
+                            className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor:
+                                absenceCount >
+                                3
+                                  ? "#FBEAE7"
+                                  : "#FCFAF4",
+
+                              color:
+                                absenceCount >
+                                3
+                                  ? "#C25B4A"
+                                  : "#7A8580",
+                            }}
+                          >
+                            {absenceCount}{" "}
+                            غياب
+                          </span>
+                        )}
+                      </div>
+
+                      <p
+                        className="text-[11px] mt-1"
+                        style={{
+                          color:
+                            "#A8B0AB",
+                        }}
+                      >
+                        {isParent
+                          ? child.classroom
+                          : `آخر تسجيل: ${
+                              latestRecord?.date ||
+                              "لا يوجد"
+                            }`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ==================================
+                      ولي الأمر - قراءة فقط
+                  ================================== */}
+
+                  {isParent ? (
+                    <div className="flex items-center gap-2">
+                      {latestRecord ? (
+                        <span
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                          style={{
+                            backgroundColor:
+                              latestRecord.status ===
+                              "present"
+                                ? "#EEF6F3"
+                                : latestRecord.status ===
+                                  "late"
+                                ? "#FFF7E6"
+                                : "#FBEAE7",
+
+                            color:
+                              latestRecord.status ===
+                              "present"
+                                ? "#4C8577"
+                                : latestRecord.status ===
+                                  "late"
+                                ? "#B27A19"
+                                : "#C25B4A",
+                          }}
+                        >
+                          {latestRecord.status ===
+                          "present"
+                            ? "حاضر"
+                            : latestRecord.status ===
+                              "late"
+                            ? "متأخر"
+                            : latestRecord.status ===
+                              "absent_excused"
+                            ? "غائب بعذر"
+                            : "غائب بدون عذر"}
+                        </span>
+                      ) : (
+                        <span
+                          className="text-xs"
+                          style={{
+                            color:
+                              "#A8B0AB",
+                          }}
+                        >
+                          لا يوجد تسجيل
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    /* ==================================
+                       المعلمة / المدير
+                    ================================== */
+
+                    <div className="flex items-center gap-2">
+                      {STATUS_OPTIONS.map(
+                        ({
+                          key,
+                          label,
+                          icon: Icon,
+                          color,
+                        }) => {
+                          const isActive =
+                            current ===
+                            key;
+
+                          return (
+                            <button
+                              key={key}
+                              onClick={() =>
+                                setStatus(
+                                  child.id,
+                                  key
+                                )
+                              }
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+                              style={{
+                                backgroundColor:
+                                  isActive
+                                    ? `${color}20`
+                                    : "transparent",
+
+                                color:
+                                  isActive
+                                    ? color
+                                    : "#A8B0AB",
+
+                                border: `1px solid ${
+                                  isActive
+                                    ? color
+                                    : "#EDE7D9"
+                                }`,
+                              }}
+                            >
+                              <Icon
+                                size={13}
+                              />
+
+                              {label}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ====================================
+                    سبب الغياب
+                ==================================== */}
+
+                {!isParent &&
+                  current ===
+                    "absent" && (
+                    <div className="mt-3">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <FileText
+                          size={14}
+                          style={{
+                            color:
+                              "#A8B0AB",
+                          }}
+                        />
+
+                        <label
+                          className="text-xs font-medium"
+                          style={{
+                            color:
+                              "#7A8580",
+                          }}
+                        >
+                          سبب الغياب / العذر
+                        </label>
+                      </div>
+
+                      <input
+                        type="text"
+                        value={excuse}
+                        onChange={(e) =>
+                          setExcuse(
+                            child.id,
+                            e.target.value
+                          )
+                        }
+                        placeholder="مثال: مرض، موعد طبي، ظرف عائلي..."
+                        className="w-full rounded-xl py-2.5 px-3 text-xs outline-none"
+                        style={{
+                          border:
+                            "1px solid #E2DCCC",
+                          backgroundColor:
+                            "#FCFAF4",
+                          color:
+                            "#2F3A36",
+                        }}
+                      />
+
+                      <p
+                        className="text-[11px] mt-1.5"
+                        style={{
+                          color:
+                            "#A8B0AB",
+                        }}
+                      >
+                        كتابة العذر تسجل الغياب
+                        "بعذر"، وتركه فارغًا
+                        يسجل الغياب "بدون عذر".
+                      </p>
+                    </div>
+                  )}
+              </div>
+            );
+          }
         )}
       </div>
     </DashboardLayout>

@@ -11,7 +11,6 @@ export default function Navbar({ title = "لوحة التحكم", onNavigate, on
   const [notifOpen, setNotifOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // إشعارات حقيقية مبنية على الرسائل الفعلية، مفلترة حسب دور المستخدم الحالي
   const myChildIds =
     user.roleType === "teacher"
       ? childrenList.filter((c) => c.classroom === user.classroom).map((c) => c.id)

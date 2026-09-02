@@ -1,5 +1,26 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
+
+// الحد القانوني لعمر القبول بالروضة: من 3 سنين و8 أشهر لغاية 5 سنين بالضبط
+const MIN_AGE_MONTHS = 3 * 12 + 8; // 44 شهر
+const MAX_AGE_MONTHS = 5 * 12; // 60 شهر
+
+function calculateAgeInMonths(birthDateStr) {
+  if (!birthDateStr) return null;
+  const birth = new Date(birthDateStr);
+  const today = new Date();
+  let months = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
+  if (today.getDate() < birth.getDate()) months -= 1;
+  return months;
+}
+
+function formatAge(months) {
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  if (years === 0) return `${remMonths} أشهر`;
+  if (remMonths === 0) return `${years} سنوات`;
+  return `${years} سنوات و${remMonths} أشهر`;
+}
 
 export default function ChildForm({ initialData = null, onClose, onSave }) {
   const isEdit = !!initialData;
@@ -7,17 +28,49 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
   const [form, setForm] = useState({
     name: initialData?.name || "",
     classroom: initialData?.classroom || "",
-    age: initialData?.age || "",
+    birthDate: initialData?.birthDate || "",
     parent: initialData?.parent || "",
   });
 
-  const handleChange = (field) => (e) =>
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  const [ageError, setAgeError] = useState("");
+
+  const handleChange = (field) => (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (field === "birthDate") {
+      validateAge(value);
+    }
+  };
+
+  const validateAge = (birthDateStr) => {
+    const months = calculateAgeInMonths(birthDateStr);
+    if (months === null) {
+      setAgeError("");
+      return true;
+    }
+    if (months < MIN_AGE_MONTHS) {
+      setAgeError(`عمر الطفل أقل من الحد القانوني للقبول (3 سنوات و8 أشهر). العمر الحالي: ${formatAge(months)}`);
+      return false;
+    }
+    if (months > MAX_AGE_MONTHS) {
+      setAgeError(`عمر الطفل أكبر من الحد القانوني للقبول (5 سنوات). العمر الحالي: ${formatAge(months)}`);
+      return false;
+    }
+    setAgeError("");
+    return true;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave && onSave(form);
+    if (!validateAge(form.birthDate)) return;
+
+    const months = calculateAgeInMonths(form.birthDate);
+    const ageYears = months !== null ? Math.floor(months / 12) : "";
+
+    onSave && onSave({ ...form, age: ageYears });
   };
+
+  const currentMonths = calculateAgeInMonths(form.birthDate);
 
   return (
     <div
@@ -66,16 +119,35 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
 
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
-              العمر
+              تاريخ الميلاد
             </label>
             <input
-              type="number"
-              value={form.age}
-              onChange={handleChange("age")}
+              type="date"
+              value={form.birthDate}
+              onChange={handleChange("birthDate")}
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
-              style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }}
+              style={{
+                border: `1px solid ${ageError ? "#C25B4A" : "#E2DCCC"}`,
+                backgroundColor: "#FCFAF4",
+                color: "#2F3A36",
+              }}
               required
             />
+            {/* عرض العمر المحسوب تلقائياً، يساعد يلي بتعبي الفورم تتأكد بسرعة */}
+            {currentMonths !== null && !ageError && (
+              <p className="text-xs mt-1.5" style={{ color: "#7A8580" }}>
+                العمر الحالي: {formatAge(currentMonths)}
+              </p>
+            )}
+            {ageError && (
+              <p className="text-xs mt-1.5 flex items-start gap-1.5" style={{ color: "#C25B4A" }}>
+                <AlertCircle size={13} className="shrink-0 mt-0.5" />
+                <span>{ageError}</span>
+              </p>
+            )}
+            <p className="text-[11px] mt-1" style={{ color: "#A8B0AB" }}>
+              العمر المقبول قانونياً: من 3 سنوات و8 أشهر إلى 5 سنوات
+            </p>
           </div>
 
           <div>
@@ -103,7 +175,8 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white"
+              disabled={!!ageError}
+              className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white disabled:opacity-50"
               style={{ backgroundColor: "#4C8577" }}
             >
               {isEdit ? "حفظ التعديلات" : "إضافة"}

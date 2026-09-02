@@ -1,11 +1,34 @@
 import { useState } from "react";
-import { Download, Printer, FileBarChart } from "lucide-react";
+import {
+  Download,
+  Printer,
+  FileBarChart,
+  CalendarDays,
+  Users,
+  ClipboardCheck,
+  Sparkles,
+} from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 
 const reportTypes = [
-  { key: "attendance", label: "تقرير الحضور" },
-  { key: "children", label: "تقرير الأطفال" },
-  { key: "behavior", label: "تقرير السلوكيات" },
+  {
+    key: "attendance",
+    label: "تقرير الحضور",
+    description: "متابعة حضور وغياب الأطفال",
+    icon: ClipboardCheck,
+  },
+  {
+    key: "children",
+    label: "تقرير الأطفال",
+    description: "ملخص بيانات الأطفال المسجلين",
+    icon: Users,
+  },
+  {
+    key: "behavior",
+    label: "تقرير السلوكيات",
+    description: "متابعة الملاحظات والسلوكيات",
+    icon: Sparkles,
+  },
 ];
 
 export default function ReportsPage({ onNavigate }) {
@@ -14,25 +37,181 @@ export default function ReportsPage({ onNavigate }) {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
+  const selectedReport = reportTypes.find(
+    (report) => report.key === reportType
+  );
+
+  const SelectedIcon = selectedReport?.icon || FileBarChart;
+
   return (
-    <DashboardLayout activePage="reports" onNavigate={onNavigate} pageTitle="التقارير">
-      {/* فلاتر */}
-      <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}>
-        <h3 className="text-sm font-bold mb-4" style={{ color: "#2F3A36" }}>تصفية التقرير</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#7A8580" }}>نوع التقرير</label>
-            <select value={reportType} onChange={(e) => setReportType(e.target.value)}
-              className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
-              style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }}>
-              {reportTypes.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
-            </select>
+    <DashboardLayout
+      activePage="reports"
+      onNavigate={onNavigate}
+      pageTitle="التقارير"
+    >
+      {/* Header */}
+      <div className="mb-6">
+        <div
+          className="rounded-3xl p-6 relative overflow-hidden"
+          style={{
+            backgroundColor: "#F4F8F7",
+            border: "1px solid #E2ECE8",
+          }}
+        >
+          <div
+            className="absolute -top-12 -left-12 w-32 h-32 rounded-full"
+            style={{ backgroundColor: "#4C857710" }}
+          />
+
+          <div className="relative flex items-center gap-4">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#EAF2EF" }}
+            >
+              <FileBarChart size={25} style={{ color: "#4C8577" }} />
+            </div>
+
+            <div>
+              <h2
+                className="text-lg font-bold"
+                style={{ color: "#2F3A36" }}
+              >
+                التقارير والإحصائيات
+              </h2>
+
+              <p
+                className="text-sm mt-1"
+                style={{ color: "#7A8580" }}
+              >
+                اختاري نوع التقرير والفترة الزمنية لعرض البيانات المطلوبة
+              </p>
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Report Types */}
+      <div className="mb-5">
+        <h3
+          className="text-sm font-bold mb-3"
+          style={{ color: "#2F3A36" }}
+        >
+          نوع التقرير
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {reportTypes.map((report) => {
+            const Icon = report.icon;
+            const isSelected = reportType === report.key;
+
+            return (
+              <button
+                key={report.key}
+                type="button"
+                onClick={() => setReportType(report.key)}
+                className="text-right rounded-2xl p-4 transition-all"
+                style={{
+                  backgroundColor: isSelected ? "#F0F6F4" : "#FFFFFF",
+                  border: `1px solid ${
+                    isSelected ? "#BFD8D0" : "#EDE7D9"
+                  }`,
+                  boxShadow: isSelected
+                    ? "0 8px 24px rgba(76,133,119,0.08)"
+                    : "none",
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                    style={{
+                      backgroundColor: isSelected
+                        ? "#E0EEE9"
+                        : "#F7F6F0",
+                    }}
+                  >
+                    <Icon
+                      size={19}
+                      style={{
+                        color: isSelected ? "#4C8577" : "#7A8580",
+                      }}
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p
+                      className="text-sm font-bold"
+                      style={{ color: "#2F3A36" }}
+                    >
+                      {report.label}
+                    </p>
+
+                    <p
+                      className="text-xs mt-1"
+                      style={{ color: "#8A9490" }}
+                    >
+                      {report.description}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div
+        className="rounded-3xl p-5 mb-5"
+        style={{
+          backgroundColor: "#FFFFFF",
+          border: "1px solid #EDE7D9",
+        }}
+      >
+        <div className="flex items-center gap-2 mb-5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: "#F4F8F7" }}
+          >
+            <CalendarDays size={17} style={{ color: "#4C8577" }} />
+          </div>
+
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#7A8580" }}>الصف</label>
-            <select value={classroom} onChange={(e) => setClassroom(e.target.value)}
+            <h3
+              className="text-sm font-bold"
+              style={{ color: "#2F3A36" }}
+            >
+              تصفية التقرير
+            </h3>
+
+            <p
+              className="text-[11px] mt-0.5"
+              style={{ color: "#A8B0AB" }}
+            >
+              حددي البيانات التي تريدين ظهورها
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Classroom */}
+          <div>
+            <label
+              className="block text-xs font-semibold mb-1.5"
+              style={{ color: "#7A8580" }}
+            >
+              الصف
+            </label>
+
+            <select
+              value={classroom}
+              onChange={(e) => setClassroom(e.target.value)}
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
-              style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }}>
+              style={{
+                border: "1px solid #E2DCCC",
+                backgroundColor: "#FCFAF4",
+                color: "#2F3A36",
+              }}
+            >
               <option>الكل</option>
               <option>صف الفراشات</option>
               <option>صف النجوم</option>
@@ -40,43 +219,127 @@ export default function ReportsPage({ onNavigate }) {
               <option>صف الشمس</option>
             </select>
           </div>
+
+          {/* From */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#7A8580" }}>من تاريخ</label>
-            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)}
+            <label
+              className="block text-xs font-semibold mb-1.5"
+              style={{ color: "#7A8580" }}
+            >
+              من تاريخ
+            </label>
+
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
-              style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }} />
+              style={{
+                border: "1px solid #E2DCCC",
+                backgroundColor: "#FCFAF4",
+                color: "#2F3A36",
+              }}
+            />
           </div>
+
+          {/* To */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#7A8580" }}>إلى تاريخ</label>
-            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)}
+            <label
+              className="block text-xs font-semibold mb-1.5"
+              style={{ color: "#7A8580" }}
+            >
+              إلى تاريخ
+            </label>
+
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
-              style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }} />
+              style={{
+                border: "1px solid #E2DCCC",
+                backgroundColor: "#FCFAF4",
+                color: "#2F3A36",
+              }}
+            />
           </div>
         </div>
 
-        <div className="flex gap-3 mt-5">
-          <button className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
-            style={{ backgroundColor: "#4C8577" }}>
+        {/* Actions */}
+        <div className="flex flex-wrap gap-3 mt-5 pt-5 border-t" style={{ borderColor: "#F1EDE3" }}>
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white"
+            style={{
+              backgroundColor: "#4C8577",
+              boxShadow: "0 6px 16px rgba(76,133,119,0.15)",
+            }}
+          >
             <FileBarChart size={16} />
             عرض التقرير
           </button>
-          <button className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
-            style={{ border: "1px solid #E2DCCC", color: "#4A5551" }}>
+
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-gray-50"
+            style={{
+              border: "1px solid #E2DCCC",
+              color: "#4A5551",
+              backgroundColor: "#FFFFFF",
+            }}
+          >
             <Download size={16} />
             تصدير PDF
           </button>
-          <button className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium"
-            style={{ border: "1px solid #E2DCCC", color: "#4A5551" }}>
+
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-gray-50"
+            style={{
+              border: "1px solid #E2DCCC",
+              color: "#4A5551",
+              backgroundColor: "#FFFFFF",
+            }}
+          >
             <Printer size={16} />
             طباعة
           </button>
         </div>
       </div>
 
-      {/* منطقة عرض النتائج (مكانها جاهز، بتتعبى بعد ربط API) */}
-      <div className="rounded-2xl p-10 flex flex-col items-center justify-center" style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}>
-        <FileBarChart size={28} style={{ color: "#A8B0AB" }} />
-        <p className="text-sm mt-3" style={{ color: "#A8B0AB" }}>اختر الفلاتر واضغط "عرض التقرير" لعرض النتائج هنا</p>
+      {/* Results Preview */}
+      <div
+        className="rounded-3xl p-10 min-h-[260px] flex flex-col items-center justify-center text-center"
+        style={{
+          backgroundColor: "#FFFFFF",
+          border: "1px solid #EDE7D9",
+        }}
+      >
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+          style={{ backgroundColor: "#F4F8F7" }}
+        >
+          <SelectedIcon size={27} style={{ color: "#4C8577" }} />
+        </div>
+
+        <h3
+          className="text-sm font-bold"
+          style={{ color: "#2F3A36" }}
+        >
+          {selectedReport?.label}
+        </h3>
+
+        <p
+          className="text-xs mt-2 max-w-sm leading-6"
+          style={{ color: "#A8B0AB" }}
+        >
+          حددي الفلاتر المطلوبة ثم اضغطي على
+          <span style={{ color: "#4C8577", fontWeight: 600 }}>
+            {" "}
+            "عرض التقرير"
+          </span>{" "}
+          لعرض النتائج هنا.
+        </p>
       </div>
     </DashboardLayout>
   );

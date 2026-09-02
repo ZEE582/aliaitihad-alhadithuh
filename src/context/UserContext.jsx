@@ -2,10 +2,12 @@ import { createContext, useContext, useState } from "react";
 
 const UserContext = createContext(null);
 
-// حسابات تجريبية لكل دور، لحد ما يجهز الـ API الحقيقي ويصير الدور جاي من السيرفر
-// roleType: "admin" | "teacher" | "parent" -- هاد يلي بيتحكم بالصلاحيات والفلترة بكل التطبيق
-// classroom: يستخدم بس لو roleType = teacher (أي صف هو مسؤول عنه)
-// childIds: يستخدم بس لو roleType = parent (أطفاله بالروضة، مصفوفة لأنه ممكن أكتر من طفل)
+// الأدوار الموجودة في النظام:
+// admin      = مدير/ة الروضة
+// secretary  = سكرتير/ة المدير
+// teacher    = معلم/ة
+// parent     = ولي أمر
+
 export const demoAccounts = {
   admin: {
     name: "أ. سارة أحمد",
@@ -15,6 +17,16 @@ export const demoAccounts = {
     phone: "059-1234567",
     joinDate: "أيلول 2022",
   },
+
+  secretary: {
+    name: "أ. ليان خالد",
+    role: "سكرتيرة المدير",
+    roleType: "secretary",
+    email: "layan.khaled@barae-kg.edu",
+    phone: "059-4455667",
+    joinDate: "آذار 2024",
+  },
+
   teacher: {
     name: "أ. نور سلامة",
     role: "معلمة",
@@ -24,6 +36,7 @@ export const demoAccounts = {
     joinDate: "شباط 2023",
     classroom: "صف الفراشات",
   },
+
   parent: {
     name: "محمد يوسف",
     role: "ولي أمر",
@@ -31,25 +44,44 @@ export const demoAccounts = {
     email: "mohammad.yousef@gmail.com",
     phone: "059-1234567",
     joinDate: "أيلول 2024",
-    childIds: [1], // بيقابل id الطفل "رهف يوسف" بـ ChildrenContext
+    childIds: [1],
   },
 };
 
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(null); // null يعني لسا ما سجل دخول
+  const [user, setUser] = useState(null);
 
   const login = (roleType) => {
-    setUser(demoAccounts[roleType]);
+    const account = demoAccounts[roleType];
+
+    if (!account) {
+      console.error("الدور غير موجود:", roleType);
+      return;
+    }
+
+    setUser(account);
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+  };
 
   const updateUser = (formData) => {
-    setUser((prev) => ({ ...prev, ...formData }));
+    setUser((prev) => ({
+      ...prev,
+      ...formData,
+    }));
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, updateUser }}>
+    <UserContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        updateUser,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
@@ -57,6 +89,10 @@ export function UserProvider({ children }) {
 
 export function useUser() {
   const ctx = useContext(UserContext);
-  if (!ctx) throw new Error("useUser لازم تستخدم جوا UserProvider");
+
+  if (!ctx) {
+    throw new Error("useUser لازم تستخدم جوا UserProvider");
+  }
+
   return ctx;
 }

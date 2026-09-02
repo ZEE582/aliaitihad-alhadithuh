@@ -1,99 +1,285 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const MessagesContext = createContext(null);
 
-const initialMessages = [
-  {
-    id: 1,
-    childId: 1, // رهف يوسف
-    fromRole: "parent",
-    fromName: "محمد يوسف",
-    text: "ممكن أعرف كيف كان يوم رهف اليوم؟ لاحظت إنها متعبة الصبح",
-    date: "اليوم، 8:30 ص",
-    read: true,
-    type: "message",
-  },
-  {
-    id: 2,
-    childId: 1,
-    fromRole: "teacher",
-    fromName: "أ. نور سلامة",
-    text: "صباح الخير، رهف كانت بخير وشاركت بكل الأنشطة، بس فعلاً بدت متعبة شوي وقت الغدا",
-    date: "اليوم، 9:10 ص",
-    read: true,
-    type: "message",
-  },
-  {
-    id: 3,
-    childId: 1,
-    fromRole: "parent",
-    fromName: "محمد يوسف",
-    text: "تمام شكراً، رح أخليها تنام بدري الليلة",
-    date: "اليوم، 9:15 ص",
-    read: false, // المعلم لسا ما شافها
-    type: "message",
-  },
-];
+// ========================================
+// وقت التواصل المسموح مع المعلم
+// 6:00 مساءً → 7:00 مساءً
+// هذا القيد على ولي الأمر فقط
+// ========================================
+
+const WINDOW_START_HOUR = 18;
+const WINDOW_END_HOUR = 19;
+
+const initialMessages = [];
+
+// ========================================
+// هل الوقت الحالي داخل نافذة التواصل؟
+// ========================================
+
+function isWithinWindow(date) {
+  const hour = date.getHours();
+
+  return (
+    hour >= WINDOW_START_HOUR &&
+    hour < WINDOW_END_HOUR
+  );
+}
+
+// ========================================
+// حساب أقرب موعد قادم للتواصل
+// ========================================
+
+function getNextWindowStart(date) {
+  const next = new Date(date);
+
+  // إذا لم يبدأ وقت التواصل بعد اليوم
+  if (date.getHours() < WINDOW_START_HOUR) {
+    next.setHours(
+      WINDOW_START_HOUR,
+      0,
+      0,
+      0
+    );
+
+    return next;
+  }
+
+  // إذا انتهى وقت التواصل
+  // ننتقل لليوم التالي
+  next.setDate(next.getDate() + 1);
+
+  next.setHours(
+    WINDOW_START_HOUR,
+    0,
+    0,
+    0
+  );
+
+  return next;
+}
+
+// ========================================
+// Messages Provider
+// ========================================
 
 export function MessagesProvider({ children }) {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] =
+    useState(initialMessages);
 
-  // رسالة عادية مرتبطة بطفل واحد
-  const sendMessage = ({ childId, fromRole, fromName, text }) => {
-    const newMsg = {
-      id: Date.now(),
+  const [now, setNow] =
+    useState(new Date());
+
+  // تحديث الوقت كل 30 ثانية
+  // حتى تختفي حالة الانتظار تلقائيًا عند حلول الوقت
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // ========================================
+  // إرسال رسالة مباشرة
+  // ========================================
+
+  const sendMessage = ({
+    childId,
+    fromRole,
+    fromName,
+    text,
+  }) => {
+    const sentAt = new Date();
+
+    // القيد فقط على ولي الأمر
+    const isRestricted =
+      fromRole === "parent" &&
+      !isWithinWindow(sentAt);
+
+    const visibleAt = isRestricted
+      ? getNextWindowStart(sentAt)
+      : sentAt;
+
+    const newMessage = {
+      id:
+        Date.now() +
+        Math.random(),
+
       childId,
+
       fromRole,
+
       fromName,
+
       text,
-      date: "الآن",
-      read: false,
-      type: "message",
+
+      type: "direct",
+
+      date:
+        sentAt.toLocaleDateString(
+          "ar-EG",
+          {
+            day: "numeric",
+            month: "short",
+          }
+        ) +
+        " " +
+        sentAt.toLocaleTimeString(
+          "ar-EG",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        ),
+
+      sentAt:
+        sentAt.toISOString(),
+
+      visibleAt:
+        visibleAt.toISOString(),
+
+      pending:
+        isRestricted,
     };
-    setMessages((prev) => [...prev, newMsg]);
-    return newMsg;
+
+    setMessages((prev) => [
+      ...prev,
+      newMessage,
+    ]);
+
+    return newMessage;
   };
 
-  const sendAnnouncement = ({ childIds, fromName, text }) => {
-    const today = "الآن";
-    const newMessages = childIds.map((childId) => ({
-      id: Date.now() + childId, // نضمن id فريد لكل نسخة
-      childId,
-      fromRole: "teacher",
-      fromName,
-      text,
-      date: today,
-      read: false,
-      type: "announcement",
-    }));
-    setMessages((prev) => [...prev, ...newMessages]);
+  // ========================================
+  // إرسال إعلان عام
+  // المعلم فقط يستخدمه
+  // ========================================
+
+  const sendAnnouncement = ({
+    childIds,
+    fromName,
+    text,
+  }) => {
+    const sentAt = new Date();
+
+    const newAnnouncements =
+      childIds.map((childId) => ({
+        id:
+          Date.now() +
+          Math.random() +
+          childId,
+
+        childId,
+
+        fromRole: "teacher",
+
+        fromName,
+
+        text,
+
+        type: "announcement",
+
+        date:
+          sentAt.toLocaleDateString(
+            "ar-EG",
+            {
+              day: "numeric",
+              month: "short",
+            }
+          ) +
+          " " +
+          sentAt.toLocaleTimeString(
+            "ar-EG",
+            {
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+          ),
+
+        sentAt:
+          sentAt.toISOString(),
+
+        visibleAt:
+          sentAt.toISOString(),
+
+        pending: false,
+      }));
+
+    setMessages((prev) => [
+      ...prev,
+      ...newAnnouncements,
+    ]);
   };
 
-  const markAsRead = (messageId) => {
-    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, read: true } : m)));
-  };
+  // ========================================
+  // جلب رسائل طفل معين
+  // ========================================
 
-  // كل الرسائل الخاصة بطفل معين، مرتبة زمنياً
-  const getMessagesForChild = (childId) => messages.filter((m) => m.childId === childId);
+  const getMessagesForChild = (
+    childId,
+    viewerRole = null
+  ) => {
+    return messages
+      .filter(
+        (message) =>
+          message.childId === childId
+      )
 
-  // عدد الرسائل الغير مقروءة الموجهة لدور معين (تُستخدم بجرس الإشعارات)
-  // منطق بسيط: أي رسالة الطرف المرسل لها مختلف عن الدور الحالي وغير مقروءة
-  const getUnreadCount = (roleType) => {
-    const oppositeRole = roleType === "teacher" ? "parent" : "teacher";
-    return messages.filter((m) => m.fromRole === oppositeRole && !m.read).length;
+      .filter((message) => {
+        // الرسائل العادية تظهر مباشرة
+        if (!message.pending) {
+          return true;
+        }
+
+        // الرسالة المؤجلة:
+        // المعلم لا يراها قبل وقتها
+        if (viewerRole === "teacher") {
+          return (
+            new Date(
+              message.visibleAt
+            ) <= now
+          );
+        }
+
+        // ولي الأمر يرى رسالته المؤجلة
+        return true;
+      })
+
+      .sort(
+        (a, b) =>
+          new Date(a.sentAt) -
+          new Date(b.sentAt)
+      );
   };
 
   return (
     <MessagesContext.Provider
-      value={{ messages, sendMessage, sendAnnouncement, markAsRead, getMessagesForChild, getUnreadCount }}
+      value={{
+        messages,
+        sendMessage,
+        sendAnnouncement,
+        getMessagesForChild,
+      }}
     >
       {children}
     </MessagesContext.Provider>
   );
 }
 
+// ========================================
+// Hook
+// ========================================
+
 export function useMessages() {
-  const ctx = useContext(MessagesContext);
-  if (!ctx) throw new Error("useMessages لازم تستخدم جوا MessagesProvider");
+  const ctx =
+    useContext(MessagesContext);
+
+  if (!ctx) {
+    throw new Error(
+      "useMessages لازم تستخدم جوا MessagesProvider"
+    );
+  }
+
   return ctx;
 }
