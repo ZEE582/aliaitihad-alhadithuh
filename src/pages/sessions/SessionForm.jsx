@@ -8,6 +8,8 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { strings as S } from "../../constants/strings";
+
 const days = [
   "الأحد",
   "الاثنين",
@@ -82,15 +84,15 @@ export default function SessionForm({
                   style={{ color: "#2F3A36" }}
                 >
                   {isEdit
-                    ? "تعديل الحصة"
-                    : "إضافة حصة جديدة"}
+                    ? S.sessionForm.headerTitleEdit
+                    : S.sessionForm.headerTitleAdd}
                 </h3>
 
                 <p
                   className="text-xs mt-1"
                   style={{ color: "#7A8580" }}
                 >
-                  رتّبي وقت الحصة وبياناتها بسهولة
+                  {S.sessionForm.headerSubtitle}
                 </p>
               </div>
             </div>
@@ -124,7 +126,7 @@ export default function SessionForm({
               className="text-[11px] font-semibold mb-3"
               style={{ color: "#7A8580" }}
             >
-              معاينة الحصة
+              {S.sessionForm.previewLabel}
             </p>
 
             <div className="flex items-center gap-3">
@@ -143,7 +145,7 @@ export default function SessionForm({
                   className="text-sm font-bold truncate"
                   style={{ color: "#2F3A36" }}
                 >
-                  {form.subject || "اسم المادة"}
+                  {form.subject || S.sessionForm.previewSubjectFallback}
                 </p>
 
                 <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
@@ -158,7 +160,7 @@ export default function SessionForm({
                     className="text-xs"
                     style={{ color: "#7A8580" }}
                   >
-                    {form.time || "وقت الحصة"}
+                    {form.time || S.sessionForm.previewTimeFallback}
                   </span>
                 </div>
 
@@ -167,14 +169,14 @@ export default function SessionForm({
                     className="text-xs"
                     style={{ color: "#7A8580" }}
                   >
-                    {form.classroom || "الصف"}
+                    {form.classroom || S.sessionForm.previewClassroomFallback}
                   </span>
 
                   <span
                     className="text-xs"
                     style={{ color: "#7A8580" }}
                   >
-                    {form.teacher || "المعلم"}
+                    {form.teacher || S.sessionForm.previewTeacherFallback}
                   </span>
                 </div>
               </div>
@@ -188,7 +190,7 @@ export default function SessionForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                اليوم
+                {S.sessionForm.labelDay}
               </label>
 
               <div className="relative">
@@ -223,7 +225,7 @@ export default function SessionForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                الوقت
+                {S.sessionForm.labelTime}
               </label>
 
               <div className="relative">
@@ -235,7 +237,7 @@ export default function SessionForm({
 
                 <input
                   type="text"
-                  placeholder="مثال: 9:00 - 9:45"
+                  placeholder={S.sessionForm.placeholderTime}
                   value={form.time}
                   onChange={handleChange("time")}
                   required
@@ -255,7 +257,7 @@ export default function SessionForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                المادة
+                {S.sessionForm.labelSubject}
               </label>
 
               <div className="relative">
@@ -270,7 +272,7 @@ export default function SessionForm({
                   value={form.subject}
                   onChange={handleChange("subject")}
                   required
-                  placeholder="مثال: اللغة العربية"
+                  placeholder={S.sessionForm.placeholderSubject}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -287,7 +289,7 @@ export default function SessionForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                الصف
+                {S.sessionForm.labelClassroom}
               </label>
 
               <div className="relative">
@@ -302,7 +304,7 @@ export default function SessionForm({
                   value={form.classroom}
                   onChange={handleChange("classroom")}
                   required
-                  placeholder="مثال: صف الفراشات"
+                  placeholder={S.sessionForm.placeholderClassroom}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -319,7 +321,7 @@ export default function SessionForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                المعلم
+                {S.sessionForm.labelTeacher}
               </label>
 
               <div className="relative">
@@ -334,7 +336,7 @@ export default function SessionForm({
                   value={form.teacher}
                   onChange={handleChange("teacher")}
                   required
-                  placeholder="مثال: أ. سارة الحاج"
+                  placeholder={S.sessionForm.placeholderTeacher}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -358,7 +360,7 @@ export default function SessionForm({
                 backgroundColor: "#FFFFFF",
               }}
             >
-              إلغاء
+              {S.sessionForm.cancelButton}
             </button>
 
             <button
@@ -367,8 +369,8 @@ export default function SessionForm({
               style={{ backgroundColor: "#4C8577" }}
             >
               {isEdit
-                ? "حفظ التعديلات"
-                : "إضافة الحصة"}
+                ? S.sessionForm.submitEdit
+                : S.sessionForm.submitAdd}
             </button>
           </div>
         </form>

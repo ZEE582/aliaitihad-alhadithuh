@@ -10,28 +10,30 @@ import {
 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 
+import { strings as S } from "../../constants/strings";
+
 const reportTypes = [
   {
     key: "attendance",
-    label: "تقرير الحضور",
-    description: "متابعة حضور وغياب الأطفال",
+    label: S.reports.reportAttendance,
+    description: S.reports.reportAttendanceDesc,
     icon: ClipboardCheck,
   },
   {
     key: "children",
-    label: "تقرير الأطفال",
-    description: "ملخص بيانات الأطفال المسجلين",
+    label: S.reports.reportChildren,
+    description: S.reports.reportChildrenDesc,
     icon: Users,
   },
   {
     key: "behavior",
-    label: "تقرير السلوكيات",
-    description: "متابعة الملاحظات والسلوكيات",
+    label: S.reports.reportBehavior,
+    description: S.reports.reportBehaviorDesc,
     icon: Sparkles,
   },
 ];
 
-export default function ReportsPage({ onNavigate }) {
+export default function ReportsPage({ onNavigate, onLogout }) {
   const [reportType, setReportType] = useState("attendance");
   const [classroom, setClassroom] = useState("الكل");
   const [fromDate, setFromDate] = useState("");
@@ -47,7 +49,8 @@ export default function ReportsPage({ onNavigate }) {
     <DashboardLayout
       activePage="reports"
       onNavigate={onNavigate}
-      pageTitle="التقارير"
+      onLogout={onLogout}
+      pageTitle={S.reports.pageTitle}
     >
       {/* Header */}
       <div className="mb-6">
@@ -76,14 +79,14 @@ export default function ReportsPage({ onNavigate }) {
                 className="text-lg font-bold"
                 style={{ color: "#2F3A36" }}
               >
-                التقارير والإحصائيات
+                {S.reports.headerTitle}
               </h2>
 
               <p
                 className="text-sm mt-1"
                 style={{ color: "#7A8580" }}
               >
-                اختاري نوع التقرير والفترة الزمنية لعرض البيانات المطلوبة
+                {S.reports.headerDescription}
               </p>
             </div>
           </div>
@@ -96,7 +99,7 @@ export default function ReportsPage({ onNavigate }) {
           className="text-sm font-bold mb-3"
           style={{ color: "#2F3A36" }}
         >
-          نوع التقرير
+          {S.reports.reportTypeLabel}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -180,14 +183,14 @@ export default function ReportsPage({ onNavigate }) {
               className="text-sm font-bold"
               style={{ color: "#2F3A36" }}
             >
-              تصفية التقرير
+              {S.reports.filterTitle}
             </h3>
 
             <p
               className="text-[11px] mt-0.5"
               style={{ color: "#A8B0AB" }}
             >
-              حددي البيانات التي تريدين ظهورها
+              {S.reports.filterDescription}
             </p>
           </div>
         </div>
@@ -199,7 +202,7 @@ export default function ReportsPage({ onNavigate }) {
               className="block text-xs font-semibold mb-1.5"
               style={{ color: "#7A8580" }}
             >
-              الصف
+              {S.reports.classroomLabel}
             </label>
 
             <select
@@ -226,7 +229,7 @@ export default function ReportsPage({ onNavigate }) {
               className="block text-xs font-semibold mb-1.5"
               style={{ color: "#7A8580" }}
             >
-              من تاريخ
+              {S.reports.fromDateLabel}
             </label>
 
             <input
@@ -248,7 +251,7 @@ export default function ReportsPage({ onNavigate }) {
               className="block text-xs font-semibold mb-1.5"
               style={{ color: "#7A8580" }}
             >
-              إلى تاريخ
+              {S.reports.toDateLabel}
             </label>
 
             <input
@@ -276,7 +279,7 @@ export default function ReportsPage({ onNavigate }) {
             }}
           >
             <FileBarChart size={16} />
-            عرض التقرير
+            {S.reports.showReportButton}
           </button>
 
           <button
@@ -289,7 +292,7 @@ export default function ReportsPage({ onNavigate }) {
             }}
           >
             <Download size={16} />
-            تصدير PDF
+            {S.reports.exportPdfButton}
           </button>
 
           <button
@@ -302,7 +305,7 @@ export default function ReportsPage({ onNavigate }) {
             }}
           >
             <Printer size={16} />
-            طباعة
+            {S.reports.printButton}
           </button>
         </div>
       </div>
@@ -333,12 +336,12 @@ export default function ReportsPage({ onNavigate }) {
           className="text-xs mt-2 max-w-sm leading-6"
           style={{ color: "#A8B0AB" }}
         >
-          حددي الفلاتر المطلوبة ثم اضغطي على
+          {S.reports.previewHintBefore}
           <span style={{ color: "#4C8577", fontWeight: 600 }}>
             {" "}
-            "عرض التقرير"
+            {S.reports.previewHintAction}
           </span>{" "}
-          لعرض النتائج هنا.
+          {S.reports.previewHintAfter}
         </p>
       </div>
     </DashboardLayout>

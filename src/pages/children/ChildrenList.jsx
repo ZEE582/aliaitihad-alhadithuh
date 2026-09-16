@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Search, Plus, Pencil, Eye, Trash2 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import ChildForm from "./ChildForm";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useChildren } from "../../context/ChildrenContext";
+import { strings as S } from "../../constants/strings";
 function StatusBadge({ status, onClick }) {
   const isActive = status === "نشط";
 
@@ -14,7 +16,7 @@ function StatusBadge({ status, onClick }) {
         backgroundColor: isActive ? "#4C857720" : "#C25B4A20",
         color: isActive ? "#4C8577" : "#C25B4A",
       }}
-      title="اضغط لتبديل الحالة"
+      title={S.children.toggleStatusTitle}
     >
       {status}
     </button>
@@ -33,6 +35,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingChild, setEditingChild] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const filtered = childrenList.filter(
     (c) =>
@@ -62,9 +65,15 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
   };
 
   const handleDelete = (childId) => {
-    if (window.confirm("متأكدة إنك بدك تحذفي هالطفل؟")) {
-      deleteChild(childId);
+    setDeleteTarget(childId);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteChild(deleteTarget);
     }
+
+    setDeleteTarget(null);
   };
 
   return (
@@ -72,7 +81,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
       activePage="children"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="الأطفال"
+      pageTitle={S.children.pageTitle}
     >
       <div className="flex items-center justify-between mb-5 gap-3">
         <div className="relative flex-1 max-w-sm">
@@ -86,7 +95,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث باسم الطفل أو الصف..."
+            placeholder={S.children.searchPlaceholder}
             className="w-full rounded-xl py-2.5 pr-9 pl-3 text-sm outline-none"
             style={{
               border: "1px solid #E2DCCC",
@@ -102,7 +111,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
           style={{ backgroundColor: "#4C8577" }}
         >
           <Plus size={18} />
-          إضافة طفل
+          {S.children.addChildButton}
         </button>
       </div>
 
@@ -125,42 +134,42 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
                 className="text-right px-5 py-3 font-medium"
                 style={{ color: "#7A8580" }}
               >
-                الاسم
+                {S.children.tableName}
               </th>
 
               <th
                 className="text-right px-5 py-3 font-medium"
                 style={{ color: "#7A8580" }}
               >
-                الصف
+                {S.children.tableClassroom}
               </th>
 
               <th
                 className="text-right px-5 py-3 font-medium"
                 style={{ color: "#7A8580" }}
               >
-                العمر
+                {S.children.tableAge}
               </th>
 
               <th
                 className="text-right px-5 py-3 font-medium"
                 style={{ color: "#7A8580" }}
               >
-                ولي الأمر
+                {S.children.tableParent}
               </th>
 
               <th
                 className="text-right px-5 py-3 font-medium"
                 style={{ color: "#7A8580" }}
               >
-                الحالة
+                {S.children.tableStatus}
               </th>
 
               <th
                 className="text-right px-5 py-3 font-medium"
                 style={{ color: "#7A8580" }}
               >
-                إجراءات
+                {S.children.tableActions}
               </th>
             </tr>
           </thead>
@@ -245,7 +254,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
             className="text-center text-sm py-8"
             style={{ color: "#A8B0AB" }}
           >
-            لا يوجد نتائج مطابقة للبحث
+            {S.children.noResults}
           </p>
         )}
       </div>
@@ -260,6 +269,15 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
           onSave={handleSave}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={S.children.confirmDeleteTitle}
+        message={S.children.confirmDeleteMessage}
+        confirmLabel={S.children.confirmDeleteButton}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </DashboardLayout>
   );
 }

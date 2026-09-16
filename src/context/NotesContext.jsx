@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { strings as S } from "../constants/strings";
 
 const NotesContext = createContext(null);
 
@@ -44,7 +45,7 @@ const initialNotes = [
 export function NotesProvider({ children }) {
   const [notes, setNotes] = useState(initialNotes);
 
-  const addNote = (formData, author = "أنتِ") => {
+  const addNote = (formData, author = S.context.defaultAuthor) => {
     const today = new Date().toLocaleDateString("ar-EG", {
       day: "numeric",
       month: "long",

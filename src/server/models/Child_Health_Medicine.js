@@ -2,12 +2,12 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Child_Health_Medicine = sequelize.define('Child_Health_Medicine', {
-  child_N: {
+  child_PersonID: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     references: {
       model: 'Children',
-      key: 'child_N'
+      key: 'PersonID'
     }
   },
   CH_M_ID: {

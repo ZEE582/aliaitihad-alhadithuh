@@ -7,6 +7,8 @@ import {
   Users,
 } from "lucide-react";
 
+import { strings as S } from "../../constants/strings";
+
 export default function ParentForm({ initialData = null, onClose, onSave }) {
   const isEdit = !!initialData;
 
@@ -65,8 +67,8 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                   style={{ color: "#2F3A36" }}
                 >
                   {isEdit
-                    ? "تعديل بيانات ولي الأمر"
-                    : "إضافة ولي أمر جديد"}
+                    ? S.parentForm.headerEditTitle
+                    : S.parentForm.headerAddTitle}
                 </h3>
 
                 <p
@@ -74,8 +76,8 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                   style={{ color: "#7A8580" }}
                 >
                   {isEdit
-                    ? "حدّثي البيانات ثم احفظي التغييرات"
-                    : "أضيفي بيانات ولي الأمر إلى النظام"}
+                    ? S.parentForm.headerEditSubtitle
+                    : S.parentForm.headerAddSubtitle}
                 </p>
               </div>
             </div>
@@ -107,7 +109,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
               className="text-[11px] font-semibold mb-3"
               style={{ color: "#7A8580" }}
             >
-              معاينة ولي الأمر
+              {S.parentForm.previewLabel}
             </p>
 
             <div className="flex items-center gap-3">
@@ -118,7 +120,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                   color: "#FBF7EF",
                 }}
               >
-                {form.name?.charAt(0) || "؟"}
+                {form.name?.charAt(0) || S.common.fallbackInitial}
               </div>
 
               <div className="flex-1 min-w-0">
@@ -126,7 +128,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                   className="text-sm font-bold truncate"
                   style={{ color: "#2F3A36" }}
                 >
-                  {form.name || "اسم ولي الأمر"}
+                  {form.name || S.parentForm.previewNameFallback}
                 </p>
 
                 <div className="flex flex-wrap gap-3 mt-1">
@@ -135,7 +137,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                     style={{ color: "#7A8580" }}
                   >
                     <Phone size={12} />
-                    {form.phone || "رقم التواصل"}
+                    {form.phone || S.parentForm.previewPhoneFallback}
                   </span>
 
                   <span
@@ -143,7 +145,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                     style={{ color: "#7A8580" }}
                   >
                     <Users size={12} />
-                    {form.childrenNames || "الأبناء"}
+                    {form.childrenNames || S.parentForm.previewChildrenFallback}
                   </span>
                 </div>
               </div>
@@ -157,7 +159,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                الاسم الكامل
+                {S.parentForm.labelFullName}
               </label>
 
               <div className="relative">
@@ -172,7 +174,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                   value={form.name}
                   onChange={handleChange("name")}
                   required
-                  placeholder="مثال: محمد أحمد"
+                  placeholder={S.parentForm.namePlaceholder}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -189,7 +191,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                رقم الهاتف
+                {S.parentForm.labelPhone}
               </label>
 
               <div className="relative">
@@ -222,7 +224,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                البريد الإلكتروني
+                {S.parentForm.labelEmail}
               </label>
 
               <div className="relative">
@@ -254,7 +256,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                اسم الطفل / الأبناء
+                {S.parentForm.labelChildren}
               </label>
 
               <div className="relative">
@@ -269,7 +271,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                   value={form.childrenNames}
                   onChange={handleChange("childrenNames")}
                   required
-                  placeholder="مثال: رهف يوسف"
+                  placeholder={S.parentForm.childrenPlaceholder}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -293,7 +295,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 backgroundColor: "#FFFFFF",
               }}
             >
-              إلغاء
+              {S.parentForm.cancelButton}
             </button>
 
             <button
@@ -301,7 +303,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
               className="flex-1 rounded-xl py-3 text-sm font-semibold text-white hover:opacity-90"
               style={{ backgroundColor: "#4C8577" }}
             >
-              {isEdit ? "حفظ التعديلات" : "إضافة ولي الأمر"}
+              {isEdit ? S.parentForm.submitEditLabel : S.parentForm.submitAddLabel}
             </button>
           </div>
         </form>

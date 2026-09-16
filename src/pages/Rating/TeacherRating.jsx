@@ -10,27 +10,30 @@ import {
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 
+import { strings as S } from "../../constants/strings";
+
 import { useUser } from "../../context/UserContext";
 import { useChildren } from "../../context/ChildrenContext";
 import { useTeachers } from "../../context/TeachersContext";
 import { useTeacherRatings } from "../../context/TeacherRatingsContext";
+import { useToast } from "../../context/ToastContext";
 
 const criteria = [
   {
     key: "interaction",
-    label: "التعامل مع الطفل",
+    label: S.rating.criterionInteraction,
   },
   {
     key: "care",
-    label: "الاهتمام والمتابعة",
+    label: S.rating.criterionCare,
   },
   {
     key: "communication",
-    label: "التواصل مع ولي الأمر",
+    label: S.rating.criterionCommunication,
   },
   {
     key: "activities",
-    label: "الأنشطة والتعليم",
+    label: S.rating.criterionActivities,
   },
 ];
 
@@ -48,7 +51,7 @@ function Stars({
           disabled={disabled}
           onClick={() => onChange(star)}
           className="transition-transform hover:scale-110 disabled:cursor-default"
-          aria-label={`تقييم ${star} من 5`}
+          aria-label={S.rating.starAriaLabel(star)}
         >
           <Star
             size={24}
@@ -110,6 +113,7 @@ export default function TeacherRating({
     addRating,
     getParentRating,
   } = useTeacherRatings();
+  const { showWarning } = useToast();
 
   const [submitted, setSubmitted] =
     useState(false);
@@ -184,7 +188,7 @@ export default function TeacherRating({
         activePage="rate-teacher"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="تقييم المعلم"
+        pageTitle={S.rating.pageTitle}
       >
         <div
           className="rounded-2xl p-8 text-center"
@@ -209,7 +213,7 @@ export default function TeacherRating({
             className="text-base font-bold"
             style={{ color: "#2F3A36" }}
           >
-            هذه الصفحة متاحة لأولياء الأمور فقط
+            {S.rating.parentsOnlyMessage}
           </h2>
         </div>
       </DashboardLayout>
@@ -226,21 +230,21 @@ export default function TeacherRating({
         activePage="rate-teacher"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="تقييم المعلم"
+        pageTitle={S.rating.pageTitle}
       >
         <div className="mb-6">
           <h2
             className="text-lg font-bold"
             style={{ color: "#2F3A36" }}
           >
-            تقييم المعلم ⭐
+            {S.rating.ratedTitleWithStar}
           </h2>
 
           <p
             className="text-xs mt-1"
             style={{ color: "#A8B0AB" }}
           >
-            شاركينا رأيك حول تجربة طفلك مع معلمه.
+            {S.rating.shareExperienceHint}
           </p>
         </div>
 
@@ -267,14 +271,14 @@ export default function TeacherRating({
             className="text-sm font-semibold"
             style={{ color: "#4A5551" }}
           >
-            لا يوجد معلم مرتبط بطفلك حاليًا
+            {S.rating.noTeacherMessage}
           </p>
 
           <p
             className="text-xs mt-1.5"
             style={{ color: "#A8B0AB" }}
           >
-            سيتم عرض المعلم هنا عند ربط الطفل بصفه.
+            {S.rating.noTeacherDescription}
           </p>
         </div>
       </DashboardLayout>
@@ -302,8 +306,8 @@ export default function TeacherRating({
     ).every((value) => value > 0);
 
     if (!allRated) {
-      window.alert(
-        "يرجى تقييم جميع الجوانب قبل إرسال التقييم."
+      showWarning(
+        S.rating.allAspectsWarning
       );
       return;
     }
@@ -329,7 +333,7 @@ export default function TeacherRating({
         activePage="rate-teacher"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="تقييم المعلم"
+        pageTitle={S.rating.pageTitle}
       >
         <div
           className="max-w-2xl mx-auto rounded-3xl p-8 text-center"
@@ -354,14 +358,14 @@ export default function TeacherRating({
             className="text-lg font-bold"
             style={{ color: "#2F3A36" }}
           >
-            تم إرسال تقييمك بنجاح 🌷
+            {S.rating.submittedSuccessTitle}
           </h2>
 
           <p
             className="text-sm mt-2 leading-6"
             style={{ color: "#7A8580" }}
           >
-            شكرًا لمساهمتك في تحسين تجربة أطفالنا.
+            {S.rating.submittedSuccessMessage}
           </p>
 
           <button
@@ -373,7 +377,7 @@ export default function TeacherRating({
               backgroundColor: "#4C8577",
             }}
           >
-            العودة إلى ملف طفلي
+            {S.rating.backToChildProfileButton}
           </button>
         </div>
       </DashboardLayout>
@@ -385,7 +389,7 @@ export default function TeacherRating({
       activePage="rate-teacher"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="تقييم المعلم"
+      pageTitle={S.rating.pageTitle}
     >
       <div className="mb-6">
         <div className="flex items-center gap-2">
@@ -405,7 +409,7 @@ export default function TeacherRating({
             className="text-lg font-bold"
             style={{ color: "#2F3A36" }}
           >
-            تقييم المعلم
+            {S.rating.pageTitle}
           </h2>
         </div>
 
@@ -413,7 +417,7 @@ export default function TeacherRating({
           className="text-xs mt-2"
           style={{ color: "#A8B0AB" }}
         >
-          شاركينا رأيك حول تجربة طفلك مع معلمه.
+          {S.rating.shareExperienceHint}
         </p>
       </div>
 
@@ -476,8 +480,10 @@ export default function TeacherRating({
                           color: "#A8B0AB",
                         }}
                       >
-                        {teacher.classroom} ·{" "}
-                        {child.name}
+                        {S.rating.teacherClassChild(
+                          teacher.classroom,
+                          child.name
+                        )}
                       </p>
                     </div>
                   </div>
@@ -502,7 +508,7 @@ export default function TeacherRating({
                         color: "#4C8577",
                       }}
                     >
-                      تم إرسال تقييمك لهذا المعلم مسبقًا.
+                      {S.rating.alreadyRatedMessage}
                     </p>
                   </div>
                 </div>
@@ -563,7 +569,7 @@ export default function TeacherRating({
                           color: "#A8B0AB",
                         }}
                       >
-                        تقييم خاص بـ {child.name}
+                        {S.rating.ratingForChild(child.name)}
                       </p>
                     </div>
                   </div>
@@ -624,14 +630,14 @@ export default function TeacherRating({
                       }}
                     />
 
-                    ملاحظتك
+                    {S.rating.yourNoteLabel}
                     <span
                       className="text-xs font-normal"
                       style={{
                         color: "#A8B0AB",
                       }}
                     >
-                      (اختياري)
+                      {S.rating.optionalLabel}
                     </span>
                   </label>
 
@@ -641,7 +647,7 @@ export default function TeacherRating({
                       setComment(e.target.value)
                     }
                     rows={4}
-                    placeholder="اكتبي أي ملاحظات أو اقتراحات..."
+                    placeholder={S.rating.notePlaceholder}
                     className="w-full rounded-xl py-2.5 px-3 text-sm outline-none resize-none"
                     style={{
                       border:
@@ -666,7 +672,7 @@ export default function TeacherRating({
                   }}
                 >
                   <Send size={16} />
-                  إرسال التقييم
+                  {S.rating.submitRatingButton}
                 </button>
               </div>
             );

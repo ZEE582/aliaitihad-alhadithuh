@@ -9,19 +9,21 @@ import {
   Trash2,
 } from "lucide-react";
 
+import { strings as S } from "../../constants/strings";
+
 const weekDays = [
-  "الأحد",
-  "الاثنين",
-  "الثلاثاء",
-  "الأربعاء",
-  "الخميس",
+  S.seed.days.sunday,
+  S.seed.days.monday,
+  S.seed.days.tuesday,
+  S.seed.days.wednesday,
+  S.seed.days.thursday,
 ];
 
 const teachers = [
-  "المعلمة سارة",
-  "المعلمة نور",
-  "المعلمة ريم",
-  "المعلمة ليان",
+  S.seed.teachers.teacherSara,
+  S.seed.teachers.teacherNoor,
+  S.seed.teachers.teacherReem,
+  S.seed.teachers.teacherLayan,
 ];
 
 export default function SubjectForm({
@@ -39,7 +41,7 @@ export default function SubjectForm({
   });
 
   const [newClass, setNewClass] = useState({
-    day: "الأحد",
+    day: S.seed.days.sunday,
     from: "09:00",
     to: "09:30",
     teacher: teachers[0],
@@ -124,14 +126,14 @@ export default function SubjectForm({
                   className="text-lg font-bold"
                   style={{ color: "#2F3A36" }}
                 >
-                  {isEdit ? "تعديل المادة" : "إضافة مادة جديدة"}
+                  {S.subjectForm.title(isEdit ? "edit" : "add")}
                 </h3>
 
                 <p
                   className="text-xs mt-1"
                   style={{ color: "#7A8580" }}
                 >
-                  حددي المادة وعدد حصصها والمعلمات وجدولها الأسبوعي
+                  {S.subjectForm.subtitle}
                 </p>
               </div>
             </div>
@@ -159,7 +161,7 @@ export default function SubjectForm({
                 className="text-sm font-bold"
                 style={{ color: "#2F3A36" }}
               >
-                معلومات المادة
+                {S.subjectForm.sectionBasicInfo}
               </h4>
             </div>
 
@@ -169,7 +171,7 @@ export default function SubjectForm({
                   className="block text-sm font-semibold mb-1.5"
                   style={{ color: "#2F3A36" }}
                 >
-                  اسم المادة
+                  {S.subjectForm.labelSubjectName}
                 </label>
 
                 <input
@@ -177,7 +179,7 @@ export default function SubjectForm({
                   value={form.name}
                   onChange={handleChange("name")}
                   required
-                  placeholder="مثال: الرياضيات"
+                  placeholder={S.subjectForm.subjectNamePlaceholder}
                   className="w-full rounded-xl py-3 px-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -192,7 +194,7 @@ export default function SubjectForm({
                   className="block text-sm font-semibold mb-1.5"
                   style={{ color: "#2F3A36" }}
                 >
-                  عدد الحصص أسبوعيًا
+                  {S.subjectForm.labelWeeklyClasses}
                 </label>
 
                 <input
@@ -221,7 +223,7 @@ export default function SubjectForm({
                 className="text-sm font-bold"
                 style={{ color: "#2F3A36" }}
               >
-                المعلمات المسؤولات
+                {S.subjectForm.sectionTeachers}
               </h4>
             </div>
 
@@ -266,7 +268,7 @@ export default function SubjectForm({
                         className="mr-auto text-xs font-semibold"
                         style={{ color: "#4C8577" }}
                       >
-                        محددة
+                        {S.subjectForm.teacherSelectedBadge}
                       </span>
                     )}
                   </button>
@@ -283,7 +285,7 @@ export default function SubjectForm({
                 className="text-sm font-bold"
                 style={{ color: "#2F3A36" }}
               >
-                جدول الحصص الأسبوعي
+                {S.subjectForm.sectionWeeklySchedule}
               </h4>
             </div>
 
@@ -380,7 +382,7 @@ export default function SubjectForm({
                 }}
               >
                 <Plus size={16} />
-                إضافة حصة للجدول
+                {S.subjectForm.addClassToScheduleButton}
               </button>
             </div>
 
@@ -415,7 +417,11 @@ export default function SubjectForm({
                         className="text-xs mt-0.5"
                         style={{ color: "#7A8580" }}
                       >
-                        {item.from} - {item.to} · {item.teacher}
+                        {S.subjectForm.scheduleItemDetail({
+                          from: item.from,
+                          to: item.to,
+                          teacher: item.teacher,
+                        })}
                       </p>
                     </div>
 
@@ -445,7 +451,7 @@ export default function SubjectForm({
                 backgroundColor: "#FFFFFF",
               }}
             >
-              إلغاء
+              {S.subjectForm.cancelButton}
             </button>
 
             <button
@@ -453,7 +459,7 @@ export default function SubjectForm({
               className="flex-1 rounded-xl py-3 text-sm font-semibold text-white"
               style={{ backgroundColor: "#4C8577" }}
             >
-              {isEdit ? "حفظ التعديلات" : "إضافة المادة"}
+              {S.subjectForm.submitButton(isEdit ? "edit" : "add")}
             </button>
           </div>
         </form>

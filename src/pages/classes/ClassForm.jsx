@@ -6,6 +6,8 @@ import {
   Users,
 } from "lucide-react";
 
+import { strings as S } from "../../constants/strings";
+
 export default function ClassForm({
   initialData = null,
   onClose,
@@ -69,16 +71,14 @@ export default function ClassForm({
                   className="text-lg font-bold"
                   style={{ color: "#2F3A36" }}
                 >
-                  {isEdit ? "تعديل بيانات الصف" : "إضافة صف جديد"}
+                  {S.classForm.title(isEdit ? "edit" : "add")}
                 </h3>
 
                 <p
                   className="text-xs mt-1"
                   style={{ color: "#7A8580" }}
                 >
-                  {isEdit
-                    ? "حدّثي بيانات الصف ثم احفظي التغييرات"
-                    : "أضيفي صفًا جديدًا إلى فصول الروضة"}
+                  {S.classForm.subtitle(isEdit ? "edit" : "add")}
                 </p>
               </div>
             </div>
@@ -112,7 +112,7 @@ export default function ClassForm({
               className="text-[11px] font-semibold mb-3"
               style={{ color: "#7A8580" }}
             >
-              معاينة الصف
+              {S.classForm.previewTitle}
             </p>
 
             <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ export default function ClassForm({
                   className="text-sm font-bold truncate"
                   style={{ color: "#2F3A36" }}
                 >
-                  {form.name || "اسم الصف"}
+                  {form.name || S.classForm.previewClassNameFallback}
                 </p>
 
                 <div className="flex flex-wrap gap-3 mt-1">
@@ -140,7 +140,7 @@ export default function ClassForm({
                     style={{ color: "#7A8580" }}
                   >
                     <UserRound size={12} />
-                    {form.teacher || "المعلمة المسؤولة"}
+                    {form.teacher || S.classForm.previewTeacherFallback}
                   </span>
 
                   <span
@@ -149,8 +149,8 @@ export default function ClassForm({
                   >
                     <Users size={12} />
                     {form.capacity
-                      ? `${form.capacity} طفل`
-                      : "السعة القصوى"}
+                      ? S.classForm.previewCapacityValue(form.capacity)
+                      : S.classForm.previewCapacityFallback}
                   </span>
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function ClassForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                اسم الصف
+                {S.classForm.labelClassName}
               </label>
 
               <div className="relative">
@@ -179,7 +179,7 @@ export default function ClassForm({
                   value={form.name}
                   onChange={handleChange("name")}
                   required
-                  placeholder="مثال: صف الفراشات"
+                  placeholder={S.classForm.classNamePlaceholder}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -196,7 +196,7 @@ export default function ClassForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                المعلمة المسؤولة
+                {S.classForm.labelTeacher}
               </label>
 
               <div className="relative">
@@ -211,7 +211,7 @@ export default function ClassForm({
                   value={form.teacher}
                   onChange={handleChange("teacher")}
                   required
-                  placeholder="مثال: أ. سارة الحاج"
+                  placeholder={S.classForm.teacherPlaceholder}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -228,7 +228,7 @@ export default function ClassForm({
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
-                السعة القصوى
+                {S.classForm.labelCapacityMax}
               </label>
 
               <div className="relative">
@@ -244,7 +244,7 @@ export default function ClassForm({
                   value={form.capacity}
                   onChange={handleChange("capacity")}
                   required
-                  placeholder="مثال: 20"
+                  placeholder={S.classForm.capacityPlaceholder}
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -268,7 +268,7 @@ export default function ClassForm({
                 backgroundColor: "#FFFFFF",
               }}
             >
-              إلغاء
+              {S.classForm.cancelButton}
             </button>
 
             <button
@@ -276,7 +276,7 @@ export default function ClassForm({
               className="flex-1 rounded-xl py-3 text-sm font-semibold text-white transition-all hover:opacity-90"
               style={{ backgroundColor: "#4C8577" }}
             >
-              {isEdit ? "حفظ التعديلات" : "إنشاء الصف"}
+              {S.classForm.submitButton(isEdit ? "edit" : "add")}
             </button>
           </div>
         </form>

@@ -14,7 +14,9 @@ import {
 import DashboardLayout from "../../layouts/DashboardLayout";
 import TeacherForm from "./TeacherForm";
 import DetailsModal from "../../components/DetailsModal";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useTeachers } from "../../context/TeachersContext";
+import { strings as S } from "../../constants/strings";
 
 function StatusBadge({ status, onClick }) {
   const isActive = status === "نشط";
@@ -27,7 +29,7 @@ function StatusBadge({ status, onClick }) {
         backgroundColor: isActive ? "#4C857720" : "#E8B24D25",
         color: isActive ? "#4C8577" : "#B8862F",
       }}
-      title="اضغط لتبديل الحالة"
+      title={S.teachers.statusToggleTitle}
     >
       {status}
     </button>
@@ -47,6 +49,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [viewingTeacher, setViewingTeacher] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const filtered = teachersList.filter((teacher) => {
     const query = search.trim().toLowerCase();
@@ -83,9 +86,15 @@ export default function TeachersList({ onNavigate, onLogout }) {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("متأكدة إنك بدك تحذفي هالمعلم/ة؟")) {
-      deleteTeacher(id);
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteTeacher(deleteTarget);
     }
+
+    setDeleteTarget(null);
   };
 
   return (
@@ -93,7 +102,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
       activePage="teachers"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="المعلمون"
+      pageTitle={S.teachers.pageTitle}
     >
       {/* Top section */}
       <div className="flex items-center justify-between mb-5 gap-3">
@@ -108,7 +117,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث باسم المعلم، المادة أو الصف..."
+            placeholder={S.teachers.searchPlaceholder}
             className="w-full rounded-xl py-2.5 pr-9 pl-3 text-sm outline-none"
             style={{
               border: "1px solid #E2DCCC",
@@ -124,7 +133,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
           style={{ backgroundColor: "#4C8577" }}
         >
           <Plus size={18} />
-          إضافة معلم
+          {S.teachers.addButton}
         </button>
       </div>
 
@@ -149,42 +158,42 @@ export default function TeachersList({ onNavigate, onLogout }) {
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  المعلم
+                  {S.teachers.tableHeaderTeacher}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  المواد
+                  {S.teachers.tableHeaderSubjects}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  الصفوف
+                  {S.teachers.tableHeaderClassrooms}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  الحصص الأسبوعية
+                  {S.teachers.tableHeaderWeeklyLessons}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  الحالة
+                  {S.teachers.tableHeaderStatus}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  إجراءات
+                  {S.teachers.tableHeaderActions}
                 </th>
               </tr>
             </thead>
@@ -205,7 +214,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
                           color: "#4C8577",
                         }}
                       >
-                        {teacher.name?.charAt(0) || "م"}
+                        {teacher.name?.charAt(0) || S.teachers.initialsFallback}
                       </div>
 
                       <div>
@@ -267,7 +276,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
                       />
 
                       <span>
-                        {teacher.weeklyLessons ?? 0} حصة
+                        {S.teachers.weeklyLessonsSuffix(teacher.weeklyLessons ?? 0)}
                       </span>
                     </div>
                   </td>
@@ -287,7 +296,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
                         onClick={() => setViewingTeacher(teacher)}
                         className="p-1.5 rounded-lg hover:opacity-70"
                         style={{ color: "#6E8FB0" }}
-                        title="عرض التفاصيل"
+                        title={S.common.viewDetails}
                       >
                         <Eye size={16} />
                       </button>
@@ -296,7 +305,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
                         onClick={() => handleEditClick(teacher)}
                         className="p-1.5 rounded-lg hover:opacity-70"
                         style={{ color: "#4C8577" }}
-                        title="تعديل"
+                        title={S.common.edit}
                       >
                         <Pencil size={16} />
                       </button>
@@ -305,7 +314,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
                         onClick={() => handleDelete(teacher.id)}
                         className="p-1.5 rounded-lg hover:opacity-70"
                         style={{ color: "#C25B4A" }}
-                        title="حذف"
+                        title={S.common.delete}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -330,7 +339,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
               className="text-sm mt-3"
               style={{ color: "#A8B0AB" }}
             >
-              لا يوجد معلمون مطابقون للبحث
+              {S.teachers.emptyResult}
             </p>
           </div>
         )}
@@ -352,33 +361,44 @@ export default function TeachersList({ onNavigate, onLogout }) {
       {viewingTeacher && (
         <DetailsModal
           title={viewingTeacher.name}
-          subtitle="معلم/ة"
-          initials={viewingTeacher.name?.charAt(0) || "م"}
+          subtitle={S.teachers.detailsSubtitle}
+          initials={viewingTeacher.name?.charAt(0) || S.teachers.detailsInitialsFallback}
           fields={[
             {
-              label: "المواد التي يدرّسها",
-              value: viewingTeacher.subject || "غير محدد",
+              label: S.teachers.detailsFieldSubjectsLabel,
+              value: viewingTeacher.subject || S.teachers.detailsValueFallback,
             },
             {
-              label: "الصفوف",
-              value: viewingTeacher.classroom || "غير محدد",
+              label: S.teachers.detailsFieldClassroomsLabel,
+              value: viewingTeacher.classroom || S.teachers.detailsValueFallback,
             },
             {
-              label: "رقم الهاتف",
-              value: viewingTeacher.phone || "غير محدد",
+              label: S.teachers.detailsFieldPhoneLabel,
+              value: viewingTeacher.phone || S.teachers.detailsValueFallback,
             },
             {
-              label: "الحصص الأسبوعية",
-              value: `${viewingTeacher.weeklyLessons ?? 0} حصة`,
+              label: S.teachers.detailsFieldWeeklyLessonsLabel,
+              value: S.teachers.detailsWeeklyLessonsValue(
+                viewingTeacher.weeklyLessons ?? 0
+              ),
             },
             {
-              label: "الحالة",
+              label: S.teachers.detailsFieldStatusLabel,
               value: viewingTeacher.status || "نشط",
             },
           ]}
           onClose={() => setViewingTeacher(null)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={S.teachers.confirmDeleteTitle}
+        message={S.teachers.confirmDeleteMessage}
+        confirmLabel={S.teachers.confirmDeleteLabel}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </DashboardLayout>
   );
 }

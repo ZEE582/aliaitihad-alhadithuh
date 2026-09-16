@@ -43,11 +43,14 @@ router.post('/', auth, authorize('admin', 'teacher'), async (req, res) => {
 // Update child
 router.put('/:id', auth, async (req, res) => {
   try {
-    const child = await childService.updateChild(req.params.id, req.body);
+    const child = await childService.updateChild(req.params.id, req.body, req.user.roleType, req.user.id);
     res.json(child);
   } catch (error) {
     if (error.message === 'Child not found') {
       return res.status(404).json({ message: error.message });
+    }
+    if (error.message === 'Not authorized') {
+      return res.status(403).json({ message: error.message });
     }
     res.status(500).json({ message: 'Server error' });
   }
@@ -56,13 +59,71 @@ router.put('/:id', auth, async (req, res) => {
 // Delete child (admin only)
 router.delete('/:id', auth, authorize('admin'), async (req, res) => {
   try {
-    const result = await childService.deleteChild(req.params.id);
+    const result = await childService.deleteChild(req.params.id, req.user.roleType, req.user.id);
     res.json(result);
   } catch (error) {
     if (error.message === 'Child not found') {
       return res.status(404).json({ message: error.message });
     }
+    if (error.message === 'Not authorized') {
+      return res.status(403).json({ message: error.message });
+    }
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ==========================================
+// Health & Medicine Endpoints (السجل الصحي للطفل)
+// ==========================================
+
+const { Health_Medicine, Child_Health_Medicine } = require('../models');
+
+// GET /api/children/:id/health - جلب السجل الصحي للطفل
+router.get('/:id/health', auth, async (req, res) => {
+  try {
+    const childId = req.params.id;
+    const relation = await Child_Health_Medicine.findOne({
+      where: { child_PersonID: childId },
+      include: [{ model: Health_Medicine, as: 'healthMedicine' }]
+    });
+
+    if (!relation || !relation.healthMedicine) {
+      return res.json({ Diseases: '', vaccinations: '', allergies: '' });
+    }
+
+    res.json(relation.healthMedicine);
+  } catch (error) {
+    res.status(500).json({ message: 'فشل جلب السجل الصحي', error: error.message });
+  }
+});
+
+// PUT /api/children/:id/health - حفظ أو تحديث السجل الصحي للطفل
+router.put('/:id/health', auth, authorize('admin', 'teacher'), async (req, res) => {
+  try {
+    const childId = req.params.id;
+    const { Diseases, vaccinations, allergies } = req.body;
+
+    let relation = await Child_Health_Medicine.findOne({
+      where: { child_PersonID: childId }
+    });
+
+    let healthRecord;
+    if (relation) {
+      healthRecord = await Health_Medicine.findByPk(relation.CH_M_ID);
+      if (healthRecord) {
+        await healthRecord.update({ Diseases, vaccinations, allergies });
+      }
+    } else {
+      healthRecord = await Health_Medicine.create({ Diseases, vaccinations, allergies });
+      await Child_Health_Medicine.create({
+        child_PersonID: childId,
+        CH_M_ID: healthRecord.CH_M_ID
+      });
+    }
+
+    res.json({ message: 'تم تحديث السجل الصحي بنجاح', health: healthRecord });
+  } catch (error) {
+    res.status(500).json({ message: 'فشل حفظ السجل الصحي', error: error.message });
   }
 });
 

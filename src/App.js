@@ -1,5 +1,8 @@
 import { useState } from "react";
 import LoginPage from "./login";
+import ToastContainer from "./components/Toast";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ToastProvider } from "./context/ToastContext";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import ChildrenList from "./pages/children/ChildrenList";
@@ -355,11 +358,16 @@ function AppGate() {
 
 function App() {
   return (
-    <UserProvider>
-      <RegistrationRequestsProvider>
-        <AppGate />
-      </RegistrationRequestsProvider>
-    </UserProvider>
+    <ErrorBoundary>
+      <ToastProvider>
+        <UserProvider>
+          <RegistrationRequestsProvider>
+            <AppGate />
+          </RegistrationRequestsProvider>
+        </UserProvider>
+        <ToastContainer />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

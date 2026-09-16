@@ -12,10 +12,11 @@ import {
   ShieldCheck,
   CalendarDays,
   GraduationCap,
-  Users,
 } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
+
+import { strings as S } from "../../constants/strings";
 
 import { useChildren } from "../../context/ChildrenContext";
 import { useAttendance } from "../../context/AttendanceContext";
@@ -30,19 +31,19 @@ import { useUser } from "../../context/UserContext";
 const STATUS_OPTIONS = [
   {
     key: "present",
-    label: "حاضر",
+    label: S.attendance.statusPresent,
     icon: Check,
     color: "#4C8577",
   },
   {
     key: "absent",
-    label: "غائب",
+    label: S.attendance.statusAbsent,
     icon: XIcon,
     color: "#C25B4A",
   },
   {
     key: "late",
-    label: "متأخر",
+    label: S.attendance.statusLate,
     icon: Clock3,
     color: "#E8B24D",
   },
@@ -55,19 +56,19 @@ const STATUS_OPTIONS = [
 const TEACHER_STATUS_OPTIONS = [
   {
     key: "present",
-    label: "حاضرة",
+    label: S.attendance.teacherStatusPresent,
     icon: Check,
     color: "#4C8577",
   },
   {
     key: "absent",
-    label: "غائبة",
+    label: S.attendance.teacherStatusAbsent,
     icon: XIcon,
     color: "#C25B4A",
   },
   {
     key: "late",
-    label: "متأخرة",
+    label: S.attendance.teacherStatusLate,
     icon: Clock3,
     color: "#E8B24D",
   },
@@ -90,7 +91,6 @@ export default function AttendancePage({
     recordDailyAttendance,
     getAbsenceCount,
 
-    teacherRecords,
     recordTeacherAttendance,
     getTeacherAttendance,
   } = useAttendance();
@@ -365,7 +365,7 @@ export default function AttendancePage({
           parentName:
             parent?.name ||
             child.parent ||
-            "ولي الأمر",
+            S.attendance.parentRoleFallback,
 
           parentPhone:
             parent?.phone ||
@@ -440,7 +440,7 @@ export default function AttendancePage({
         activePage="attendance"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="الحضور"
+        pageTitle={S.attendance.emptyChildrenTitle}
       >
         <div
           className="rounded-2xl bg-white p-10 text-center"
@@ -463,8 +463,7 @@ export default function AttendancePage({
               color: "#A8B0AB",
             }}
           >
-            لا يوجد أطفال مسجلين
-            ببياناتك حاليًا.
+            {S.attendance.emptyChildrenMessage}
           </p>
         </div>
       </DashboardLayout>
@@ -478,8 +477,8 @@ export default function AttendancePage({
       onLogout={onLogout}
       pageTitle={
         isParent
-          ? "سجل حضور أطفالي"
-          : "الحضور"
+          ? S.attendance.pageTitleParent
+          : S.attendance.pageTitleDefault
       }
     >
       {/* ==================================================
@@ -513,12 +512,12 @@ export default function AttendancePage({
             }}
           >
             {isParent
-              ? "يمكنك متابعة حضور أطفالك وسجل الغياب"
+              ? S.attendance.headerSubtitleParent
               : isTeacher
-              ? `تسجيل حضور ${user.classroom}`
+              ? S.attendance.headerSubtitleTeacher(user.classroom)
               : isSecretary
-              ? "متابعة حضور الأطفال والمعلمات"
-              : "إدارة ومتابعة حضور أطفال الروضة"}
+              ? S.attendance.headerSubtitleSecretary
+              : S.attendance.headerSubtitleAdmin}
           </p>
         </div>
 
@@ -545,7 +544,7 @@ export default function AttendancePage({
               color: "#7A8580",
             }}
           >
-            غياب اليوم
+{S.attendance.todayAbsenceCountLabel}
           </span>
         </div>
       </div>
@@ -585,7 +584,7 @@ export default function AttendancePage({
                     color: "#2F3A36",
                   }}
                 >
-                  حضور المعلمة
+                  {S.attendance.teacherSectionTitle}
                 </h3>
 
                 <p
@@ -594,8 +593,7 @@ export default function AttendancePage({
                     color: "#A8B0AB",
                   }}
                 >
-                  تسجيل ومتابعة حضور
-                  المعلمات لهذا اليوم
+                  {S.attendance.teacherSectionSubtitle}
                 </p>
               </div>
             </div>
@@ -683,7 +681,7 @@ export default function AttendancePage({
                   }}
                 >
                   <Save size={15} />
-                  حفظ حضور المعلمة
+                  {S.attendance.saveTeacherAttendanceBtn}
                 </button>
 
                 {teacherSavedMessage && (
@@ -696,7 +694,7 @@ export default function AttendancePage({
                     <CheckCircle2
                       size={15}
                     />
-                    تم حفظ الحضور
+                    {S.attendance.teacherSavedMessage}
                   </span>
                 )}
               </div>
@@ -716,7 +714,7 @@ export default function AttendancePage({
                     color: "#A8B0AB",
                   }}
                 >
-                  لا توجد معلمات مسجلات.
+                  {S.attendance.noTeachersRegistered}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -776,7 +774,7 @@ export default function AttendancePage({
                                 }}
                               >
                                 {teacher.classroom ||
-                                  "معلمة"}
+                                  S.attendance.teacherRoleFallback}
                               </p>
                             </div>
                           </div>
@@ -808,14 +806,14 @@ export default function AttendancePage({
                             }}
                           >
                             {!record
-                              ? "لم يسجل"
+                              ? S.attendance.teacherStatusNotRecorded
                               : record.status ===
                                 "present"
-                              ? "حاضرة"
+                              ? S.attendance.teacherStatusPresent
                               : record.status ===
                                 "late"
-                              ? "متأخرة"
-                              : "غائبة"}
+                              ? S.attendance.teacherStatusLate
+                              : S.attendance.teacherStatusAbsent}
                           </span>
                         </div>
                       );
@@ -856,7 +854,7 @@ export default function AttendancePage({
                 color: "#2F3A36",
               }}
             >
-              سجل الحضور للمتابعة فقط
+              {S.attendance.parentNoticeTitle}
             </p>
 
             <p
@@ -865,9 +863,7 @@ export default function AttendancePage({
                 color: "#7A8580",
               }}
             >
-              يمكنك الاطلاع على حضور طفلك
-              وغياباته، بينما تسجيل الحضور
-              من صلاحية المعلمة وإدارة الروضة.
+              {S.attendance.parentNoticeBody}
             </p>
           </div>
         </div>
@@ -909,7 +905,7 @@ export default function AttendancePage({
                   color: "#C25B4A",
                 }}
               >
-                متابعة غياب مطلوبة
+                {S.attendance.alertTitle}
               </h3>
 
               <p
@@ -918,9 +914,7 @@ export default function AttendancePage({
                   color: "#7A8580",
                 }}
               >
-                تم تجاوز 3 غيابات.
-                يُنصح بالتواصل مع ولي
-                الأمر لمتابعة السبب.
+                {S.attendance.alertBody}
               </p>
 
               <div className="space-y-3 mt-4">
@@ -957,11 +951,9 @@ export default function AttendancePage({
                                 "#C25B4A",
                             }}
                           >
-                            {
+                            {S.attendance.alertAbsenceCount(
                               child.absenceCount
-                            }{" "}
-                            غيابات — يحتاج
-                            متابعة
+                            )}
                           </p>
                         </div>
 
@@ -977,8 +969,7 @@ export default function AttendancePage({
                             <Phone
                               size={15}
                             />
-                            التواصل مع ولي
-                            الأمر
+                            {S.attendance.alertContactBtn}
                           </a>
                         )}
                       </div>
@@ -997,7 +988,7 @@ export default function AttendancePage({
                               "#7A8580",
                           }}
                         >
-                          ولي الأمر:{" "}
+                          {S.attendance.alertParentLabel}{" "}
                           <strong
                             style={{
                               color:
@@ -1080,7 +1071,7 @@ export default function AttendancePage({
                 <CheckCircle2
                   size={16}
                 />
-                تم حفظ الحضور
+                {S.attendance.childrenSavedMessage}
               </span>
             )}
 
@@ -1095,7 +1086,7 @@ export default function AttendancePage({
               }}
             >
               <Save size={16} />
-              حفظ حضور الأطفال
+              {S.attendance.saveChildrenAttendanceBtn}
             </button>
           </div>
         </div>
@@ -1197,8 +1188,9 @@ export default function AttendancePage({
                                   : "#7A8580",
                             }}
                           >
-                            {absenceCount}{" "}
-                            غياب
+                            {S.attendance.absenceBadge(
+                              absenceCount
+                            )}
                           </span>
                         )}
                       </div>
@@ -1212,10 +1204,9 @@ export default function AttendancePage({
                       >
                         {isParent
                           ? child.classroom
-                          : `آخر تسجيل: ${
-                              latestRecord?.date ||
-                              "لا يوجد"
-                            }`}
+                          : S.attendance.lastRecordLabel(
+                              latestRecord?.date
+                            )}
                       </p>
                     </div>
                   </div>
@@ -1251,14 +1242,14 @@ export default function AttendancePage({
                         >
                           {latestRecord.status ===
                           "present"
-                            ? "حاضر"
+                            ? S.attendance.latestStatusPresent
                             : latestRecord.status ===
                               "late"
-                            ? "متأخر"
+                            ? S.attendance.latestStatusLate
                             : latestRecord.status ===
                               "absent_excused"
-                            ? "غائب بعذر"
-                            : "غائب بدون عذر"}
+                            ? S.attendance.latestStatusExcused
+                            : S.attendance.latestStatusUnexcused}
                         </span>
                       ) : (
                         <span
@@ -1268,7 +1259,7 @@ export default function AttendancePage({
                               "#A8B0AB",
                           }}
                         >
-                          لا يوجد تسجيل
+                          {S.attendance.noRecordMessage}
                         </span>
                       )}
                     </div>
@@ -1354,7 +1345,7 @@ export default function AttendancePage({
                               "#7A8580",
                           }}
                         >
-                          سبب الغياب / العذر
+                          {S.attendance.excuseLabel}
                         </label>
                       </div>
 
@@ -1367,7 +1358,7 @@ export default function AttendancePage({
                             e.target.value
                           )
                         }
-                        placeholder="مثال: مرض، موعد طبي، ظرف عائلي..."
+                        placeholder={S.attendance.excusePlaceholder}
                         className="w-full rounded-xl py-2.5 px-3 text-xs outline-none"
                         style={{
                           border:
@@ -1386,9 +1377,7 @@ export default function AttendancePage({
                             "#A8B0AB",
                         }}
                       >
-                        كتابة العذر تسجل الغياب
-                        "بعذر"، وتركه فارغًا
-                        يسجل الغياب "بدون عذر".
+                        {S.attendance.excuseHint}
                       </p>
                     </div>
                   )}

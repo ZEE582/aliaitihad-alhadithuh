@@ -19,7 +19,7 @@ const Report = sequelize.define('Report', {
     type: DataTypes.INTEGER,
     references: {
       model: 'Children',
-      key: 'child_N'
+      key: 'PersonID'
     }
   },
   classId: {

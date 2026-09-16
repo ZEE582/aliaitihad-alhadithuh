@@ -8,7 +8,7 @@ const classSession = sequelize.define('classSession', {
     autoIncrement: true
   },
   Date: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: false
   },
   day: {
@@ -18,6 +18,9 @@ const classSession = sequelize.define('classSession', {
   Period: {
     type: DataTypes.STRING(50),
     allowNull: false
+  },
+  Study_class_number: {
+    type: DataTypes.STRING(50)
   },
   SubjectID: {
     type: DataTypes.INTEGER,
@@ -31,7 +34,7 @@ const classSession = sequelize.define('classSession', {
     type: DataTypes.INTEGER,
     references: {
       model: 'Sections',
-      key: 'SectionID'
+      key: 'section_id'
     }
   }
 }, {

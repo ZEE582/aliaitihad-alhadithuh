@@ -20,10 +20,14 @@ import {
 import DashboardLayout from "../../layouts/DashboardLayout";
 import SessionForm from "./SessionForm";
 import NoteForm from "../notes/NoteForm";
+import ConfirmModal from "../../components/ConfirmModal";
 
 import { useUser } from "../../context/UserContext";
 import { useChildren } from "../../context/ChildrenContext";
 import { useNotes } from "../../context/NotesContext";
+import { useToast } from "../../context/ToastContext";
+
+import { strings as S } from "../../constants/strings";
 
 const days = [
   "الأحد",
@@ -103,9 +107,13 @@ export default function SessionsList({
   const { user } = useUser();
   const { childrenList } = useChildren();
   const { addNote } = useNotes();
+  const { showWarning, showError } = useToast();
 
   const [sessions, setSessions] =
     useState(initialSessions);
+
+  const [deleteTarget, setDeleteTarget] =
+    useState(null);
 
   const [activeDay, setActiveDay] =
     useState("الأحد");
@@ -240,17 +248,19 @@ export default function SessionsList({
   const handleDelete = (id) => {
     if (!canManageSessions) return;
 
-    if (
-      window.confirm(
-        "متأكدة إنك بدك تحذفي هالحصة؟"
-      )
-    ) {
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
       setSessions((prev) =>
         prev.filter(
-          (session) => session.id !== id
+          (session) => session.id !== deleteTarget
         )
       );
     }
+
+    setDeleteTarget(null);
   };
 
   // ==========================================
@@ -402,8 +412,8 @@ export default function SessionsList({
     }
 
     if (!selectedChildId) {
-      window.alert(
-        "اختاري الطفل أولاً."
+      showWarning(
+        S.sessions.toast.selectChildFirst
       );
       return;
     }
@@ -416,8 +426,8 @@ export default function SessionsList({
       );
 
     if (!selectedChild) {
-      window.alert(
-        "هذا الطفل ليس ضمن صفك."
+      showError(
+        S.sessions.toast.childNotInClass
       );
       return;
     }
@@ -452,8 +462,8 @@ export default function SessionsList({
       );
 
     if (!allowedChild) {
-      window.alert(
-        "لا يمكنك إضافة ملاحظة إلا لأطفال صفك."
+      showError(
+        S.sessions.toast.noteOnlyForOwnClass
       );
       return;
     }
@@ -473,7 +483,8 @@ export default function SessionsList({
         sessionClassroom:
           childNoteSession.classroom,
       },
-      user?.name || "أنتِ"
+      user?.name ||
+        S.sessions.lessonNoteModal.fallbackUserName
     );
 
     setChildNoteFormOpen(false);
@@ -486,7 +497,7 @@ export default function SessionsList({
       activePage="sessions"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="الحصص"
+      pageTitle={S.sessions.pageTitle}
     >
       {/* ========================================== */}
       {/* Header */}
@@ -508,8 +519,8 @@ export default function SessionsList({
                 }}
               >
                 {isTeacher
-                  ? "عرض الجدول"
-                  : "إدارة الجدول"}
+                  ? S.sessions.header.roleBadgeTeacher
+                  : S.sessions.header.roleBadgeManager}
               </span>
             </div>
 
@@ -519,7 +530,7 @@ export default function SessionsList({
                 color: "#2F3A36",
               }}
             >
-              الجدول الدراسي
+              {S.sessions.header.title}
             </h2>
 
             <p
@@ -529,8 +540,8 @@ export default function SessionsList({
               }}
             >
               {isTeacher
-                ? "اطلعي على جدول الحصص وتابعي حصصك وملاحظاتك."
-                : "نظرة سريعة على حصص اليوم والجدول الأسبوعي."}
+                ? S.sessions.header.teacherSubtitle
+                : S.sessions.header.adminSubtitle}
             </p>
           </div>
 
@@ -543,7 +554,7 @@ export default function SessionsList({
               }}
             >
               <Plus size={18} />
-              إضافة حصة
+              {S.sessions.header.addButton}
             </button>
           )}
         </div>
@@ -578,7 +589,7 @@ export default function SessionsList({
                 color: "#2F3A36",
               }}
             >
-              جدول الروضة
+              {S.sessions.teacherInfoCard.title}
             </p>
 
             <p
@@ -587,9 +598,7 @@ export default function SessionsList({
                 color: "#7A8580",
               }}
             >
-              يمكنك مشاهدة حصص جميع الصفوف،
-              لكن يمكنك توثيق وإضافة ملاحظات
-              فقط على الحصص التي تقومين بتدريسها.
+              {S.sessions.teacherInfoCard.description}
             </p>
           </div>
         </div>
@@ -671,7 +680,7 @@ export default function SessionsList({
               color: "#2F3A36",
             }}
           >
-            حصص يوم {activeDay}
+            {S.sessions.dayHeader.daySessionsTitle(activeDay)}
           </h3>
 
           <p
@@ -681,12 +690,8 @@ export default function SessionsList({
             }}
           >
             {filtered.length === 0
-              ? "لا توجد حصص مجدولة"
-              : `${filtered.length} ${
-                  filtered.length === 1
-                    ? "حصة"
-                    : "حصص"
-                } اليوم`}
+              ? S.sessions.dayHeader.noSessions
+              : S.sessions.dayHeader.sessionsCount(filtered.length)}
           </p>
         </div>
 
@@ -699,7 +704,7 @@ export default function SessionsList({
           >
             <LockKeyhole size={13} />
             <span>
-              التوثيق متاح لحصصك فقط
+              {S.sessions.dayHeader.teacherOnlyHint}
             </span>
           </div>
         )}
@@ -780,7 +785,7 @@ export default function SessionsList({
                                   "#4C8577",
                               }}
                             >
-                              تمت الحصة ✓
+                              {S.sessions.sessionCard.completedBadge}
                             </span>
                           )}
                       </div>
@@ -793,10 +798,9 @@ export default function SessionsList({
                               "#7A8580",
                           }}
                         >
-                          🏫{" "}
-                          {
+                          {S.sessions.sessionCard.classroomPrefix(
                             session.classroom
-                          }
+                          )}
                         </span>
 
                         <span
@@ -806,10 +810,9 @@ export default function SessionsList({
                               "#7A8580",
                           }}
                         >
-                          👩‍🏫{" "}
-                          {
+                          {S.sessions.sessionCard.teacherPrefix(
                             session.teacher
-                          }
+                          )}
                         </span>
                       </div>
                     </div>
@@ -883,14 +886,14 @@ export default function SessionsList({
                               <CheckCircle2
                                 size={14}
                               />
-                              تم تنفيذ الحصة
+                              {S.sessions.sessionCard.markCompletedButton}
                             </>
                           ) : (
                             <>
                               <Circle
                                 size={14}
                               />
-                              تم تنفيذ الحصة
+                              {S.sessions.sessionCard.markCompletedButton}
                             </>
                           )}
                         </button>
@@ -917,8 +920,8 @@ export default function SessionsList({
                           />
 
                           {session.note
-                            ? "تعديل الملاحظات"
-                            : "إضافة ملاحظة"}
+                            ? S.sessions.sessionCard.noteButtonEdit
+                            : S.sessions.sessionCard.noteButtonAdd}
                         </button>
                       </div>
                     )}
@@ -958,7 +961,7 @@ export default function SessionsList({
                                   "#B8862F",
                               }}
                             >
-                              ملاحظة عن الحصة
+                              {S.sessions.sessionCard.lessonNoteHeading}
                             </p>
 
                             <p
@@ -996,7 +999,7 @@ export default function SessionsList({
                         <Pencil
                           size={14}
                         />
-                        تعديل
+                        {S.sessions.sessionCard.editButton}
                       </button>
 
                       <button
@@ -1014,7 +1017,7 @@ export default function SessionsList({
                         <Trash2
                           size={14}
                         />
-                        حذف
+                        {S.sessions.sessionCard.deleteButton}
                       </button>
                     </div>
                   )}
@@ -1059,7 +1062,7 @@ export default function SessionsList({
                   "#4A5551",
               }}
             >
-              يوم هادئ 🌿
+              {S.sessions.dayHeader.emptyStateTitle}
             </p>
 
             <p
@@ -1069,7 +1072,7 @@ export default function SessionsList({
                   "#A8B0AB",
               }}
             >
-              لا توجد حصص مجدولة لهذا اليوم
+              {S.sessions.dayHeader.emptyStateSubtitle}
             </p>
           </div>
         )}
@@ -1140,7 +1143,7 @@ export default function SessionsList({
                           "#2F3A36",
                       }}
                     >
-                      إضافة ملاحظة
+                      {S.sessions.noteTypeModal.title}
                     </h3>
 
                     <p
@@ -1150,13 +1153,10 @@ export default function SessionsList({
                           "#7A8580",
                       }}
                     >
-                      {
-                        noteChoiceSession.subject
-                      }{" "}
-                      —{" "}
-                      {
+                      {S.sessions.noteTypeModal.subjectClassSubtitle(
+                        noteChoiceSession.subject,
                         noteChoiceSession.classroom
-                      }
+                      )}
                     </p>
                   </div>
 
@@ -1217,7 +1217,7 @@ export default function SessionsList({
                             "#2F3A36",
                         }}
                       >
-                        ملاحظة عن الحصة
+                        {S.sessions.noteTypeModal.lessonNoteOption}
                       </p>
 
                       <p
@@ -1227,8 +1227,7 @@ export default function SessionsList({
                             "#7A8580",
                         }}
                       >
-                        اكتبي ملاحظة عامة عن
-                        سير الحصة وتفاعل الأطفال.
+                        {S.sessions.noteTypeModal.lessonNoteDesc}
                       </p>
                     </div>
                   </div>
@@ -1270,7 +1269,7 @@ export default function SessionsList({
                             "#2F3A36",
                         }}
                       >
-                        ملاحظة عن طفل
+                        {S.sessions.noteTypeModal.childNoteOption}
                       </p>
 
                       <p
@@ -1280,9 +1279,7 @@ export default function SessionsList({
                             "#7A8580",
                         }}
                       >
-                        اختاري طفلًا من صفك ثم
-                        أضيفي الملاحظة في صفحة
-                        الملاحظات.
+                        {S.sessions.noteTypeModal.childNoteDesc}
                       </p>
                     </div>
                   </div>
@@ -1353,7 +1350,7 @@ export default function SessionsList({
                             "#2F3A36",
                         }}
                       >
-                        ملاحظة عن الحصة
+                        {S.sessions.lessonNoteModal.title}
                       </h3>
 
                       <p
@@ -1363,13 +1360,10 @@ export default function SessionsList({
                             "#7A8580",
                         }}
                       >
-                        {
-                          lessonNoteSession.subject
-                        }{" "}
-                        —{" "}
-                        {
+                        {S.sessions.noteTypeModal.subjectClassSubtitle(
+                          lessonNoteSession.subject,
                           lessonNoteSession.classroom
-                        }
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1402,7 +1396,7 @@ export default function SessionsList({
                       "#2F3A36",
                   }}
                 >
-                  ملاحظات المعلمة عن الحصة
+                  {S.sessions.lessonNoteModal.label}
                 </label>
 
                 <textarea
@@ -1416,7 +1410,7 @@ export default function SessionsList({
                     )
                   }
                   rows={5}
-                  placeholder="مثال: كان تفاعل الأطفال ممتازًا اليوم، وتم تنفيذ النشاط بشكل جيد..."
+                  placeholder={S.sessions.lessonNoteModal.placeholder}
                   className="w-full rounded-2xl p-3 text-sm outline-none resize-none"
                   style={{
                     border:
@@ -1435,9 +1429,7 @@ export default function SessionsList({
                       "#A8B0AB",
                   }}
                 >
-                  هذه الملاحظة تخص الحصة
-                  كاملة وليست ملاحظة لطفل
-                  معين.
+                  {S.sessions.lessonNoteModal.hint}
                 </p>
 
                 <div className="flex gap-3 pt-5">
@@ -1456,7 +1448,7 @@ export default function SessionsList({
                         "#FFFFFF",
                     }}
                   >
-                    إلغاء
+                    {S.sessions.lessonNoteModal.cancelButton}
                   </button>
 
                   <button
@@ -1470,7 +1462,7 @@ export default function SessionsList({
                         "#4C8577",
                     }}
                   >
-                    حفظ الملاحظة
+                    {S.sessions.lessonNoteModal.saveButton}
                   </button>
                 </div>
               </div>
@@ -1540,7 +1532,7 @@ export default function SessionsList({
                             "#2F3A36",
                         }}
                       >
-                        ملاحظة عن طفل
+                        {S.sessions.childSelector.title}
                       </h3>
 
                       <p
@@ -1550,13 +1542,10 @@ export default function SessionsList({
                             "#7A8580",
                         }}
                       >
-                        {
-                          childNoteSession.subject
-                        }{" "}
-                        —{" "}
-                        {
+                        {S.sessions.noteTypeModal.subjectClassSubtitle(
+                          childNoteSession.subject,
                           childNoteSession.classroom
-                        }
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1589,7 +1578,7 @@ export default function SessionsList({
                       "#2F3A36",
                   }}
                 >
-                  اختاري الطفل
+                  {S.sessions.childSelector.label}
                 </label>
 
                 {teacherChildren.length ===
@@ -1604,8 +1593,7 @@ export default function SessionsList({
                     }}
                   >
                     <p className="text-xs">
-                      لا يوجد أطفال مسجلون
-                      في صفك حاليًا.
+                      {S.sessions.childSelector.emptyMessage}
                     </p>
                   </div>
                 ) : (
@@ -1629,7 +1617,7 @@ export default function SessionsList({
                     }}
                   >
                     <option value="">
-                      اختاري الطفل...
+                      {S.sessions.childSelector.placeholderOption}
                     </option>
 
                     {teacherChildren.map(
@@ -1652,9 +1640,7 @@ export default function SessionsList({
                       "#A8B0AB",
                   }}
                 >
-                  يظهر هنا فقط أطفال صفك،
-                  ولا يمكنك إضافة ملاحظة
-                  لطفل من صف آخر.
+                  {S.sessions.childSelector.hint}
                 </p>
 
                 <div className="flex gap-3 pt-5">
@@ -1673,7 +1659,7 @@ export default function SessionsList({
                         "#FFFFFF",
                     }}
                   >
-                    إلغاء
+                    {S.sessions.childSelector.cancelButton}
                   </button>
 
                   <button
@@ -1692,7 +1678,7 @@ export default function SessionsList({
                         "#4C8577",
                     }}
                   >
-                    متابعة
+                    {S.sessions.childSelector.continueButton}
                   </button>
                 </div>
               </div>
@@ -1734,6 +1720,15 @@ export default function SessionsList({
             }
           />
         )}
+
+        <ConfirmModal
+          isOpen={!!deleteTarget}
+          title={S.sessions.deleteConfirm.title}
+          message={S.sessions.deleteConfirm.message}
+          confirmLabel={S.sessions.deleteConfirm.confirmLabel}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
     </DashboardLayout>
   );
 }

@@ -1,10 +1,11 @@
+import { strings as S } from "../constants/strings";
 import { useState } from "react";
 import { Bell, Search, LogOut, UserCircle } from "lucide-react";
 import { useUser } from "../context/UserContext";
 import { useMessages } from "../context/MessagesContext";
 import { useChildren } from "../context/ChildrenContext";
 
-export default function Navbar({ title = "لوحة التحكم", onNavigate, onLogout }) {
+export default function Navbar({ title = S.common.dashboard, onNavigate, onLogout }) {
   const { user } = useUser();
   const { messages, markAsRead } = useMessages();
   const { childrenList } = useChildren();
@@ -44,7 +45,7 @@ export default function Navbar({ title = "لوحة التحكم", onNavigate, on
             <Search size={16} className="absolute top-1/2 -translate-y-1/2 right-3" style={{ color: "#A8B0AB" }} />
             <input
               type="text"
-              placeholder="بحث سريع..."
+              placeholder={S.sidebar.quickSearchPlaceholder}
               className="rounded-xl py-2 pr-9 pl-3 text-sm outline-none w-56"
               style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }}
             />
@@ -75,10 +76,10 @@ export default function Navbar({ title = "لوحة التحكم", onNavigate, on
               style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
             >
               <div className="px-4 py-3" style={{ borderBottom: "1px solid #F3EFE3" }}>
-                <p className="text-sm font-bold" style={{ color: "#2F3A36" }}>الإشعارات</p>
+                <p className="text-sm font-bold" style={{ color: "#2F3A36" }}>{S.sidebar.notificationsTitle}</p>
               </div>
               {relevantNotifications.length === 0 ? (
-                <p className="text-sm text-center py-6" style={{ color: "#A8B0AB" }}>لا يوجد إشعارات جديدة</p>
+                <p className="text-sm text-center py-6" style={{ color: "#A8B0AB" }}>{S.sidebar.noNotifications}</p>
               ) : (
                 <ul className="max-h-80 overflow-y-auto">
                   {relevantNotifications.map((n) => {
@@ -133,7 +134,7 @@ export default function Navbar({ title = "لوحة التحكم", onNavigate, on
                 style={{ color: "#4A5551" }}
               >
                 <UserCircle size={16} />
-                الملف الشخصي
+                {S.common.profile}
               </button>
               <button
                 onClick={() => { setMenuOpen(false); onLogout && onLogout(); }}
@@ -141,7 +142,7 @@ export default function Navbar({ title = "لوحة التحكم", onNavigate, on
                 style={{ color: "#C25B4A" }}
               >
                 <LogOut size={16} />
-                تسجيل الخروج
+                {S.common.logout}
               </button>
             </div>
           )}

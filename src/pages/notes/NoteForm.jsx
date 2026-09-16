@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useChildren } from "../../context/ChildrenContext";
+import { strings as S } from "../../constants/strings";
 
-const noteTypes = ["إيجابي", "ملاحظة", "تنبيه"];
+const noteTypes = S.noteForm.formTypes;
 
 export default function NoteForm({
   initialData = null,
@@ -66,8 +67,8 @@ export default function NoteForm({
             }}
           >
             {isEdit
-              ? "تعديل ملاحظة الطفل"
-              : "إضافة ملاحظة عن طفل"}
+              ? S.noteForm.titleEdit
+              : S.noteForm.titleAdd}
           </h3>
 
           <button
@@ -93,7 +94,7 @@ export default function NoteForm({
                 color: "#2F3A36",
               }}
             >
-              اسم الطفل
+              {S.noteForm.fieldChild}
             </label>
 
             {childrenList.length === 0 ? (
@@ -103,7 +104,7 @@ export default function NoteForm({
                   color: "#C25B4A",
                 }}
               >
-                لا يوجد أطفال مسجلين بعد. أضيفي طفل أول من صفحة الأطفال.
+                {S.noteForm.noChildren}
               </p>
             ) : (
               <select
@@ -136,7 +137,7 @@ export default function NoteForm({
                 color: "#2F3A36",
               }}
             >
-              نوع الملاحظة
+              {S.noteForm.fieldType}
             </label>
 
             <select
@@ -168,7 +169,7 @@ export default function NoteForm({
                 color: "#2F3A36",
               }}
             >
-              نص الملاحظة
+              {S.noteForm.fieldText}
             </label>
 
             <textarea
@@ -176,7 +177,7 @@ export default function NoteForm({
               onChange={handleChange("text")}
               required
               rows={4}
-              placeholder="اكتبي ملاحظة عن الطفل..."
+              placeholder={S.noteForm.textPlaceholder}
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none resize-none"
               style={{
                 border: "1px solid #E2DCCC",
@@ -198,7 +199,7 @@ export default function NoteForm({
                 backgroundColor: "#FFFFFF",
               }}
             >
-              إلغاء
+              {S.noteForm.cancel}
             </button>
 
             <button
@@ -210,8 +211,8 @@ export default function NoteForm({
               }}
             >
               {isEdit
-                ? "حفظ التعديلات"
-                : "إضافة الملاحظة"}
+                ? S.noteForm.submitEdit
+                : S.noteForm.submitAdd}
             </button>
           </div>
         </form>

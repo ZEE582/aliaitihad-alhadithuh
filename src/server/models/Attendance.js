@@ -18,12 +18,12 @@ const Attendance = sequelize.define('Attendance', {
   Reason: {
     type: DataTypes.TEXT
   },
-  child_N: {
+  child_PersonID: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
       model: 'Children',
-      key: 'child_N'
+      key: 'PersonID'
     }
   },
   classID: {

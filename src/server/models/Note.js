@@ -20,63 +20,25 @@ const Note = sequelize.define('Note', {
     type: DataTypes.TEXT,
     allowNull: false
   },
-  ToRole: {
-    type: DataTypes.STRING(50),
-    allowNull: false
-  },
-  FromRole: {
-    type: DataTypes.STRING(50),
-    allowNull: false
-  },
-  ToGID: {
+  SenderID: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
-      model: 'Guardians',
-      key: 'GID'
+      model: 'Persons',
+      key: 'PersonID'
     }
   },
-  FromGID: {
+  ReceiverID: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
-      model: 'Guardians',
-      key: 'GID'
-    }
-  },
-  ToTID: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: 'Teachers',
-      key: 'TID'
-    }
-  },
-  FromTID: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: 'Teachers',
-      key: 'TID'
+      model: 'Persons',
+      key: 'PersonID'
     }
   }
 }, {
   timestamps: true,
-  tableName: 'Notes',
-  validate: {
-    oneRecipient() {
-      if (this.ToGID && this.ToTID) {
-        throw new Error('Note can only have one recipient (Guardian or Teacher)');
-      }
-      if (!this.ToGID && !this.ToTID) {
-        throw new Error('Note must have one recipient (Guardian or Teacher)');
-      }
-    },
-    oneSender() {
-      if (this.FromGID && this.FromTID) {
-        throw new Error('Note can only have one sender (Guardian or Teacher)');
-      }
-      if (!this.FromGID && !this.FromTID) {
-        throw new Error('Note must have one sender (Guardian or Teacher)');
-      }
-    }
-  }
+  tableName: 'Notes'
 });
 
 module.exports = Note;

@@ -87,6 +87,11 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Parent not found' });
     }
 
+    // Backend Auth Check: Parents can only update their own profile
+    if (req.user.roleType === 'parent' && parent.userId !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
     await parent.update(req.body);
     
     const updatedParent = await Parent.findByPk(req.params.id, {
@@ -100,6 +105,21 @@ router.put('/:id', auth, async (req, res) => {
     });
 
     res.json(updatedParent);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete parent (admin only)
+router.delete('/:id', auth, authorize('admin'), async (req, res) => {
+  try {
+    const parent = await Parent.findByPk(req.params.id);
+    if (!parent) {
+      return res.status(404).json({ message: 'Parent not found' });
+    }
+
+    await parent.destroy();
+    res.json({ message: 'Parent profile deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

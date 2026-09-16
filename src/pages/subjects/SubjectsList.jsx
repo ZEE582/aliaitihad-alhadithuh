@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import SubjectForm from "./SubjectForm";
+import ConfirmModal from "../../components/ConfirmModal";
+import { strings as S } from "../../constants/strings";
 
 const initialSubjects = [
   {
@@ -43,6 +45,7 @@ export default function SubjectsList({
   onLogout,
 }) {
   const [subjects, setSubjects] = useState(initialSubjects);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
@@ -87,11 +90,17 @@ export default function SubjectsList({
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("متأكدة إنك بدك تحذفي هالمادة؟")) {
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
       setSubjects((prev) =>
-        prev.filter((s) => s.id !== id)
+        prev.filter((s) => s.id !== deleteTarget)
       );
     }
+
+    setDeleteTarget(null);
   };
 
   return (
@@ -99,7 +108,7 @@ export default function SubjectsList({
       activePage="subjects"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="المواد"
+      pageTitle={S.subjects.pageTitle}
     >
       <div dir="rtl">
         {/* Header */}
@@ -132,14 +141,14 @@ export default function SubjectsList({
                   className="text-lg font-bold"
                   style={{ color: "#2F3A36" }}
                 >
-                  المواد التعليمية
+                  {S.subjects.headerTitle}
                 </h2>
 
                 <p
                   className="text-xs mt-1"
                   style={{ color: "#7A8580" }}
                 >
-                  إدارة المواد والأنشطة التعليمية في الروضة
+                  {S.subjects.headerDescription}
                 </p>
               </div>
             </div>
@@ -160,7 +169,7 @@ export default function SubjectsList({
                 className="text-xs font-semibold"
                 style={{ color: "#4A5551" }}
               >
-                {subjects.length} مواد
+                {S.subjects.subjectsCount(subjects.length)}
               </span>
             </div>
           </div>
@@ -179,7 +188,7 @@ export default function SubjectsList({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث باسم المادة..."
+              placeholder={S.subjects.searchPlaceholder}
               className="w-full rounded-xl py-2.5 pr-9 pl-3 text-sm outline-none"
               style={{
                 border: "1px solid #E2DCCC",
@@ -200,7 +209,7 @@ export default function SubjectsList({
             }}
           >
             <Plus size={18} />
-            إضافة مادة
+            {S.subjects.addSubjectButton}
           </button>
         </div>
 
@@ -266,7 +275,7 @@ export default function SubjectsList({
                   <Users size={13} />
 
                   <p className="text-xs">
-                    {s.teachersCount} معلمين
+                    {S.subjects.teachersCount(s.teachersCount)}
                   </p>
                 </div>
               </div>
@@ -313,7 +322,7 @@ export default function SubjectsList({
                 className="text-sm font-medium"
                 style={{ color: "#7A8580" }}
               >
-                لا يوجد نتائج مطابقة للبحث
+                {S.subjects.noResultsFound}
               </p>
             </div>
           )}
@@ -331,6 +340,15 @@ export default function SubjectsList({
           />
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={S.subjects.confirmDeleteTitle}
+        message={S.subjects.confirmDeleteMessage}
+        confirmLabel={S.subjects.confirmDeleteLabel}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </DashboardLayout>
   );
 }

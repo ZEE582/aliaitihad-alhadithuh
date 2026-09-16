@@ -18,13 +18,6 @@ const Subject = sequelize.define('Subject', {
   semester: {
     type: DataTypes.STRING(50),
     allowNull: false
-  },
-  assigned_teacher_id: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: 'Teachers',
-      key: 'TID'
-    }
   }
 }, {
   timestamps: true,

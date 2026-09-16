@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import { strings as S } from "../../constants/strings";
 
 function ToggleRow({
   icon: Icon,
@@ -105,7 +106,7 @@ function SectionHeader({ icon: Icon, title, description }) {
   );
 }
 
-export default function SettingsPage({ onNavigate }) {
+export default function SettingsPage({ onNavigate, onLogout }) {
   const [notifications, setNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
 
@@ -113,7 +114,8 @@ export default function SettingsPage({ onNavigate }) {
     <DashboardLayout
       activePage="settings"
       onNavigate={onNavigate}
-      pageTitle="الإعدادات"
+      onLogout={onLogout}
+      pageTitle={S.settings.pageTitle}
     >
       <div dir="rtl" className="max-w-2xl space-y-5">
         {/* Intro */}
@@ -142,14 +144,14 @@ export default function SettingsPage({ onNavigate }) {
                 className="text-lg font-bold"
                 style={{ color: "#2F3A36" }}
               >
-                إعدادات النظام
+                {S.settings.systemSettingsTitle}
               </h2>
 
               <p
                 className="text-xs mt-1 leading-5"
                 style={{ color: "#7A8580" }}
               >
-                تحكّمي بالتنبيهات والأمان واللغة بالطريقة التي تناسبك.
+                {S.settings.introDescription}
               </p>
             </div>
           </div>
@@ -165,14 +167,14 @@ export default function SettingsPage({ onNavigate }) {
         >
           <SectionHeader
             icon={Bell}
-            title="التنبيهات"
-            description="اختاري التنبيهات التي تريدين استقبالها"
+            title={S.settings.notificationsSectionTitle}
+            description={S.settings.notificationsSectionDesc}
           />
 
           <ToggleRow
             icon={Bell}
-            label="إشعارات داخل التطبيق"
-            description="تنبيهات الحضور والملاحظات الجديدة"
+            label={S.settings.inAppNotificationsLabel}
+            description={S.settings.inAppNotificationsDesc}
             checked={notifications}
             onChange={() => setNotifications((v) => !v)}
           />
@@ -180,8 +182,8 @@ export default function SettingsPage({ onNavigate }) {
           <div style={{ borderBottom: "none" }}>
             <ToggleRow
               icon={Bell}
-              label="تنبيهات SMS"
-              description="إرسال رسائل نصية لأولياء الأمور عند الغياب"
+              label={S.settings.smsAlertsLabel}
+              description={S.settings.smsAlertsDesc}
               checked={smsAlerts}
               onChange={() => setSmsAlerts((v) => !v)}
             />
@@ -198,8 +200,8 @@ export default function SettingsPage({ onNavigate }) {
         >
           <SectionHeader
             icon={ShieldCheck}
-            title="الأمان"
-            description="حافظي على أمان حسابك"
+            title={S.settings.securitySectionTitle}
+            description={S.settings.securitySectionDesc}
           />
 
           <button
@@ -222,14 +224,14 @@ export default function SettingsPage({ onNavigate }) {
                   className="text-sm font-semibold"
                   style={{ color: "#2F3A36" }}
                 >
-                  تغيير كلمة المرور
+                  {S.settings.changePasswordLabel}
                 </p>
 
                 <p
                   className="text-xs mt-0.5"
                   style={{ color: "#A8B0AB" }}
                 >
-                  حدّثي كلمة المرور الخاصة بحسابك
+                  {S.settings.changePasswordDesc}
                 </p>
               </div>
             </div>
@@ -251,8 +253,8 @@ export default function SettingsPage({ onNavigate }) {
         >
           <SectionHeader
             icon={Globe}
-            title="اللغة"
-            description="اختاري لغة واجهة النظام"
+            title={S.settings.languageSectionTitle}
+            description={S.settings.languageSectionDesc}
           />
 
           <div
@@ -272,7 +274,7 @@ export default function SettingsPage({ onNavigate }) {
                 className="text-sm font-medium"
                 style={{ color: "#2F3A36" }}
               >
-                لغة النظام
+                {S.settings.systemLanguageLabel}
               </span>
             </div>
 
@@ -284,8 +286,8 @@ export default function SettingsPage({ onNavigate }) {
                 color: "#2F3A36",
               }}
             >
-              <option>العربية</option>
-              <option>English</option>
+              <option>{S.settings.languageArabic}</option>
+              <option>{S.settings.languageEnglish}</option>
             </select>
           </div>
         </div>

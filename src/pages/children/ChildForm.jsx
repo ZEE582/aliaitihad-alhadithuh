@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, AlertCircle } from "lucide-react";
+import { strings as S } from "../../constants/strings";
 
 // الحد القانوني لعمر القبول بالروضة: من 3 سنين و8 أشهر لغاية 5 سنين بالضبط
 const MIN_AGE_MONTHS = 3 * 12 + 8; // 44 شهر
@@ -17,9 +18,9 @@ function calculateAgeInMonths(birthDateStr) {
 function formatAge(months) {
   const years = Math.floor(months / 12);
   const remMonths = months % 12;
-  if (years === 0) return `${remMonths} أشهر`;
-  if (remMonths === 0) return `${years} سنوات`;
-  return `${years} سنوات و${remMonths} أشهر`;
+  if (years === 0) return S.childForm.ageFormatMonths(remMonths);
+  if (remMonths === 0) return S.childForm.ageFormatYears(years);
+  return S.childForm.ageFormatYearsMonths({ years, months: remMonths });
 }
 
 export default function ChildForm({ initialData = null, onClose, onSave }) {
@@ -49,11 +50,11 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
       return true;
     }
     if (months < MIN_AGE_MONTHS) {
-      setAgeError(`عمر الطفل أقل من الحد القانوني للقبول (3 سنوات و8 أشهر). العمر الحالي: ${formatAge(months)}`);
+      setAgeError(S.childForm.ageErrorTooYoung(formatAge(months)));
       return false;
     }
     if (months > MAX_AGE_MONTHS) {
-      setAgeError(`عمر الطفل أكبر من الحد القانوني للقبول (5 سنوات). العمر الحالي: ${formatAge(months)}`);
+      setAgeError(S.childForm.ageErrorTooOld(formatAge(months)));
       return false;
     }
     setAgeError("");
@@ -81,7 +82,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
       <div className="w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: "#FFFFFF" }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-bold" style={{ color: "#2F3A36" }}>
-            {isEdit ? "تعديل بيانات الطفل" : "إضافة طفل جديد"}
+            {isEdit ? S.childForm.modalTitleEdit : S.childForm.modalTitleAdd}
           </h3>
           <button onClick={onClose} style={{ color: "#A8B0AB" }}>
             <X size={20} />
@@ -91,7 +92,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
-              اسم الطفل
+              {S.childForm.fieldNameLabel}
             </label>
             <input
               type="text"
@@ -105,7 +106,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
 
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
-              الصف
+              {S.childForm.fieldClassroomLabel}
             </label>
             <input
               type="text"
@@ -119,7 +120,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
 
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
-              تاريخ الميلاد
+              {S.childForm.fieldBirthDateLabel}
             </label>
             <input
               type="date"
@@ -136,7 +137,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
             {/* عرض العمر المحسوب تلقائياً، يساعد يلي بتعبي الفورم تتأكد بسرعة */}
             {currentMonths !== null && !ageError && (
               <p className="text-xs mt-1.5" style={{ color: "#7A8580" }}>
-                العمر الحالي: {formatAge(currentMonths)}
+                {S.childForm.currentAgeHint(formatAge(currentMonths))}
               </p>
             )}
             {ageError && (
@@ -146,13 +147,13 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
               </p>
             )}
             <p className="text-[11px] mt-1" style={{ color: "#A8B0AB" }}>
-              العمر المقبول قانونياً: من 3 سنوات و8 أشهر إلى 5 سنوات
+              {S.childForm.legalAgeHint}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
-              اسم ولي الأمر
+              {S.childForm.fieldParentLabel}
             </label>
             <input
               type="text"
@@ -171,7 +172,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
               className="flex-1 rounded-xl py-2.5 text-sm font-semibold"
               style={{ border: "1px solid #E2DCCC", color: "#4A5551" }}
             >
-              إلغاء
+              {S.childForm.cancelButton}
             </button>
             <button
               type="submit"
@@ -179,7 +180,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
               className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white disabled:opacity-50"
               style={{ backgroundColor: "#4C8577" }}
             >
-              {isEdit ? "حفظ التعديلات" : "إضافة"}
+              {isEdit ? S.childForm.saveButton : S.childForm.addButton}
             </button>
           </div>
         </form>

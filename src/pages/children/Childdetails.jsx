@@ -15,6 +15,8 @@ import {
 import DashboardLayout from "../../layouts/DashboardLayout";
 import NoteForm from "../notes/NoteForm";
 import { useChildren } from "../../context/ChildrenContext";
+import { useUser } from "../../context/UserContext";
+import { strings as S } from "../../constants/strings";
 
 const defaultAttendance = [
   { date: "2026-07-14", status: "حاضر" },
@@ -45,7 +47,7 @@ function InfoRow({ icon: Icon, label, value }) {
           className="text-sm font-semibold truncate"
           style={{ color: "#2F3A36" }}
         >
-          {value || "غير محدد"}
+          {value || S.common.notSpecified}
         </p>
       </div>
     </div>
@@ -129,14 +131,14 @@ function AttendanceSummary({ attendance }) {
               className="text-xs font-semibold"
               style={{ color: "#2F3A36" }}
             >
-              ملخص الحضور
+              {S.childDetails.attendanceSummaryTitle}
             </p>
 
             <p
               className="text-[11px]"
               style={{ color: "#A8B0AB" }}
             >
-              آخر {attendance.length} أيام
+              {S.childDetails.attendanceLastDays(attendance.length)}
             </p>
           </div>
         </div>
@@ -145,7 +147,7 @@ function AttendanceSummary({ attendance }) {
           className="text-sm font-bold"
           style={{ color: "#4C8577" }}
         >
-          {percentage}%
+{S.childDetails.attendancePercentage(percentage)}
         </span>
       </div>
 
@@ -173,7 +175,7 @@ function AttendanceSummary({ attendance }) {
             className="text-xs"
             style={{ color: "#4A5551" }}
           >
-            حاضر {presentCount}
+            {S.childDetails.attendancePresentCount(presentCount)}
           </span>
         </div>
 
@@ -187,7 +189,7 @@ function AttendanceSummary({ attendance }) {
             className="text-xs"
             style={{ color: "#4A5551" }}
           >
-            غائب {absentCount}
+            {S.childDetails.attendanceAbsentCount(absentCount)}
           </span>
         </div>
       </div>
@@ -203,6 +205,8 @@ export default function ChildDetails({
 }) {
   const { childrenList, addChildNote } =
     useChildren();
+
+  const { user } = useUser();
 
   const [tab, setTab] = useState("behavior");
   const [noteFormOpen, setNoteFormOpen] =
@@ -226,7 +230,7 @@ export default function ChildDetails({
         activePage="children"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="تفاصيل الطفل"
+        pageTitle={S.childDetails.pageTitle}
       >
         <div
           className="rounded-2xl p-8 text-center"
@@ -249,8 +253,7 @@ export default function ChildDetails({
             className="text-sm"
             style={{ color: "#7A8580" }}
           >
-            لم يتم اختيار طفل. الرجاء الرجوع لقائمة
-            الأطفال.
+            {S.childDetails.noChildSelected}
           </p>
         </div>
       </DashboardLayout>
@@ -268,7 +271,7 @@ export default function ChildDetails({
       });
 
     addChildNote(currentChild.id, {
-      author: "أنتِ",
+      author: user?.name || S.childDetails.noteAuthorFallback,
       date: today,
       type: formData.type,
       text: formData.text,
@@ -283,7 +286,7 @@ export default function ChildDetails({
       activePage="children"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="تفاصيل الطفل"
+      pageTitle={S.childDetails.pageTitle}
     >
       {/* Back */}
 
@@ -293,7 +296,7 @@ export default function ChildDetails({
         style={{ color: "#4C8577" }}
       >
         <ArrowRight size={17} />
-        العودة إلى الأطفال
+        {S.childDetails.backButton}
       </button>
 
       {/* Child Hero */}
@@ -322,7 +325,7 @@ export default function ChildDetails({
                   "0 8px 20px rgba(76,133,119,0.18)",
               }}
             >
-              {currentChild.name?.charAt(0) || "؟"}
+              {currentChild.name?.charAt(0) || S.childDetails.avatarFallback}
             </div>
 
             <div>
@@ -347,8 +350,7 @@ export default function ChildDetails({
                         : "#C25B4A",
                   }}
                 >
-                  {currentChild.status ||
-                    "غير محدد"}
+                  {currentChild.status || S.childDetails.heroStatusFallback}
                 </span>
               </div>
 
@@ -356,15 +358,14 @@ export default function ChildDetails({
                 className="text-sm mt-1"
                 style={{ color: "#7A8580" }}
               >
-                {currentChild.classroom ||
-                  "الصف غير محدد"}
+                {currentChild.classroom || S.childDetails.heroClassroomFallback}
               </p>
 
               <p
                 className="text-xs mt-2"
                 style={{ color: "#A8B0AB" }}
               >
-                ملف الطفل والمتابعة اليومية
+                {S.childDetails.heroSubtitle}
               </p>
             </div>
           </div>
@@ -397,43 +398,43 @@ export default function ChildDetails({
                 className="text-sm font-bold"
                 style={{ color: "#2F3A36" }}
               >
-                معلومات الطفل
+                {S.childDetails.infoCardTitle}
               </h3>
 
               <p
                 className="text-[11px] mt-1"
                 style={{ color: "#A8B0AB" }}
               >
-                البيانات الأساسية المسجلة
+                {S.childDetails.infoCardSubtitle}
               </p>
             </div>
 
             <div className="space-y-4">
               <InfoRow
                 icon={CalendarDays}
-                label="العمر"
+                label={S.childDetails.infoAgeLabel}
                 value={
                   currentChild.age
-                    ? `${currentChild.age} سنوات`
+                    ? S.childDetails.infoAgeValue(currentChild.age)
                     : null
                 }
               />
 
               <InfoRow
                 icon={Users}
-                label="ولي الأمر"
+                label={S.childDetails.infoParentLabel}
                 value={currentChild.parent}
               />
 
               <InfoRow
                 icon={Phone}
-                label="رقم التواصل"
+                label={S.childDetails.infoPhoneLabel}
                 value={currentChild.parentPhone}
               />
 
               <InfoRow
                 icon={ClipboardCheck}
-                label="الحالة"
+                label={S.childDetails.infoStatusLabel}
                 value={currentChild.status}
               />
             </div>
@@ -456,7 +457,7 @@ export default function ChildDetails({
                     className="text-xs font-semibold"
                     style={{ color: "#C25B4A" }}
                   >
-                    ملاحظات صحية
+                    {S.childDetails.healthNotesTitle}
                   </p>
                 </div>
 
@@ -506,7 +507,7 @@ export default function ChildDetails({
               }}
             >
               <MessageCircle size={15} />
-              السلوكيات والملاحظات
+              {S.childDetails.tabBehaviors}
             </button>
 
             <button
@@ -528,7 +529,7 @@ export default function ChildDetails({
               }}
             >
               <ClipboardCheck size={15} />
-              سجل الحضور
+              {S.childDetails.tabAttendance}
             </button>
           </div>
 
@@ -548,14 +549,14 @@ export default function ChildDetails({
                     className="text-sm font-bold"
                     style={{ color: "#2F3A36" }}
                   >
-                    السلوكيات والملاحظات
+                    {S.childDetails.behaviorsTitle}
                   </h4>
 
                   <p
                     className="text-[11px] mt-1"
                     style={{ color: "#A8B0AB" }}
                   >
-                    سجّلي اللحظات المهمة في رحلة الطفل
+                    {S.childDetails.behaviorsSubtitle}
                   </p>
                 </div>
 
@@ -568,7 +569,7 @@ export default function ChildDetails({
                   }}
                 >
                   <Plus size={15} />
-                  إضافة ملاحظة
+                  {S.childDetails.addNoteButton}
                 </button>
               </div>
 
@@ -596,14 +597,14 @@ export default function ChildDetails({
                     className="text-sm font-medium"
                     style={{ color: "#7A8580" }}
                   >
-                    لا توجد ملاحظات بعد
+                    {S.childDetails.noNotes}
                   </p>
 
                   <p
                     className="text-xs mt-1"
                     style={{ color: "#A8B0AB" }}
                   >
-                    أضيفي أول ملاحظة لمتابعة تطور الطفل
+                    {S.childDetails.noNotesHint}
                   </p>
                 </div>
               ) : (
@@ -680,8 +681,7 @@ export default function ChildDetails({
                                 color: "#A8B0AB",
                               }}
                             >
-                              من حصة:{" "}
-                              {note.sessionSubject}
+                              {S.childDetails.noteFromSession(note.sessionSubject)}
                             </p>
                           )}
                       </div>
@@ -707,14 +707,14 @@ export default function ChildDetails({
                   className="text-sm font-bold"
                   style={{ color: "#2F3A36" }}
                 >
-                  سجل الحضور
+                  {S.childDetails.attendanceTitle}
                 </h4>
 
                 <p
                   className="text-[11px] mt-1"
                   style={{ color: "#A8B0AB" }}
                 >
-                  متابعة حضور وغياب الطفل
+                  {S.childDetails.attendanceSubtitle}
                 </p>
               </div>
 
@@ -801,7 +801,7 @@ export default function ChildDetails({
         <NoteForm
           initialData={{
             childName: currentChild.name,
-            type: "إيجابي",
+            type: S.childDetails.noteDefaultType,
             text: "",
           }}
           onClose={() =>

@@ -14,6 +14,7 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 import { useUser } from "../../context/UserContext";
 import { useChildren } from "../../context/ChildrenContext";
 import { useMessages } from "../../context/MessagesContext";
+import { strings as S } from "../../constants/strings";
 
 // ========================================
 // استخراج اسم المعلم من بيانات الطفل
@@ -26,7 +27,7 @@ function getTeacherName(child) {
     child.teacher?.name ||
     child.teacher?.fullName ||
     child.teacher ||
-    "معلم الصف"
+    S.messages.fallbackTeacher
   );
 }
 
@@ -41,7 +42,7 @@ function getParentName(child) {
     child.parent_name ||
     child.parent?.name ||
     child.parent?.fullName ||
-    "ولي الأمر"
+    S.messages.fallbackParent
   );
 }
 
@@ -132,7 +133,7 @@ function ChatThread({
 
       setSendNotice({
         type: "pending",
-        text: `تم استلام رسالتك 🌿 سيتم إرسالها إلى ${otherPersonName} الساعة ${time} لأن وقت التواصل المحدد هو من 6:00 إلى 7:00 مساءً.`,
+        text: S.messages.sendNoticePending({ teacherName: otherPersonName, time }),
       });
 
       setTimeout(() => {
@@ -151,7 +152,7 @@ function ChatThread({
     ) {
       setSendNotice({
         type: "success",
-        text: `تم إرسال رسالتك إلى ${otherPersonName} بنجاح ✓`,
+        text: S.messages.sendNoticeParentSuccess({ teacherName: otherPersonName }),
       });
 
       setTimeout(() => {
@@ -167,7 +168,7 @@ function ChatThread({
 
     setSendNotice({
       type: "success",
-      text: `تم إرسال الرسالة إلى ${otherPersonName} بنجاح ✓`,
+      text: S.messages.sendNoticeTeacherSuccess({ parentName: otherPersonName }),
     });
 
     setTimeout(() => {
@@ -184,8 +185,8 @@ function ChatThread({
 
   const subtitle =
     isParent
-      ? `معلم ${child.classroom || "الصف"}`
-      : `ولي أمر ${child.name}`;
+      ? S.messages.subtitleParentView({ classroom: child.classroom })
+      : S.messages.subtitleTeacherView({ childName: child.name });
 
   return (
     <div
@@ -260,10 +261,10 @@ function ChatThread({
             <Clock size={13} />
 
             <span className="text-[11px] font-medium">
-              وقت التواصل مع المعلم:
+              {S.messages.contactTimeLabel}
               {" "}
               <strong>
-                6:00 – 7:00 مساءً
+                {S.messages.contactTimeValue}
               </strong>
             </span>
           </div>
@@ -287,7 +288,7 @@ function ChatThread({
             <UserRound size={13} />
 
             <span className="text-[11px]">
-              المحادثة مع ولي أمر الطفل
+              {S.messages.bannerTeacherHint}
             </span>
           </div>
         )}
@@ -367,7 +368,7 @@ function ChatThread({
                 color: "#4A5551",
               }}
             >
-              ابدئي المحادثة 🌿
+              {S.messages.emptyTitle}
             </p>
 
             <p
@@ -377,8 +378,8 @@ function ChatThread({
               }}
             >
               {isParent
-                ? "يمكنك التواصل مع معلم طفلك خلال وقت التواصل المحدد."
-                : "يمكنك التواصل مع ولي أمر الطفل مباشرة."}
+                ? S.messages.emptyParentHint
+                : S.messages.emptyTeacherHint}
             </p>
           </div>
         )}
@@ -440,7 +441,7 @@ function ChatThread({
                     }}
                   >
                     <Megaphone size={11} />
-                    إعلان عام
+                    {S.messages.announcementBadge}
                   </p>
                 )}
 
@@ -474,7 +475,7 @@ function ChatThread({
                     >
                       <Clock size={11} />
 
-                      بانتظار وقت التواصل
+                      {S.messages.pendingBadge}
                     </div>
                   )}
 
@@ -511,8 +512,8 @@ function ChatThread({
           }}
           placeholder={
             isParent
-              ? "اكتبي رسالتك للمعلم..."
-              : "اكتب رسالة لولي الأمر..."
+              ? S.messages.inputParentPlaceholder
+              : S.messages.inputTeacherPlaceholder
           }
           className="flex-1 rounded-xl py-2.5 px-3 text-sm outline-none"
           style={{
@@ -531,7 +532,7 @@ function ChatThread({
             backgroundColor:
               "#4C8577",
           }}
-          title="إرسال الرسالة"
+          title={S.messages.sendTitleAttr}
         >
           <Send
             size={16}
@@ -607,7 +608,7 @@ function AnnouncementModal({
               }}
             />
 
-            إعلان عام لكل أهالي الصف
+            {S.messages.announcementModalTitle}
           </h3>
 
           <button
@@ -626,10 +627,12 @@ function AnnouncementModal({
             color: "#A8B0AB",
           }}
         >
-          سيصل هذا الإعلان إلى جميع
-          أولياء أمور طلاب صفك
+          {S.messages.announcementModalDesc}
           {" "}
-          ({childIds.length} ولي أمر)
+          ({childIds.length}{" "}
+          {childIds.length === 1
+            ? S.messages.announcementCountSingular
+            : S.messages.announcementCountPlural})
         </p>
 
         <textarea
@@ -638,7 +641,7 @@ function AnnouncementModal({
             setText(e.target.value)
           }
           rows={4}
-          placeholder="اكتبي نص الإعلان..."
+          placeholder={S.messages.announcementPlaceholder}
           className="w-full rounded-xl py-2.5 px-3 text-sm outline-none resize-none mb-4"
           style={{
             border:
@@ -660,7 +663,7 @@ function AnnouncementModal({
               color: "#4A5551",
             }}
           >
-            إلغاء
+            {S.messages.announcementCancel}
           </button>
 
           <button
@@ -671,7 +674,7 @@ function AnnouncementModal({
                 "#4C8577",
             }}
           >
-            إرسال للجميع
+            {S.messages.announcementSend}
           </button>
 
         </div>
@@ -748,7 +751,7 @@ export default function MessagesPage({
         activePage="messages"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="الرسائل"
+        pageTitle={S.messages.pageTitle}
       >
         <div className="flex flex-col items-center justify-center py-16">
 
@@ -769,7 +772,7 @@ export default function MessagesPage({
               color: "#4A5551",
             }}
           >
-            لا توجد محادثات بعد
+            {S.messages.noThreads}
           </p>
 
         </div>
@@ -789,7 +792,7 @@ export default function MessagesPage({
         activePage="messages"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="الرسائل"
+        pageTitle={S.messages.pageTitle}
       >
         <div
           className="rounded-2xl overflow-hidden"
@@ -828,7 +831,7 @@ export default function MessagesPage({
       activePage="messages"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="الرسائل"
+      pageTitle={S.messages.pageTitle}
     >
 
       {/* إعلان عام */}
@@ -849,7 +852,7 @@ export default function MessagesPage({
         >
           <Megaphone size={16} />
 
-          إعلان عام لكل الصف
+          {S.messages.announceAllButton}
         </button>
 
       </div>
@@ -958,7 +961,7 @@ export default function MessagesPage({
                             "#A8B0AB",
                         }}
                       >
-                        ولي أمر {child.name}
+                        {S.messages.studentItemSubtitle({ childName: child.name })}
                       </span>
 
                       <span
@@ -970,7 +973,7 @@ export default function MessagesPage({
                       >
                         {lastMsg
                           ? lastMsg.text
-                          : "لا توجد رسائل بعد"}
+                          : S.messages.studentNoMessages}
                       </span>
 
                     </div>

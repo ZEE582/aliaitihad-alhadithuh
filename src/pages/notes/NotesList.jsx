@@ -13,31 +13,33 @@ import {
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import NoteForm from "./NoteForm";
+import ConfirmModal from "../../components/ConfirmModal";
 
 import { useChildren } from "../../context/ChildrenContext";
 import { useUser } from "../../context/UserContext";
 import { useNotes } from "../../context/NotesContext";
+import { strings as S } from "../../constants/strings";
 
 const TYPE_CONFIG = {
   إيجابي: {
     bg: "#EAF4F0",
     text: "#4C8577",
     icon: Sparkles,
-    label: "إيجابي",
+    label: S.notes.typePositive,
   },
 
   ملاحظة: {
     bg: "#FFF5DF",
     text: "#B8862F",
     icon: StickyNote,
-    label: "ملاحظة",
+    label: S.notes.typeNormal,
   },
 
   تنبيه: {
     bg: "#FBEDEA",
     text: "#C25B4A",
     icon: AlertCircle,
-    label: "تنبيه",
+    label: S.notes.typeAlert,
   },
 };
 
@@ -131,6 +133,8 @@ export default function NotesList({
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingNote, setEditingNote] =
+    useState(null);
+  const [deleteTarget, setDeleteTarget] =
     useState(null);
 
   // ==========================================
@@ -263,7 +267,7 @@ export default function NotesList({
     } else {
       addNote(
         formData,
-        user?.name || "أنتِ"
+        user?.name || S.notes.defaultUserName
       );
     }
 
@@ -278,13 +282,15 @@ export default function NotesList({
   const handleDelete = (note) => {
     if (!canManageNote(note)) return;
 
-    if (
-      window.confirm(
-        "متأكدة إنك بدك تحذفي هالملاحظة؟"
-      )
-    ) {
-      deleteNote(note.id);
+    setDeleteTarget(note);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteNote(deleteTarget.id);
     }
+
+    setDeleteTarget(null);
   };
 
   return (
@@ -292,7 +298,7 @@ export default function NotesList({
       activePage="notes"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="الملاحظات"
+      pageTitle={S.notes.pageTitle}
     >
       {/* Header */}
 
@@ -320,7 +326,7 @@ export default function NotesList({
                   color: "#2F3A36",
                 }}
               >
-                ملاحظات الأطفال
+{S.notes.headerTitle}
               </h2>
             </div>
 
@@ -330,7 +336,7 @@ export default function NotesList({
                 color: "#A8B0AB",
               }}
             >
-              تابعي ملاحظات الأطفال وسلوكهم وتطورهم اليومي
+              {S.notes.headerSubtitle}
             </p>
           </div>
 
@@ -343,7 +349,7 @@ export default function NotesList({
               }}
             >
               <Plus size={17} />
-              إضافة ملاحظة
+{S.notes.addButton}
             </button>
           )}
         </div>
@@ -354,7 +360,7 @@ export default function NotesList({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <StatCard
           icon={MessageSquareText}
-          label="إجمالي الملاحظات"
+          label={S.notes.statTotal}
           value={roleFilteredNotes.length}
           bg="#EAF2EF"
           color="#4C8577"
@@ -362,7 +368,7 @@ export default function NotesList({
 
         <StatCard
           icon={Sparkles}
-          label="ملاحظات إيجابية"
+          label={S.notes.statPositive}
           value={positiveCount}
           bg="#EAF4F0"
           color="#4C8577"
@@ -370,7 +376,7 @@ export default function NotesList({
 
         <StatCard
           icon={AlertCircle}
-          label="تنبيهات"
+          label={S.notes.statAlerts}
           value={alertCount}
           bg="#FBEDEA"
           color="#C25B4A"
@@ -401,7 +407,7 @@ export default function NotesList({
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            placeholder="ابحث باسم الطفل أو نص الملاحظة..."
+            placeholder={S.notes.searchPlaceholder}
             className="w-full rounded-xl py-2.5 pr-10 pl-3 text-sm outline-none"
             style={{
               border: "1px solid #E2DCCC",
@@ -501,7 +507,7 @@ export default function NotesList({
                               backgroundColor:
                                 "#F4F8F7",
                             }}
-                            title="تعديل"
+                            title={S.notes.editTitleAttr}
                           >
                             <Pencil size={14} />
                           </button>
@@ -516,7 +522,7 @@ export default function NotesList({
                               backgroundColor:
                                 "#FDF5F3",
                             }}
-                            title="حذف"
+                            title={S.notes.deleteTitleAttr}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -557,7 +563,7 @@ export default function NotesList({
               color: "#4A5551",
             }}
           >
-            لا توجد ملاحظات مطابقة
+            {S.notes.emptyTitle}
           </p>
 
           <p
@@ -566,7 +572,7 @@ export default function NotesList({
               color: "#A8B0AB",
             }}
           >
-            جرّبي البحث باسم طفل آخر أو كلمة مختلفة
+            {S.notes.emptyHint}
           </p>
         </div>
       )}
@@ -583,6 +589,15 @@ export default function NotesList({
           onSave={handleSave}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={S.notes.deleteModalTitle}
+        message={S.notes.deleteModalMessage}
+        confirmLabel={S.notes.deleteModalConfirm}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </DashboardLayout>
   );
 }

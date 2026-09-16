@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, UserRound, Phone, BookOpen, School, CalendarDays } from "lucide-react";
+import { strings as S } from "../../constants/strings";
 
 export default function TeacherForm({ initialData = null, onClose, onSave }) {
   const isEdit = !!initialData;
@@ -48,7 +49,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               className="text-lg font-bold"
               style={{ color: "#2F3A36" }}
             >
-              {isEdit ? "تعديل بيانات المعلم" : "إضافة معلم جديد"}
+              {isEdit ? S.teacherForm.headerEditTitle : S.teacherForm.headerAddTitle}
             </h3>
 
             <p
@@ -56,8 +57,8 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               style={{ color: "#A8B0AB" }}
             >
               {isEdit
-                ? "حدّث بيانات المعلم والمواد والصفوف المسندة إليه"
-                : "أدخل بيانات المعلم وتوزيعه داخل الروضة"}
+                ? S.teacherForm.headerEditSubtitle
+                : S.teacherForm.headerAddSubtitle}
             </p>
           </div>
 
@@ -83,14 +84,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               style={{ color: "#2F3A36" }}
             >
               <UserRound size={15} style={{ color: "#4C8577" }} />
-              الاسم الكامل
+              {S.teacherForm.labelFullName}
             </label>
 
             <input
               type="text"
               value={form.name}
               onChange={handleChange("name")}
-              placeholder="مثال: نور أحمد"
+              placeholder={S.teacherForm.namePlaceholder}
               required
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
@@ -108,7 +109,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               style={{ color: "#2F3A36" }}
             >
               <Phone size={15} style={{ color: "#4C8577" }} />
-              رقم الهاتف
+              {S.teacherForm.labelPhone}
             </label>
 
             <input
@@ -134,14 +135,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               style={{ color: "#2F3A36" }}
             >
               <BookOpen size={15} style={{ color: "#4C8577" }} />
-              المواد التي يدرّسها
+              {S.teacherForm.labelSubjects}
             </label>
 
             <input
               type="text"
               value={form.subject}
               onChange={handleChange("subject")}
-              placeholder="مثال: الرياضيات، اللغة العربية"
+              placeholder={S.teacherForm.subjectsPlaceholder}
               required
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
@@ -155,7 +156,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               className="text-[11px] mt-1.5"
               style={{ color: "#A8B0AB" }}
             >
-              يمكنك إدخال أكثر من مادة وفصل بينها بفاصلة
+              {S.teacherForm.subjectsHint}
             </p>
           </div>
 
@@ -166,14 +167,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               style={{ color: "#2F3A36" }}
             >
               <School size={15} style={{ color: "#4C8577" }} />
-              الصفوف التي يدرّسها
+              {S.teacherForm.labelClassrooms}
             </label>
 
             <input
               type="text"
               value={form.classroom}
               onChange={handleChange("classroom")}
-              placeholder="مثال: الفراشات، النجوم"
+              placeholder={S.teacherForm.classroomsPlaceholder}
               required
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
@@ -187,7 +188,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               className="text-[11px] mt-1.5"
               style={{ color: "#A8B0AB" }}
             >
-              الصفوف التي تم إسناد حصص لهذا المعلم فيها
+              {S.teacherForm.classroomsHint}
             </p>
           </div>
 
@@ -198,7 +199,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               style={{ color: "#2F3A36" }}
             >
               <CalendarDays size={15} style={{ color: "#4C8577" }} />
-              عدد الحصص الأسبوعية
+              {S.teacherForm.labelWeeklyLessons}
             </label>
 
             <input
@@ -206,7 +207,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               min="0"
               value={form.weeklyLessons}
               onChange={handleChange("weeklyLessons")}
-              placeholder="مثال: 8"
+              placeholder={S.teacherForm.weeklyLessonsPlaceholder}
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
                 border: "1px solid #E2DCCC",
@@ -219,7 +220,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               className="text-[11px] mt-1.5"
               style={{ color: "#A8B0AB" }}
             >
-              إجمالي الحصص المسندة للمعلم خلال الأسبوع
+              {S.teacherForm.weeklyLessonsHint}
             </p>
           </div>
 
@@ -235,7 +236,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
                 backgroundColor: "#FFFFFF",
               }}
             >
-              إلغاء
+              {S.teacherForm.cancelButton}
             </button>
 
             <button
@@ -243,7 +244,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
               className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white"
               style={{ backgroundColor: "#4C8577" }}
             >
-              {isEdit ? "حفظ التعديلات" : "إضافة المعلم"}
+              {isEdit ? S.teacherForm.submitEditLabel : S.teacherForm.submitAddLabel}
             </button>
           </div>
         </form>

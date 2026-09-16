@@ -1,3 +1,4 @@
+import { strings as S } from "../constants/strings";
 import {
   LayoutDashboard,
   Baby,
@@ -30,73 +31,73 @@ const NAV_BY_ROLE = {
   admin: [
     {
       key: "dashboard",
-      label: "لوحة التحكم",
+      label: S.common.dashboard,
       icon: LayoutDashboard,
     },
 
     {
       key: "children",
-      label: "الأطفال",
+      label: S.common.children,
       icon: Baby,
     },
 
     {
       key: "parents",
-      label: "أولياء الأمور",
+      label: S.common.parents,
       icon: Users,
     },
 
     {
       key: "teachers",
-      label: "المعلمون",
+      label: S.common.teachers,
       icon: GraduationCap,
     },
 
     {
       key: "classes",
-      label: "الصفوف",
+      label: S.common.classes,
       icon: BookOpen,
     },
 
     {
       key: "subjects",
-      label: "المواد",
+      label: S.common.subjects,
       icon: BookOpen,
     },
 
     {
       key: "sessions",
-      label: "الحصص",
+      label: S.common.sessions,
       icon: CalendarClock,
     },
 
     {
       key: "attendance",
-      label: "الحضور",
+      label: S.common.attendance,
       icon: ClipboardCheck,
     },
 
     {
       key: "notes",
-      label: "الملاحظات",
+      label: S.common.notes,
       icon: StickyNote,
     },
 
     {
       key: "messages",
-      label: "الرسائل",
+      label: S.common.messages,
       icon: MessageSquare,
     },
 
     {
       key: "registration-requests",
-      label: "طلبات التسجيل",
+      label: S.common.registrationRequests,
       icon: ClipboardList,
     },
 
     {
       key: "reports",
-      label: "التقارير",
+      label: S.common.reports,
       icon: FileBarChart,
     },
   ],
@@ -108,67 +109,67 @@ const NAV_BY_ROLE = {
   secretary: [
     {
       key: "dashboard",
-      label: "لوحة التحكم",
+      label: S.common.dashboard,
       icon: LayoutDashboard,
     },
 
     {
       key: "children",
-      label: "الأطفال",
+      label: S.common.children,
       icon: Baby,
     },
 
     {
       key: "parents",
-      label: "أولياء الأمور",
+      label: S.common.parents,
       icon: Users,
     },
 
     {
       key: "teachers",
-      label: "المعلمون",
+      label: S.common.teachers,
       icon: GraduationCap,
     },
 
     {
       key: "classes",
-      label: "الصفوف",
+      label: S.common.classes,
       icon: BookOpen,
     },
 
     {
       key: "sessions",
-      label: "الجدول والحصص",
+      label: S.sidebar.sessionsSchedule,
       icon: CalendarClock,
     },
 
     {
       key: "attendance",
-      label: "الحضور والغياب",
+      label: S.sidebar.attendanceAbsence,
       icon: ClipboardCheck,
     },
 
     {
       key: "notes",
-      label: "الملاحظات",
+      label: S.common.notes,
       icon: StickyNote,
     },
 
     {
       key: "messages",
-      label: "الرسائل",
+      label: S.common.messages,
       icon: MessageSquare,
     },
 
     {
       key: "registration-requests",
-      label: "طلبات التسجيل",
+      label: S.common.registrationRequests,
       icon: ClipboardList,
     },
 
     {
       key: "reports",
-      label: "التقارير",
+      label: S.common.reports,
       icon: FileBarChart,
     },
   ],
@@ -180,37 +181,37 @@ const NAV_BY_ROLE = {
   teacher: [
     {
       key: "dashboard",
-      label: "لوحة التحكم",
+      label: S.common.dashboard,
       icon: LayoutDashboard,
     },
 
     {
       key: "children",
-      label: "طلاب صفي",
+      label: S.sidebar.myClassStudents,
       icon: Baby,
     },
 
     {
       key: "attendance",
-      label: "الحضور",
+      label: S.common.attendance,
       icon: ClipboardCheck,
     },
 
     {
       key: "notes",
-      label: "الملاحظات",
+      label: S.common.notes,
       icon: StickyNote,
     },
 
     {
       key: "sessions",
-      label: "جدولي",
+      label: S.sidebar.mySchedule,
       icon: CalendarClock,
     },
 
     {
       key: "messages",
-      label: "الرسائل",
+      label: S.common.messages,
       icon: MessageSquare,
     },
   ],
@@ -222,31 +223,31 @@ const NAV_BY_ROLE = {
   parent: [
     {
       key: "children",
-      label: "ملف طفلي",
+      label: S.sidebar.myChildFile,
       icon: Baby,
     },
 
     {
       key: "attendance",
-      label: "سجل الحضور",
+      label: S.sidebar.attendanceLog,
       icon: ClipboardCheck,
     },
 
     {
       key: "notes",
-      label: "الملاحظات",
+      label: S.common.notes,
       icon: StickyNote,
     },
 
     {
       key: "messages",
-      label: "الرسائل",
+      label: S.common.messages,
       icon: MessageSquare,
     },
 
     {
       key: "rate-teacher",
-      label: "تقييم المعلم",
+      label: S.sidebar.rateTeacher,
       icon: Star,
     },
   ],
@@ -259,13 +260,13 @@ const NAV_BY_ROLE = {
 const bottomItems = [
   {
     key: "profile",
-    label: "الملف الشخصي",
+    label: S.common.profile,
     icon: UserCircle,
   },
 
   {
     key: "settings",
-    label: "الإعدادات",
+    label: S.common.settings,
     icon: Settings,
   },
 ];
@@ -382,7 +383,7 @@ export default function Sidebar({
               color: "#2F3A36",
             }}
           >
-            روضة الاتحاد الحديثة
+            {S.common.appName}
           </p>
 
           <p
@@ -392,7 +393,7 @@ export default function Sidebar({
             }}
           >
             {user?.role ||
-              "لوحة الإدارة"}
+              S.sidebar.adminPanelFallback}
           </p>
         </div>
       </div>
@@ -426,7 +427,7 @@ export default function Sidebar({
 
         <button
           type="button"
-          onClick={onLogout}
+          onClick={() => onLogout && onLogout()}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-right"
           style={{
             color: "#C25B4A",
@@ -438,7 +439,7 @@ export default function Sidebar({
           />
 
           <span>
-            تسجيل الخروج
+            {S.common.logout}
           </span>
         </button>
       </div>

@@ -2,10 +2,13 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Child = sequelize.define('Child', {
-  child_N: {
+  PersonID: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true
+    references: {
+      model: 'Persons',
+      key: 'PersonID'
+    }
   },
   F_name: {
     type: DataTypes.STRING(50),
@@ -21,8 +24,12 @@ const Child = sequelize.define('Child', {
     type: DataTypes.STRING(50),
     allowNull: false
   },
+  gender: {
+    type: DataTypes.ENUM('Male', 'Female', 'Other'),
+    allowNull: false
+  },
   birth_date: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: false
   },
   birthplace: {
@@ -31,28 +38,20 @@ const Child = sequelize.define('Child', {
   address: {
     type: DataTypes.STRING(255)
   },
-  child_order: {
-    type: DataTypes.INTEGER,
-    validate: {
-      min: 1
-    }
-  },
   education_stage: {
     type: DataTypes.STRING(50)
-  },
-  gender: {
-    type: DataTypes.ENUM('Male', 'Female', 'Other'),
-    allowNull: false
   },
   num_of_brothers: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
-    validate: {
-      min: 0
-    }
+    validate: { min: 0 }
   },
   status_of_parents: {
     type: DataTypes.STRING(50)
+  },
+  child_order: {
+    type: DataTypes.INTEGER,
+    validate: { min: 1 }
   },
   classID: {
     type: DataTypes.INTEGER,
@@ -65,7 +64,7 @@ const Child = sequelize.define('Child', {
     type: DataTypes.INTEGER,
     references: {
       model: 'Sections',
-      key: 'SectionID'
+      key: 'section_id'
     }
   }
 }, {

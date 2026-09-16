@@ -8,18 +8,11 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
   try {
     const classes = await Class.findAll({
-      include: [
-        {
-          model: Teacher,
-          as: 'teacher',
-          attributes: ['id', 'fullName']
-        }
-      ],
-      order: [['level', 'ASC'], ['name', 'ASC']]
+      order: [['className', 'ASC']]
     });
     res.json(classes);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -49,21 +42,14 @@ router.get('/:id', auth, async (req, res) => {
 // Create new class (admin only)
 router.post('/', auth, authorize('admin'), async (req, res) => {
   try {
-    const classData = await Class.create(req.body);
-    
-    const newClass = await Class.findByPk(classData.id, {
-      include: [
-        {
-          model: Teacher,
-          as: 'teacher',
-          attributes: ['id', 'fullName']
-        }
-      ]
-    });
-    
-    res.status(201).json(newClass);
+    const className = req.body.className || req.body.name;
+    if (!className) {
+      return res.status(400).json({ message: 'اسم الفصل/القاعة مطلوب (className)' });
+    }
+    const classData = await Class.create({ className });
+    res.status(201).json(classData);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -104,6 +90,66 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
     res.json({ message: 'Class deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ==========================================
+// ClassRoom - ClassSession Junction Endpoints (hosts)
+// ==========================================
+
+const { ClassRoom_ClassSession, classSession } = require('../models');
+
+// GET /api/classes/:id/sessions - جلب الحصص المرتبطة بهذه الغرفة الصفية
+router.get('/:id/sessions', auth, async (req, res) => {
+  try {
+    const classID = req.params.id;
+    const room = await Class.findByPk(classID, {
+      include: [
+        {
+          model: classSession,
+          as: 'sessions'
+        }
+      ]
+    });
+    res.json(room ? room.sessions : []);
+  } catch (error) {
+    res.status(500).json({ message: 'فشل جلب الحصص المرتبطة بالقاعة', error: error.message });
+  }
+});
+
+// POST /api/classes/:id/sessions - ربط حصة بغرفة صفية (ClassRoom hosts ClassSession)
+router.post('/:id/sessions', auth, authorize('admin'), async (req, res) => {
+  try {
+    const classID = req.params.id;
+    const { SessionID } = req.body;
+    if (!SessionID) {
+      return res.status(400).json({ message: 'SessionID مطلوب' });
+    }
+
+    const [record, created] = await ClassRoom_ClassSession.findOrCreate({
+      where: { classID, SessionID }
+    });
+
+    res.status(201).json({ message: 'تم ربط الحصة بالغرفة بنجاح', record, created });
+  } catch (error) {
+    res.status(500).json({ message: 'فشل ربط الحصة بالغرفة الصفية', error: error.message });
+  }
+});
+
+// DELETE /api/classes/:id/sessions/:sessionId - فك ربط حصة من غرفة صفية
+router.delete('/:id/sessions/:sessionId', auth, authorize('admin'), async (req, res) => {
+  try {
+    const { id: classID, sessionId: SessionID } = req.params;
+    const record = await ClassRoom_ClassSession.findOne({
+      where: { classID, SessionID }
+    });
+    if (!record) {
+      return res.status(404).json({ message: 'الربط غير موجود' });
+    }
+    await record.destroy();
+    res.json({ message: 'تم فك الارتباط بنجاح' });
+  } catch (error) {
+    res.status(500).json({ message: 'فشل فك الارتباط', error: error.message });
   }
 });
 

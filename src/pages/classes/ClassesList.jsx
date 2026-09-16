@@ -12,9 +12,12 @@ import {
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import ClassForm from "./ClassForm";
+import ConfirmModal from "../../components/ConfirmModal";
 
 import { useClasses } from "../../context/ClassesContext";
 import { useChildren } from "../../context/ChildrenContext";
+import { useToast } from "../../context/ToastContext";
+import { strings as S } from "../../constants/strings";
 
 function CapacityBadge({ current, capacity }) {
   const percentage =
@@ -22,16 +25,16 @@ function CapacityBadge({ current, capacity }) {
       ? Math.round((current / capacity) * 100)
       : 0;
 
-  let label = "متاح";
+  let label = S.classes.capacityBadgeAvailable;
   let bgColor = "#4C857720";
   let textColor = "#4C8577";
 
   if (percentage >= 100) {
-    label = "ممتلئ";
+    label = S.classes.capacityBadgeFull;
     bgColor = "#C25B4A20";
     textColor = "#C25B4A";
   } else if (percentage >= 80) {
-    label = "قارب على الامتلاء";
+    label = S.classes.capacityBadgeAlmostFull;
     bgColor = "#D99A2020";
     textColor = "#B27A00";
   }
@@ -52,7 +55,7 @@ function CapacityBadge({ current, capacity }) {
         className="text-xs"
         style={{ color: "#7A8580" }}
       >
-        {current} / {capacity} طفل
+        {S.classes.capacityCount({ current, capacity })}
       </span>
     </div>
   );
@@ -70,11 +73,13 @@ export default function ClassesList({
   } = useClasses();
 
   const { childrenList } = useChildren();
+  const { showWarning } = useToast();
 
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // ======================================================
   // عدد الأطفال داخل الصف
@@ -159,25 +164,25 @@ export default function ClassesList({
       getChildrenForClass(classItem.name);
 
     if (classChildren.length > 0) {
-      window.alert(
-        `لا يمكن حذف "${classItem.name}" لأنه يحتوي على ${classChildren.length} طفل نشط.`
+      showWarning(
+        S.classes.deleteBlockedWarning(classItem.name)
       );
       return;
     }
 
-    if (
-      window.confirm(
-        `متأكدة إنك بدك تحذفي "${classItem.name}"؟`
-      )
-    ) {
-      deleteClass(classId);
+    setDeleteTarget(classItem);
+  };
 
-      if (
-        selectedClass?.id === classId
-      ) {
-        setSelectedClass(null);
-      }
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+
+    deleteClass(deleteTarget.id);
+
+    if (selectedClass?.id === deleteTarget.id) {
+      setSelectedClass(null);
     }
+
+    setDeleteTarget(null);
   };
 
   // ======================================================
@@ -193,7 +198,7 @@ export default function ClassesList({
       activePage="classes"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="الصفوف"
+      pageTitle={S.classes.pageTitle}
     >
       {/* ==================================================
           Header
@@ -215,7 +220,7 @@ export default function ClassesList({
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            placeholder="ابحث باسم الصف أو المعلم..."
+            placeholder={S.classes.searchPlaceholder}
             className="w-full rounded-xl py-2.5 pr-9 pl-3 text-sm outline-none"
             style={{
               border:
@@ -237,7 +242,7 @@ export default function ClassesList({
           }}
         >
           <Plus size={18} />
-          إضافة صف
+          {S.classes.addClassButton}
         </button>
       </div>
 
@@ -278,7 +283,7 @@ export default function ClassesList({
                   color: "#7A8580",
                 }}
               >
-                إجمالي الصفوف
+                {S.classes.totalClassesLabel}
               </p>
 
               <p
@@ -325,7 +330,7 @@ export default function ClassesList({
                   color: "#7A8580",
                 }}
               >
-                الأطفال المسجلون
+                {S.classes.registeredChildrenLabel}
               </p>
 
               <p
@@ -378,7 +383,7 @@ export default function ClassesList({
                   color: "#7A8580",
                 }}
               >
-                المقاعد المتاحة
+                {S.classes.availableSeatsSummaryLabel}
               </p>
 
               <p
@@ -441,7 +446,7 @@ export default function ClassesList({
                   color: "#7A8580",
                 }}
               >
-                اسم الصف
+                {S.classForm.labelClassName}
               </th>
 
               <th
@@ -450,7 +455,7 @@ export default function ClassesList({
                   color: "#7A8580",
                 }}
               >
-                المعلمة المسؤولة
+                {S.classForm.labelTeacher}
               </th>
 
               <th
@@ -459,7 +464,25 @@ export default function ClassesList({
                   color: "#7A8580",
                 }}
               >
-                الأطفال
+{S.classes.childrenDetailLabel}
+                </th>
+
+              <th
+                className="text-right px-5 py-3 font-medium"
+                style={{
+                  color: "#7A8580",
+                }}
+              >
+{S.classes.capacityDetailLabel}
+                </th>
+
+              <th
+                className="text-right px-5 py-3 font-medium"
+                style={{
+                  color: "#7A8580",
+                }}
+              >
+                {S.common.tableHeaderStatus}
               </th>
 
               <th
@@ -468,25 +491,7 @@ export default function ClassesList({
                   color: "#7A8580",
                 }}
               >
-                السعة
-              </th>
-
-              <th
-                className="text-right px-5 py-3 font-medium"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                الحالة
-              </th>
-
-              <th
-                className="text-right px-5 py-3 font-medium"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                إجراءات
+                {S.common.tableHeaderActions}
               </th>
             </tr>
           </thead>
@@ -595,8 +600,8 @@ export default function ClassesList({
                         }}
                       >
                         {availableSeats > 0
-                          ? `${availableSeats} مقعد متاح`
-                          : "لا توجد مقاعد"}
+                          ? S.classes.seatsAvailable(availableSeats)
+                          : S.classes.noSeats}
                       </p>
                     </div>
                   </td>
@@ -625,7 +630,7 @@ export default function ClassesList({
                           color:
                             "#6E8FB0",
                         }}
-                        title="عرض تفاصيل الصف"
+                        title={S.classes.viewClassDetailsTitle}
                       >
                         <Eye size={16} />
                       </button>
@@ -643,7 +648,7 @@ export default function ClassesList({
                           color:
                             "#4C8577",
                         }}
-                        title="تعديل الصف"
+                        title={S.classes.editClassTitle}
                       >
                         <Pencil size={16} />
                       </button>
@@ -661,7 +666,7 @@ export default function ClassesList({
                           color:
                             "#C25B4A",
                         }}
-                        title="حذف الصف"
+                        title={S.classes.deleteClassTitle}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -680,7 +685,7 @@ export default function ClassesList({
               color: "#A8B0AB",
             }}
           >
-            لا يوجد صفوف مطابقة للبحث
+            {S.classes.noClassesFound}
           </p>
         )}
       </div>
@@ -753,8 +758,7 @@ export default function ClassesList({
                             "#7A8580",
                         }}
                       >
-                        المعلمة:{" "}
-                        {selectedClass.teacher}
+                        {S.classes.teacherDetail(selectedClass.teacher)}
                       </p>
                     </div>
                   </div>
@@ -775,7 +779,7 @@ export default function ClassesList({
                       "1px solid #E2DCCC",
                   }}
                 >
-                  إغلاق
+                  {S.classes.closeButton}
                 </button>
               </div>
             </div>
@@ -816,7 +820,7 @@ export default function ClassesList({
                               "#7A8580",
                           }}
                         >
-                          الأطفال
+                          {S.classes.childrenDetailLabel}
                         </p>
                       </div>
 
@@ -846,7 +850,7 @@ export default function ClassesList({
                               "#7A8580",
                           }}
                         >
-                          السعة
+                          {S.classes.capacityDetailLabel}
                         </p>
                       </div>
 
@@ -880,7 +884,7 @@ export default function ClassesList({
                               "#7A8580",
                           }}
                         >
-                          مقاعد متاحة
+                          {S.classes.availableSeatsDetailLabel}
                         </p>
                       </div>
                     </div>
@@ -892,7 +896,7 @@ export default function ClassesList({
                           "#2F3A36",
                       }}
                     >
-                      أطفال الصف
+                      {S.classes.classChildrenTitle}
                     </h4>
 
                     {classChildren.length >
@@ -945,9 +949,7 @@ export default function ClassesList({
                                         "#7A8580",
                                     }}
                                   >
-                                    العمر:{" "}
-                                    {child.age}{" "}
-                                    سنوات
+                                    {S.classes.childAge(child.age)}
                                   </p>
                                 </div>
                               </div>
@@ -961,7 +963,7 @@ export default function ClassesList({
                                     "#4C8577",
                                 }}
                               >
-                                نشط
+                                {S.common.statusActive}
                               </span>
                             </div>
                           )
@@ -993,8 +995,7 @@ export default function ClassesList({
                               "#7A8580",
                           }}
                         >
-                          لا يوجد أطفال
-                          مسجلون في هذا الصف
+                          {S.classes.noChildrenInClass}
                         </p>
                       </div>
                     )}
@@ -1020,6 +1021,19 @@ export default function ClassesList({
           onSave={handleSave}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={S.classes.confirmDeleteTitle}
+        message={
+          deleteTarget
+            ? S.classes.confirmDeleteMessage(deleteTarget.name)
+            : ""
+        }
+        confirmLabel={S.classes.confirmDeleteLabel}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </DashboardLayout>
   );
 }

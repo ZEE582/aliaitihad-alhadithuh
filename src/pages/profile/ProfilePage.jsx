@@ -11,6 +11,8 @@ import {
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useUser } from "../../context/UserContext";
 
+import { strings as S } from "../../constants/strings";
+
 export default function ProfilePage({ onNavigate, onLogout }) {
   const { user, updateUser } = useUser();
   const [editing, setEditing] = useState(false);
@@ -32,14 +34,14 @@ export default function ProfilePage({ onNavigate, onLogout }) {
     setEditing(false);
   };
 
-  const initial = user.name?.charAt(0) || "س";
+  const initial = user.name?.charAt(0) || S.profile.initialFallback;
 
   return (
     <DashboardLayout
       activePage="profile"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="الملف الشخصي"
+      pageTitle={S.profile.pageTitle}
     >
       <div dir="rtl" className="max-w-2xl mx-auto">
         {/* Profile Card */}
@@ -99,7 +101,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                     className="text-xs"
                     style={{ color: "#A8B0AB" }}
                   >
-                    حساب المستخدم
+                    {S.profile.accountTypeLabel}
                   </span>
                 </div>
               </div>
@@ -117,7 +119,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                   }}
                 >
                   <Pencil size={15} />
-                  تعديل
+                  {S.profile.editButton}
                 </button>
               )}
             </div>
@@ -146,7 +148,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                           className="text-xs mb-1"
                           style={{ color: "#A8B0AB" }}
                         >
-                          البريد الإلكتروني
+                          {S.profile.emailLabel}
                         </p>
 
                         <p
@@ -180,7 +182,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                           className="text-xs mb-1"
                           style={{ color: "#A8B0AB" }}
                         >
-                          رقم الهاتف
+                          {S.profile.phoneLabel}
                         </p>
 
                         <p
@@ -214,14 +216,14 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                           className="text-xs mb-1"
                           style={{ color: "#A8B0AB" }}
                         >
-                          تاريخ الانضمام
+                          {S.profile.joinDateLabel}
                         </p>
 
                         <p
                           className="text-sm font-medium"
                           style={{ color: "#2F3A36" }}
                         >
-                          عضو منذ {user.joinDate}
+                          {S.profile.memberSince(user.joinDate)}
                         </p>
                       </div>
                     </div>
@@ -241,7 +243,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                     className="text-xs"
                     style={{ color: "#A8B0AB" }}
                   >
-                    معلومات الحساب الشخصية
+                    {S.profile.footerLabel}
                   </p>
                 </div>
               </>
@@ -268,14 +270,14 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                         className="text-sm font-bold"
                         style={{ color: "#2F3A36" }}
                       >
-                        تعديل معلومات الحساب
+                        {S.profile.editTitle}
                       </h4>
 
                       <p
                         className="text-xs mt-0.5"
                         style={{ color: "#A8B0AB" }}
                       >
-                        حدّثي البيانات ثم احفظي التغييرات
+                        {S.profile.editDescription}
                       </p>
                     </div>
                   </div>
@@ -287,7 +289,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                         className="block text-sm font-semibold mb-1.5"
                         style={{ color: "#2F3A36" }}
                       >
-                        الاسم الكامل
+                        {S.profile.fullNameLabel}
                       </label>
 
                       <div className="relative">
@@ -317,7 +319,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                         className="block text-sm font-semibold mb-1.5"
                         style={{ color: "#2F3A36" }}
                       >
-                        البريد الإلكتروني
+                        {S.profile.emailLabel}
                       </label>
 
                       <div className="relative">
@@ -348,7 +350,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                         className="block text-sm font-semibold mb-1.5"
                         style={{ color: "#2F3A36" }}
                       >
-                        رقم الهاتف
+                        {S.profile.phoneLabel}
                       </label>
 
                       <div className="relative">
@@ -388,7 +390,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                     }}
                   >
                     <X size={16} />
-                    إلغاء
+                    {S.profile.cancelButton}
                   </button>
 
                   <button
@@ -398,7 +400,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                     style={{ backgroundColor: "#4C8577" }}
                   >
                     <Check size={16} />
-                    حفظ التعديلات
+                    {S.profile.saveButton}
                   </button>
                 </div>
               </>

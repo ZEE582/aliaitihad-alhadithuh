@@ -1,3 +1,4 @@
+import { strings as S } from "../constants/strings";
 import { X } from "lucide-react";
 
 export default function DetailsModal({
@@ -29,7 +30,7 @@ export default function DetailsModal({
                 color: "#4C8577",
               }}
             >
-              {initials || "؟"}
+              {initials || S.detailsModal.unknownInitials}
             </div>
 
             <div>
@@ -82,7 +83,7 @@ export default function DetailsModal({
                 className="text-sm font-medium"
                 style={{ color: "#2F3A36" }}
               >
-                {field.value || "غير محدد"}
+                {field.value || S.detailsModal.notSpecified}
               </p>
             </div>
           ))}
@@ -96,7 +97,7 @@ export default function DetailsModal({
             color: "#FFFFFF",
           }}
         >
-          إغلاق
+          {S.common.close}
         </button>
       </div>
     </div>

@@ -7,11 +7,11 @@ import {
   ClipboardList,
   StickyNote,
   MessageSquare,
-  Megaphone,
   CalendarClock,
-  FileBarChart,
   AlertTriangle,
 } from "lucide-react";
+
+import { strings as S } from "../../constants/strings";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 
@@ -121,21 +121,21 @@ function TeacherDashboard({ onNavigate }) {
   const stats = [
     {
       key: "students",
-      label: "أطفال صفي",
+      label: S.dashboard.teacherStatMyClassChildren,
       value: myStudents.length,
       icon: Baby,
       color: "#4C8577",
     },
     {
       key: "active",
-      label: "أطفال نشطون",
+      label: S.dashboard.teacherStatActiveChildren,
       value: activeStudents,
       icon: ClipboardCheck,
       color: "#6E8FB0",
     },
     {
       key: "unread",
-      label: "رسائل غير مقروءة",
+      label: S.dashboard.teacherStatUnreadMessages,
       value: unreadFromParents,
       icon: MessageSquare,
       color: "#C25B4A",
@@ -176,7 +176,7 @@ function TeacherDashboard({ onNavigate }) {
                 className="text-xs font-semibold"
                 style={{ color: "#4C8577" }}
               >
-                لوحة المعلمة
+                {S.dashboard.teacherPageBadge}
               </span>
             </div>
 
@@ -184,21 +184,17 @@ function TeacherDashboard({ onNavigate }) {
               className="text-xl md:text-2xl font-bold"
               style={{ color: "#2F3A36" }}
             >
-              صباح الخير، {user?.name}
+{S.dashboard.teacherWelcome(user?.name)}
             </h2>
 
             <p
               className="text-sm mt-2 leading-6"
               style={{ color: "#68736F" }}
             >
-              أهلاً بكِ في يوم جديد مع أطفال{" "}
-              <span
-                className="font-semibold"
-                style={{ color: "#4C8577" }}
-              >
-                {user?.classroom || "صفك"}
-              </span>
-              {" "}💚
+              {S.dashboard.teacherGreeting(
+                user?.classroom ||
+                  S.dashboard.teacherGreetingFallbackClassroom
+              )}
             </p>
           </div>
 
@@ -224,7 +220,7 @@ function TeacherDashboard({ onNavigate }) {
             className="text-xs"
             style={{ color: "#7A8580" }}
           >
-            "كل يوم فرصة جديدة لزرع فكرة جميلة في قلب طفل." ✨
+            {S.dashboard.teacherMotivationQuote}
           </p>
         </div>
       </div>
@@ -234,12 +230,15 @@ function TeacherDashboard({ onNavigate }) {
       {/* ============================================= */}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {stats.map((s) => (
-          <StatCard
-            key={s.key}
-            {...s}
-          />
-        ))}
+        {stats.map((s) => {
+          const { key, ...rest } = s;
+          return (
+            <StatCard
+              key={key}
+              {...rest}
+            />
+          );
+        })}
       </div>
 
       {/* ============================================= */}
@@ -253,14 +252,14 @@ function TeacherDashboard({ onNavigate }) {
               className="text-sm font-bold"
               style={{ color: "#2F3A36" }}
             >
-              اختصارات سريعة
+              {S.dashboard.teacherQuickActionsTitle}
             </h3>
 
             <p
               className="text-xs mt-1"
               style={{ color: "#A8B0AB" }}
             >
-              أهم الأشياء التي قد تحتاجينها اليوم
+              {S.dashboard.teacherQuickActionsSubtitle}
             </p>
           </div>
         </div>
@@ -288,14 +287,14 @@ function TeacherDashboard({ onNavigate }) {
               className="text-sm font-bold"
               style={{ color: "#2F3A36" }}
             >
-              تسجيل الحضور
+              {S.dashboard.teacherQuickActionAttendance}
             </p>
 
             <p
               className="text-xs mt-1"
               style={{ color: "#A8B0AB" }}
             >
-              سجلي حضور أطفال صفك اليوم
+              {S.dashboard.teacherQuickActionAttendanceHint}
             </p>
           </button>
 
@@ -321,14 +320,14 @@ function TeacherDashboard({ onNavigate }) {
               className="text-sm font-bold"
               style={{ color: "#2F3A36" }}
             >
-              إضافة ملاحظة
+              {S.dashboard.teacherQuickActionAddNote}
             </p>
 
             <p
               className="text-xs mt-1"
               style={{ color: "#A8B0AB" }}
             >
-              سجلي ملاحظة عن أحد الأطفال
+              {S.dashboard.teacherQuickActionAddNoteHint}
             </p>
           </button>
 
@@ -354,7 +353,7 @@ function TeacherDashboard({ onNavigate }) {
               className="text-sm font-bold"
               style={{ color: "#2F3A36" }}
             >
-              رسائل الأهالي
+              {S.dashboard.teacherQuickActionParentMessages}
             </p>
 
             <p
@@ -362,8 +361,10 @@ function TeacherDashboard({ onNavigate }) {
               style={{ color: "#A8B0AB" }}
             >
               {unreadFromParents > 0
-                ? `لديك ${unreadFromParents} رسائل تحتاج متابعة`
-                : "لا توجد رسائل تحتاج متابعة"}
+                ? S.dashboard.teacherUnreadMessagesSummary(
+                    unreadFromParents
+                  )
+                : S.dashboard.teacherNoUnreadMessages}
             </p>
           </button>
         </div>
@@ -375,7 +376,7 @@ function TeacherDashboard({ onNavigate }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* My Students */}
-        <Card title="🌼 أطفال صفي">
+        <Card title={S.dashboard.teacherStudentsCardTitle}>
           {myStudents.length === 0 ? (
             <div className="text-center py-8">
               <div
@@ -394,7 +395,7 @@ function TeacherDashboard({ onNavigate }) {
                 className="text-sm mt-3"
                 style={{ color: "#A8B0AB" }}
               >
-                لا يوجد طلاب مسجلين بصفك بعد
+                {S.dashboard.teacherNoStudents}
               </p>
             </div>
           ) : (
@@ -404,7 +405,7 @@ function TeacherDashboard({ onNavigate }) {
                   className="text-xs"
                   style={{ color: "#A8B0AB" }}
                 >
-                  قائمة أطفال {user?.classroom}
+                  {S.dashboard.teacherStudentsListTitle(user?.classroom)}
                 </p>
 
                 <span
@@ -414,7 +415,7 @@ function TeacherDashboard({ onNavigate }) {
                     color: "#4C8577",
                   }}
                 >
-                  {activeStudents} نشط
+                  {S.dashboard.teacherActiveCountBadge(activeStudents)}
                 </span>
               </div>
 
@@ -470,7 +471,7 @@ function TeacherDashboard({ onNavigate }) {
         </Card>
 
         {/* Messages */}
-        <Card title="💌 آخر رسائل الأهالي">
+        <Card title={S.dashboard.teacherMessagesCardTitle}>
           {incomingMessages.length === 0 ? (
             <div className="text-center py-8">
               <div
@@ -489,7 +490,7 @@ function TeacherDashboard({ onNavigate }) {
                 className="text-sm mt-3"
                 style={{ color: "#A8B0AB" }}
               >
-                صندوق الرسائل هادئ حالياً 🌿
+                {S.dashboard.teacherNoMessages}
               </p>
             </div>
           ) : (
@@ -543,7 +544,7 @@ function TeacherDashboard({ onNavigate }) {
             className="text-sm font-semibold mt-3"
             style={{ color: "#4C8577" }}
           >
-            فتح كل الرسائل ←
+            {S.dashboard.teacherOpenAllMessages}
           </button>
         </Card>
       </div>
@@ -593,7 +594,7 @@ function SecretaryDashboard({ onNavigate }) {
   const stats = [
     {
       key: "children",
-      label: "الأطفال النشطون",
+      label: S.dashboard.secretaryStatActiveChildren,
       value: activeChildren.length,
       icon: Baby,
       color: "#4C8577",
@@ -601,7 +602,7 @@ function SecretaryDashboard({ onNavigate }) {
 
     {
       key: "parents",
-      label: "أولياء الأمور",
+      label: S.dashboard.secretaryStatParents,
       value: parentsList.length,
       icon: Users,
       color: "#C25B4A",
@@ -609,7 +610,7 @@ function SecretaryDashboard({ onNavigate }) {
 
     {
       key: "teachers",
-      label: "المعلمون",
+      label: S.dashboard.secretaryStatTeachers,
       value: teachersList.length,
       icon: GraduationCap,
       color: "#6E8FB0",
@@ -617,7 +618,7 @@ function SecretaryDashboard({ onNavigate }) {
 
     {
       key: "messages",
-      label: "رسائل تحتاج متابعة",
+      label: S.dashboard.secretaryStatMessagesFollowUp,
       value: unreadMessages,
       icon: MessageSquare,
       color: "#E8B24D",
@@ -633,14 +634,14 @@ function SecretaryDashboard({ onNavigate }) {
           className="text-lg font-bold"
           style={{ color: "#2F3A36" }}
         >
-          صباح الخير، {user?.name} 🌷
+          {S.dashboard.secretaryWelcome(user?.name)}
         </h2>
 
         <p
           className="text-sm mt-1"
           style={{ color: "#7A8580" }}
         >
-          إليك ملخص الأعمال التي تحتاج متابعة اليوم.
+          {S.dashboard.secretarySubtitle}
         </p>
 
       </div>
@@ -648,12 +649,15 @@ function SecretaryDashboard({ onNavigate }) {
       {/* الإحصائيات */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
-        {stats.map((stat) => (
-          <StatCard
-            key={stat.key}
-            {...stat}
-          />
-        ))}
+        {stats.map((stat) => {
+          const { key, ...rest } = stat;
+          return (
+            <StatCard
+              key={key}
+              {...rest}
+            />
+          );
+        })}
 
       </div>
 
@@ -670,7 +674,7 @@ function SecretaryDashboard({ onNavigate }) {
           }}
         >
           <Baby size={16} />
-          إدارة الأطفال
+          {S.dashboard.secretaryQuickActionManageChildren}
         </button>
 
         <button
@@ -683,7 +687,7 @@ function SecretaryDashboard({ onNavigate }) {
           }}
         >
           <ClipboardCheck size={16} />
-          متابعة الحضور
+          {S.dashboard.secretaryQuickActionAttendance}
         </button>
 
         <button
@@ -696,7 +700,7 @@ function SecretaryDashboard({ onNavigate }) {
           }}
         >
           <CalendarClock size={16} />
-          جدول الحصص
+          {S.dashboard.secretaryQuickActionSchedules}
         </button>
 
         <button
@@ -709,7 +713,7 @@ function SecretaryDashboard({ onNavigate }) {
           }}
         >
           <MessageSquare size={16} />
-          الرسائل
+          {S.dashboard.secretaryQuickActionMessages}
         </button>
 
       </div>
@@ -740,15 +744,16 @@ function SecretaryDashboard({ onNavigate }) {
                 className="text-sm font-bold"
                 style={{ color: "#C25B4A" }}
               >
-                أطفال يحتاجون متابعة
+                {S.dashboard.secretaryAlertTitle}
               </p>
 
               <p
                 className="text-xs mt-1"
                 style={{ color: "#7A4A43" }}
               >
-                يوجد {childrenNeedFollowUp.length} طفل تجاوز
-                3 أيام غياب ويحتاج إلى مراجعة ولي الأمر.
+                {S.dashboard.secretaryAlertBody(
+                  childrenNeedFollowUp.length
+                )}
               </p>
 
               <button
@@ -756,7 +761,7 @@ function SecretaryDashboard({ onNavigate }) {
                 className="text-xs font-semibold mt-2"
                 style={{ color: "#C25B4A" }}
               >
-                مراجعة الغيابات ←
+                {S.dashboard.secretaryReviewAbsences}
               </button>
 
             </div>
@@ -769,14 +774,14 @@ function SecretaryDashboard({ onNavigate }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* حالة الصفوف */}
-        <Card title="🏫 حالة الصفوف">
+        <Card title={S.dashboard.secretaryClassesCardTitle}>
 
           {classesList.length === 0 ? (
             <p
               className="text-sm"
               style={{ color: "#A8B0AB" }}
             >
-              لا توجد صفوف مسجلة بعد.
+              {S.dashboard.secretaryNoClasses}
             </p>
           ) : (
             <div className="space-y-4">
@@ -836,7 +841,7 @@ function SecretaryDashboard({ onNavigate }) {
                         className="text-[11px] mt-1"
                         style={{ color: "#C25B4A" }}
                       >
-                        الصف قريب من الطاقة الاستيعابية.
+                        {S.dashboard.secretaryClassNearCapacity}
                       </p>
                     )}
 
@@ -850,7 +855,7 @@ function SecretaryDashboard({ onNavigate }) {
         </Card>
 
         {/* مهام المتابعة */}
-        <Card title="📌 يحتاج متابعة">
+        <Card title={S.dashboard.secretaryFollowUpCardTitle}>
 
           <div className="space-y-3">
 
@@ -865,14 +870,14 @@ function SecretaryDashboard({ onNavigate }) {
                   className="text-sm font-medium"
                   style={{ color: "#2F3A36" }}
                 >
-                  رسائل غير مقروءة
+                  {S.dashboard.secretaryFollowUpUnreadMessages}
                 </p>
 
                 <p
                   className="text-xs mt-0.5"
                   style={{ color: "#A8B0AB" }}
                 >
-                  رسائل تحتاج إلى مراجعة
+                  {S.dashboard.secretaryFollowUpUnreadMessagesHint}
                 </p>
               </div>
 
@@ -898,14 +903,14 @@ function SecretaryDashboard({ onNavigate }) {
                   className="text-sm font-medium"
                   style={{ color: "#2F3A36" }}
                 >
-                  غيابات تحتاج متابعة
+                  {S.dashboard.secretaryFollowUpAbsences}
                 </p>
 
                 <p
                   className="text-xs mt-0.5"
                   style={{ color: "#A8B0AB" }}
                 >
-                  أكثر من 3 أيام غياب
+                  {S.dashboard.secretaryFollowUpAbsencesHint}
                 </p>
               </div>
 
@@ -932,7 +937,7 @@ function SecretaryDashboard({ onNavigate }) {
               className="w-full text-right text-sm font-semibold pt-1"
               style={{ color: "#4C8577" }}
             >
-              فتح التقارير ←
+              {S.dashboard.secretaryOpenReports}
             </button>
 
           </div>
@@ -961,7 +966,7 @@ function AdminDashboard({ onNavigate }) {
   const stats = [
     {
       key: "children",
-      label: "إجمالي الأطفال",
+      label: S.dashboard.adminStatTotalChildren,
       value: childrenList.length,
       icon: Baby,
       color: "#4C8577",
@@ -969,7 +974,7 @@ function AdminDashboard({ onNavigate }) {
 
     {
       key: "activeChildren",
-      label: "الأطفال النشطون",
+      label: S.dashboard.adminStatActiveChildren,
       value: activeChildrenCount,
       icon: ClipboardCheck,
       color: "#E8B24D",
@@ -977,7 +982,7 @@ function AdminDashboard({ onNavigate }) {
 
     {
       key: "teachers",
-      label: "عدد المعلمين",
+      label: S.dashboard.adminStatTeachersCount,
       value: teachersList.length,
       icon: GraduationCap,
       color: "#6E8FB0",
@@ -985,7 +990,7 @@ function AdminDashboard({ onNavigate }) {
 
     {
       key: "parents",
-      label: "أولياء الأمور",
+      label: S.dashboard.adminStatParents,
       value: parentsList.length,
       icon: Users,
       color: "#C25B4A",
@@ -1005,45 +1010,45 @@ function AdminDashboard({ onNavigate }) {
   const recentActivity = [
     {
       id: 1,
-      text: "تم تسجيل غياب لـ رهف يوسف (صف الفراشات)",
-      time: "قبل 20 دقيقة",
+      text: S.dashboard.recentActivityAbsenceRecorded,
+      time: S.dashboard.recentActivityTime20Minutes,
     },
 
     {
       id: 2,
-      text: "أضافت المعلمة نور ملاحظة جديدة لـ يزن الأحمد",
-      time: "قبل ساعة",
+      text: S.dashboard.recentActivityNoteAdded,
+      time: S.dashboard.recentActivityTime1Hour,
     },
 
     {
       id: 3,
-      text: "تم إضافة طفل جديد: سيلين خالد (صف النجوم)",
-      time: "اليوم، 9:15 ص",
+      text: S.dashboard.recentActivityChildAdded,
+      time: S.dashboard.recentActivityTimeToday915,
     },
 
     {
       id: 4,
-      text: "تحديث بيانات ولي الأمر: أ. محمد درويش",
-      time: "أمس",
+      text: S.dashboard.recentActivityParentUpdated,
+      time: S.dashboard.recentActivityTimeYesterday,
     },
   ];
 
   const quickActions = [
     {
       key: "attendance",
-      label: "تسجيل حضور اليوم",
+      label: S.dashboard.adminQuickActionAttendanceToday,
       icon: ClipboardList,
     },
 
     {
       key: "children",
-      label: "إضافة طفل",
+      label: S.dashboard.adminQuickActionAddChild,
       icon: UserPlus,
     },
 
     {
       key: "notes",
-      label: "إضافة ملاحظة",
+      label: S.dashboard.adminQuickActionAddNote,
       icon: StickyNote,
     },
   ];
@@ -1052,12 +1057,15 @@ function AdminDashboard({ onNavigate }) {
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
-        {stats.map((s) => (
-          <StatCard
-            key={s.key}
-            {...s}
-          />
-        ))}
+        {stats.map((s) => {
+          const { key, ...rest } = s;
+          return (
+            <StatCard
+              key={key}
+              {...rest}
+            />
+          );
+        })}
 
       </div>
 
@@ -1085,14 +1093,14 @@ function AdminDashboard({ onNavigate }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
 
-        <Card title="توزيع الأطفال حسب الصفوف">
+        <Card title={S.dashboard.adminClassDistributionTitle}>
 
           {classDistribution.length === 0 ? (
             <p
               className="text-sm"
               style={{ color: "#A8B0AB" }}
             >
-              لا يوجد صفوف مسجلة بعد
+              {S.dashboard.adminNoClasses}
             </p>
           ) : (
             <div className="space-y-3">
@@ -1137,13 +1145,13 @@ function AdminDashboard({ onNavigate }) {
 
         </Card>
 
-        <Card title="غيابات اليوم">
+        <Card title={S.dashboard.adminTodayAbsencesTitle}>
 
           <p
             className="text-xs mb-3"
             style={{ color: "#A8B0AB" }}
           >
-            سيتم عرضها هون تلقائياً بمجرد تسجيل الحضور اليومي
+            {S.dashboard.adminTodayAbsencesHint}
           </p>
 
           <button
@@ -1151,26 +1159,26 @@ function AdminDashboard({ onNavigate }) {
             className="text-sm font-semibold"
             style={{ color: "#4C8577" }}
           >
-            الذهاب لتسجيل الحضور ←
+            {S.dashboard.adminGoToAttendance}
           </button>
 
         </Card>
 
-        <Card title="آخر الملاحظات">
+        <Card title={S.dashboard.adminLatestNotesTitle}>
 
           <button
             onClick={() => onNavigate("notes")}
             className="text-sm font-semibold"
             style={{ color: "#4C8577" }}
           >
-            عرض كل الملاحظات ←
+            {S.dashboard.adminViewAllNotes}
           </button>
 
         </Card>
 
       </div>
 
-      <Card title="آخر الأنشطة">
+      <Card title={S.dashboard.adminRecentActivityTitle}>
 
         <ul className="space-y-3">
 
@@ -1218,7 +1226,7 @@ export default function Dashboard({
       activePage="dashboard"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="لوحة التحكم"
+      pageTitle={S.common.dashboard}
     >
       {user.roleType === "teacher" ? (
         <TeacherDashboard

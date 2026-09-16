@@ -14,7 +14,9 @@ import {
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import ParentForm from "./ParentForm";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useParents } from "../../context/ParentsContext";
+import { strings as S } from "../../constants/strings";
 
 function StatusBadge({ status, onClick }) {
   const isActive = status === "نشط";
@@ -27,7 +29,7 @@ function StatusBadge({ status, onClick }) {
         backgroundColor: isActive ? "#4C857720" : "#C25B4A20",
         color: isActive ? "#4C8577" : "#C25B4A",
       }}
-      title="اضغط لتبديل الحالة"
+      title={S.parents.statusToggleTitle}
     >
       {status}
     </button>
@@ -67,7 +69,7 @@ function ParentDetails({ parent, onClose }) {
                   color: "#FBF7EF",
                 }}
               >
-                {parent.name?.charAt(0) || "؟"}
+                {parent.name?.charAt(0) || S.parents.rowAvatarFallback}
               </div>
 
               <div>
@@ -82,7 +84,7 @@ function ParentDetails({ parent, onClose }) {
                   className="text-xs mt-1"
                   style={{ color: "#7A8580" }}
                 >
-                  ولي أمر
+                  {S.parents.parentRole}
                 </p>
               </div>
             </div>
@@ -117,14 +119,14 @@ function ParentDetails({ parent, onClose }) {
                   className="text-xs"
                   style={{ color: "#A8B0AB" }}
                 >
-                  رقم الهاتف
+                  {S.parents.detailPhoneLabel}
                 </p>
 
                 <p
                   className="text-sm font-medium mt-0.5"
                   style={{ color: "#2F3A36" }}
                 >
-                  {parent.phone || "غير محدد"}
+                  {parent.phone || S.parents.detailPhoneFallback}
                 </p>
               </div>
             </div>
@@ -145,14 +147,14 @@ function ParentDetails({ parent, onClose }) {
                   className="text-xs"
                   style={{ color: "#A8B0AB" }}
                 >
-                  البريد الإلكتروني
+                  {S.parents.detailEmailLabel}
                 </p>
 
                 <p
                   className="text-sm font-medium mt-0.5"
                   style={{ color: "#2F3A36" }}
                 >
-                  {parent.email || "غير محدد"}
+                  {parent.email || S.parents.detailEmailFallback}
                 </p>
               </div>
             </div>
@@ -173,14 +175,14 @@ function ParentDetails({ parent, onClose }) {
                   className="text-xs"
                   style={{ color: "#A8B0AB" }}
                 >
-                  الأبناء
+                  {S.parents.detailChildrenLabel}
                 </p>
 
                 <p
                   className="text-sm font-medium mt-0.5"
                   style={{ color: "#2F3A36" }}
                 >
-                  {parent.childrenNames || "غير محدد"}
+                  {parent.childrenNames || S.parents.detailChildrenFallback}
                 </p>
               </div>
             </div>
@@ -201,7 +203,7 @@ function ParentDetails({ parent, onClose }) {
                   className="text-xs"
                   style={{ color: "#A8B0AB" }}
                 >
-                  الحالة
+                  {S.parents.detailStatusLabel}
                 </p>
 
                 <div className="mt-1">
@@ -219,7 +221,7 @@ function ParentDetails({ parent, onClose }) {
               color: "#FFFFFF",
             }}
           >
-            إغلاق
+            {S.parents.detailCloseButton}
           </button>
         </div>
       </div>
@@ -240,6 +242,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingParent, setEditingParent] = useState(null);
   const [viewingParent, setViewingParent] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const filtered = parentsList.filter(
     (p) =>
@@ -273,9 +276,15 @@ export default function ParentsList({ onNavigate, onLogout }) {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("متأكدة إنك بدك تحذفي ولي الأمر هذا؟")) {
-      deleteParent(id);
+    setDeleteTarget(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      deleteParent(deleteTarget);
     }
+
+    setDeleteTarget(null);
   };
 
   return (
@@ -283,7 +292,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
       activePage="parents"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="أولياء الأمور"
+      pageTitle={S.parents.pageTitle}
     >
       {/* Intro */}
       <div className="mb-5">
@@ -291,7 +300,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
           className="text-sm"
           style={{ color: "#7A8580" }}
         >
-          إدارة بيانات أولياء الأمور ومتابعة التواصل معهم
+          {S.parents.introText}
         </p>
       </div>
 
@@ -319,7 +328,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
               className="text-xs"
               style={{ color: "#A8B0AB" }}
             >
-              إجمالي أولياء الأمور
+              {S.parents.statsTotalLabel}
             </p>
 
             <p
@@ -353,7 +362,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
               className="text-xs"
               style={{ color: "#A8B0AB" }}
             >
-              أولياء الأمور النشطون
+              {S.parents.statsActiveLabel}
             </p>
 
             <p
@@ -379,7 +388,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث باسم ولي الأمر أو الطفل..."
+            placeholder={S.parents.searchPlaceholder}
             className="w-full rounded-xl py-2.5 pr-9 pl-3 text-sm outline-none"
             style={{
               border: "1px solid #E2DCCC",
@@ -395,7 +404,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
           style={{ backgroundColor: "#4C8577" }}
         >
           <Plus size={18} />
-          إضافة ولي أمر
+          {S.parents.addButton}
         </button>
       </div>
 
@@ -420,35 +429,35 @@ export default function ParentsList({ onNavigate, onLogout }) {
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  الاسم
+                  {S.common.tableHeaderName}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  رقم التواصل
+                  {S.common.tableHeaderContact}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  الأبناء
+                  {S.parents.detailChildrenLabel}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  الحالة
+                  {S.parents.detailStatusLabel}
                 </th>
 
                 <th
                   className="text-right px-5 py-3 font-medium"
                   style={{ color: "#7A8580" }}
                 >
-                  إجراءات
+                  {S.common.tableHeaderActions}
                 </th>
               </tr>
             </thead>
@@ -474,7 +483,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
                           color: "#4C8577",
                         }}
                       >
-                        {p.name?.charAt(0) || "؟"}
+                        {p.name?.charAt(0) || S.parents.rowAvatarFallback}
                       </div>
 
                       {p.name}
@@ -524,7 +533,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
                         }
                         className="p-1.5 rounded-lg hover:opacity-70"
                         style={{ color: "#6E8FB0" }}
-                        title="عرض التفاصيل"
+                        title={S.common.viewDetails}
                       >
                         <Eye size={16} />
                       </button>
@@ -535,7 +544,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
                         }
                         className="p-1.5 rounded-lg hover:opacity-70"
                         style={{ color: "#4C8577" }}
-                        title="تعديل"
+                        title={S.common.edit}
                       >
                         <Pencil size={16} />
                       </button>
@@ -546,7 +555,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
                         }
                         className="p-1.5 rounded-lg hover:opacity-70"
                         style={{ color: "#C25B4A" }}
-                        title="حذف"
+                        title={S.common.delete}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -574,7 +583,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
               className="text-sm"
               style={{ color: "#A8B0AB" }}
             >
-              لا يوجد نتائج مطابقة للبحث
+              {S.common.noSearchResults}
             </p>
           </div>
         )}
@@ -599,6 +608,15 @@ export default function ParentsList({ onNavigate, onLogout }) {
           onClose={() => setViewingParent(null)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={S.parents.confirmDeleteTitle}
+        message={S.parents.confirmDeleteMessage}
+        confirmLabel={S.parents.confirmDeleteLabel}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </DashboardLayout>
   );
 }

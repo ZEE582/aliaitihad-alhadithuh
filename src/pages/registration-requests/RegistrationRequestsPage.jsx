@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
+import ConfirmModal from "../../components/ConfirmModal";
+
+import { strings as S } from "../../constants/strings";
 
 import { useRegistrationRequests } from "../../context/RegistrationRequestsContext";
 import { useChildren } from "../../context/ChildrenContext";
@@ -28,19 +31,19 @@ import { useChildren } from "../../context/ChildrenContext";
 function StatusBadge({ status }) {
   const statusMap = {
     pending: {
-      label: "بانتظار المراجعة",
+      label: S.registrationRequests.statusPending,
       backgroundColor: "#E8B24D25",
       color: "#B8862F",
     },
 
     approved: {
-      label: "تمت الموافقة",
+      label: S.registrationRequests.statusApproved,
       backgroundColor: "#4C857720",
       color: "#4C8577",
     },
 
     rejected: {
-      label: "مرفوض",
+      label: S.registrationRequests.statusRejected,
       backgroundColor: "#C25B4A20",
       color: "#C25B4A",
     },
@@ -165,7 +168,7 @@ function RequestCard({
               }}
             >
               {request.childName ||
-                "طفل جديد"}
+                S.registrationRequests.childFallbackName}
             </p>
 
             <div className="flex items-center gap-1.5 mt-1">
@@ -182,8 +185,9 @@ function RequestCard({
                   color: "#A8B0AB",
                 }}
               >
-                قُدّم بتاريخ{" "}
-                {request.submittedAt}
+                {S.registrationRequests.submittedOn(
+                  request.submittedAt
+                )}
               </p>
             </div>
           </div>
@@ -240,7 +244,7 @@ function RequestCard({
                 color: "#2F3A36",
               }}
             >
-              تفاصيل طلب التسجيل
+              {S.registrationRequests.detailsTitle}
             </p>
           </div>
 
@@ -255,13 +259,13 @@ function RequestCard({
                 color: "#4C8577",
               }}
             >
-              👶 معلومات الطفل
+              {S.registrationRequests.childInfoSection}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InfoItem
                 icon={Baby}
-                label="اسم الطفل"
+                label={S.registrationRequests.childNameLabel}
                 value={
                   request.childName
                 }
@@ -269,7 +273,7 @@ function RequestCard({
 
               <InfoItem
                 icon={User}
-                label="الجنس"
+                label={S.registrationRequests.genderLabel}
                 value={
                   request.gender
                 }
@@ -277,7 +281,7 @@ function RequestCard({
 
               <InfoItem
                 icon={CalendarDays}
-                label="تاريخ الميلاد"
+                label={S.registrationRequests.birthDateLabel}
                 value={
                   request.birthDate
                 }
@@ -296,13 +300,13 @@ function RequestCard({
                 color: "#4C8577",
               }}
             >
-              👨‍👩‍👧 معلومات ولي الأمر
+              {S.registrationRequests.parentInfoSection}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InfoItem
                 icon={User}
-                label="اسم الأب"
+                label={S.registrationRequests.fatherNameLabel}
                 value={
                   request.fatherName
                 }
@@ -310,7 +314,7 @@ function RequestCard({
 
               <InfoItem
                 icon={Phone}
-                label="هاتف الأب"
+                label={S.registrationRequests.fatherPhoneLabel}
                 value={
                   request.fatherPhone
                 }
@@ -318,7 +322,7 @@ function RequestCard({
 
               <InfoItem
                 icon={User}
-                label="اسم الأم"
+                label={S.registrationRequests.motherNameLabel}
                 value={
                   request.motherName
                 }
@@ -326,7 +330,7 @@ function RequestCard({
 
               <InfoItem
                 icon={Phone}
-                label="هاتف الأم"
+                label={S.registrationRequests.motherPhoneLabel}
                 value={
                   request.motherPhone
                 }
@@ -334,7 +338,7 @@ function RequestCard({
 
               <InfoItem
                 icon={Users}
-                label="الوضع الحالي للوالدين"
+                label={S.registrationRequests.parentsStatusLabel}
                 value={
                   request.parentsStatus
                 }
@@ -342,7 +346,7 @@ function RequestCard({
 
               <InfoItem
                 icon={Phone}
-                label="وسيلة اتصال الطوارئ"
+                label={S.registrationRequests.emergencyContactLabel}
                 value={
                   request.emergencyContact
                 }
@@ -382,7 +386,7 @@ function RequestCard({
                       color: "#C25B4A",
                     }}
                   >
-                    حالات أو معلومات صحية
+                    {S.registrationRequests.healthConditionsTitle}
                   </p>
                 </div>
 
@@ -439,7 +443,7 @@ function RequestCard({
                       color: "#6E8FB0",
                     }}
                   >
-                    احتياجات خاصة
+                    {S.registrationRequests.specialNeedsTitle}
                   </p>
                 </div>
 
@@ -484,7 +488,7 @@ function RequestCard({
                   color: "#4C8577",
                 }}
               >
-                ملاحظات إضافية
+                {S.registrationRequests.extraNotesTitle}
               </p>
 
               <p
@@ -519,7 +523,7 @@ function RequestCard({
               >
                 <XCircle size={16} />
 
-                رفض الطلب
+                {S.registrationRequests.rejectButton}
               </button>
 
               <button
@@ -537,7 +541,7 @@ function RequestCard({
                   size={16}
                 />
 
-                قبول وإضافة للروضة
+                {S.registrationRequests.approveButton}
               </button>
             </div>
           )}
@@ -557,8 +561,7 @@ function RequestCard({
               />
 
               <p className="text-xs font-semibold">
-                تمت الموافقة على الطلب
-                وإضافة الطفل إلى النظام.
+                {S.registrationRequests.approvedMessage}
               </p>
             </div>
           )}
@@ -576,7 +579,7 @@ function RequestCard({
               <XCircle size={17} />
 
               <p className="text-xs font-semibold">
-                تم رفض طلب التسجيل.
+                {S.registrationRequests.rejectedMessage}
               </p>
             </div>
           )}
@@ -604,6 +607,9 @@ export default function RegistrationRequestsPage({
 
   const [filter, setFilter] =
     useState("pending");
+
+  const [rejectTarget, setRejectTarget] =
+    useState(null);
 
   // ======================================================
   // Counts
@@ -727,18 +733,18 @@ export default function RegistrationRequestsPage({
   // ======================================================
 
   const handleReject = (id) => {
-    const confirmed = window.confirm(
-      "هل أنتِ متأكدة من رفض طلب التسجيل؟"
-    );
+    setRejectTarget(id);
+  };
 
-    if (!confirmed) {
-      return;
+  const confirmReject = () => {
+    if (rejectTarget) {
+      updateRequestStatus(
+        rejectTarget,
+        "rejected"
+      );
     }
 
-    updateRequestStatus(
-      id,
-      "rejected"
-    );
+    setRejectTarget(null);
   };
 
   // ======================================================
@@ -748,22 +754,22 @@ export default function RegistrationRequestsPage({
   const filters = [
     {
       key: "pending",
-      label: "بانتظار المراجعة",
+      label: S.registrationRequests.statusPending,
       count: pendingCount,
     },
     {
       key: "approved",
-      label: "مقبولة",
+      label: S.registrationRequests.filterApproved,
       count: approvedCount,
     },
     {
       key: "rejected",
-      label: "مرفوضة",
+      label: S.registrationRequests.filterRejected,
       count: rejectedCount,
     },
     {
       key: "all",
-      label: "الكل",
+      label: S.registrationRequests.filterAll,
       count: requests.length,
     },
   ];
@@ -773,7 +779,7 @@ export default function RegistrationRequestsPage({
       activePage="registration-requests"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="طلبات التسجيل"
+      pageTitle={S.registrationRequests.pageTitle}
     >
       {/* ==================================================
           Welcome Header
@@ -808,7 +814,7 @@ export default function RegistrationRequestsPage({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">
-                🌷
+                {S.registrationRequests.welcomeEmoji}
               </span>
 
               <span
@@ -817,7 +823,7 @@ export default function RegistrationRequestsPage({
                   color: "#4C8577",
                 }}
               >
-                تسجيلات جديدة
+                {S.registrationRequests.newRegistrationsLabel}
               </span>
             </div>
 
@@ -827,7 +833,7 @@ export default function RegistrationRequestsPage({
                 color: "#2F3A36",
               }}
             >
-              طلبات الالتحاق بالروضة
+              {S.registrationRequests.welcomeTitle}
             </h2>
 
             <p
@@ -836,9 +842,7 @@ export default function RegistrationRequestsPage({
                 color: "#68736F",
               }}
             >
-              راجعي طلبات الأهالي قبل
-              اعتماد تسجيل أطفالهم في
-              الروضة. 💚
+              {S.registrationRequests.welcomeDescription}
             </p>
           </div>
 
@@ -906,7 +910,9 @@ export default function RegistrationRequestsPage({
                 color: "#7A8580",
               }}
             >
-              طلب يحتاج مراجعة
+              {S.registrationRequests.pendingStatLabel(
+                pendingCount
+              )}
             </p>
           </div>
         </div>
@@ -951,7 +957,9 @@ export default function RegistrationRequestsPage({
                 color: "#7A8580",
               }}
             >
-              طلب تمت الموافقة عليه
+              {S.registrationRequests.approvedStatLabel(
+                approvedCount
+              )}
             </p>
           </div>
         </div>
@@ -996,7 +1004,7 @@ export default function RegistrationRequestsPage({
                 color: "#7A8580",
               }}
             >
-              طلب مرفوض
+              {S.registrationRequests.rejectedStatLabel}
             </p>
           </div>
         </div>
@@ -1091,7 +1099,7 @@ export default function RegistrationRequestsPage({
                 color: "#4A5551",
               }}
             >
-              لا توجد طلبات هنا حاليًا
+              {S.registrationRequests.emptyStateTitle}
             </p>
 
             <p
@@ -1100,8 +1108,7 @@ export default function RegistrationRequestsPage({
                 color: "#A8B0AB",
               }}
             >
-              ستظهر طلبات الأهالي هنا
-              عند إرسالها.
+              {S.registrationRequests.emptyStateDescription}
             </p>
           </div>
         ) : (
@@ -1121,6 +1128,15 @@ export default function RegistrationRequestsPage({
           )
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!rejectTarget}
+        title={S.registrationRequests.confirmRejectTitle}
+        message={S.registrationRequests.confirmRejectMessage}
+        confirmLabel={S.registrationRequests.confirmRejectLabel}
+        onConfirm={confirmReject}
+        onCancel={() => setRejectTarget(null)}
+      />
     </DashboardLayout>
   );
 }

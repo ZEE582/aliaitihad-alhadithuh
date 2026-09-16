@@ -14,6 +14,7 @@ import { useChildren } from "../../context/ChildrenContext";
 import { useTeachers } from "../../context/TeachersContext";
 import { useUser } from "../../context/UserContext";
 import { useAttendance } from "../../context/AttendanceContext";
+import { strings as S } from "../../constants/strings";
 
 function getInitials(name = "") {
   return name
@@ -43,7 +44,7 @@ export default function MyChildPage({
         activePage="children"
         onNavigate={onNavigate}
         onLogout={onLogout}
-        pageTitle="ملف طفلي"
+        pageTitle={S.myChild.pageTitle}
       >
         <div className="max-w-xl mx-auto text-center py-16">
           <div
@@ -62,14 +63,14 @@ export default function MyChildPage({
             className="text-lg font-bold"
             style={{ color: "#2F3A36" }}
           >
-            لا يوجد طفل مرتبط بحسابك
+            {S.myChild.noChildTitle}
           </h2>
 
           <p
             className="text-sm mt-2"
             style={{ color: "#7A8580" }}
           >
-            تواصلي مع إدارة الروضة لإضافة بيانات طفلك إلى حسابك.
+            {S.myChild.noChildMessage}
           </p>
         </div>
       </DashboardLayout>
@@ -81,7 +82,7 @@ export default function MyChildPage({
       activePage="children"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle="ملف طفلي"
+      pageTitle={S.myChild.pageTitle}
     >
       {/* =========================
           الترحيب
@@ -98,7 +99,7 @@ export default function MyChildPage({
             className="text-xs font-semibold"
             style={{ color: "#B27A19" }}
           >
-            أهلاً بك في بوابة العائلة
+            {S.myChild.familyPortalBadge}
           </span>
         </div>
 
@@ -106,14 +107,14 @@ export default function MyChildPage({
           className="text-2xl font-bold"
           style={{ color: "#2F3A36" }}
         >
-          أهلاً، {user.name?.split(" ")[0]} 🌷
+          {S.myChild.welcomeMessage(user.name?.split(" ")[0])}
         </h1>
 
         <p
           className="text-sm mt-1"
           style={{ color: "#7A8580" }}
         >
-          من هون بتقدري تتابعي أخبار وحضور أطفالك بسهولة.
+          {S.myChild.welcomeSubtitle}
         </p>
       </div>
 
@@ -177,7 +178,7 @@ export default function MyChildPage({
                           color: "#7A8580",
                         }}
                       >
-                        ملف الطفل
+                        {S.myChild.childProfileLabel}
                       </p>
 
                       <h2
@@ -234,7 +235,7 @@ export default function MyChildPage({
                         color: "#A8B0AB",
                       }}
                     >
-                      العمر
+                      {S.myChild.ageLabel}
                     </p>
 
                     <p
@@ -243,7 +244,7 @@ export default function MyChildPage({
                         color: "#2F3A36",
                       }}
                     >
-                      {child.age} سنوات
+                      {S.myChild.ageValue(child.age)}
                     </p>
                   </div>
 
@@ -262,7 +263,7 @@ export default function MyChildPage({
                         color: "#A8B0AB",
                       }}
                     >
-                      الغيابات
+                      {S.myChild.absencesLabel}
                     </p>
 
                     <p
@@ -274,7 +275,7 @@ export default function MyChildPage({
                             : "#2F3A36",
                       }}
                     >
-                      {absenceCount} أيام
+                      {S.myChild.absencesValue(absenceCount)}
                     </p>
                   </div>
                 </div>
@@ -317,7 +318,7 @@ export default function MyChildPage({
                             color: "#A8B0AB",
                           }}
                         >
-                          معلمة الصف
+                          {S.myChild.teacherLabel}
                         </p>
 
                         <p
@@ -327,7 +328,7 @@ export default function MyChildPage({
                           }}
                         >
                           {teacher?.name ||
-                            "غير محددة"}
+                            S.myChild.teacherFallback}
                         </p>
                       </div>
                     </div>
@@ -341,7 +342,7 @@ export default function MyChildPage({
                             "#EEF6F3",
                           color: "#4C8577",
                         }}
-                        title="الاتصال بالمعلمة"
+                        title={S.myChild.callTeacherTitle}
                       >
                         <Phone size={16} />
                       </a>
@@ -368,7 +369,7 @@ export default function MyChildPage({
                       color: "#7A8580",
                     }}
                   >
-                    متابعة طفلك أولاً بأول تجعل تجربته في الروضة أجمل.
+                    {S.myChild.caregiverNote}
                   </p>
                 </div>
 
@@ -391,7 +392,7 @@ export default function MyChildPage({
                     <CalendarCheck2
                       size={16}
                     />
-                    سجل الحضور
+                    {S.myChild.attendanceButton}
                   </button>
 
                   <button
@@ -410,7 +411,7 @@ export default function MyChildPage({
                     <MessageSquare
                       size={16}
                     />
-                    تواصل مع المعلمة
+                    {S.myChild.contactTeacherButton}
                   </button>
                 </div>
 
@@ -425,7 +426,7 @@ export default function MyChildPage({
                   }}
                 >
                   <User size={14} />
-                  عرض الملف الكامل
+                  {S.myChild.viewFullProfile}
                   <ChevronLeft size={14} />
                 </button>
               </div>
@@ -462,14 +463,14 @@ export default function MyChildPage({
             className="text-xs font-semibold"
             style={{ color: "#2F3A36" }}
           >
-            نحن معك في كل خطوة
+            {S.myChild.footerTitle}
           </p>
 
           <p
             className="text-[11px] mt-0.5"
             style={{ color: "#A8B0AB" }}
           >
-            يمكنك التواصل مع معلمة طفلك أو إدارة الروضة من قسم الرسائل.
+            {S.myChild.footerMessage}
           </p>
         </div>
       </div>

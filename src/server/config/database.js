@@ -1,13 +1,14 @@
+const path = require('path');
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'defaultdb',
-  process.env.DB_USER || 'avnadmin',
+  process.env.DB_NAME || 'kindergarten_db',
+  process.env.DB_USER || 'root',
   process.env.DB_PASSWORD || '',
   {
-    host: process.env.DB_HOST || 'mysql-155bed1e-qwasdfghjkl174-ed52.c.aivencloud.com',
-    port: process.env.DB_PORT || 26043,
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
     dialect: 'mysql',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
@@ -16,12 +17,12 @@ const sequelize = new Sequelize(
       acquire: 30000,
       idle: 10000
     },
-    dialectOptions: {
-      ssl: { 
+    dialectOptions: process.env.DB_SSL === 'true' ? {
+      ssl: {
         require: true,
         rejectUnauthorized: false
       }
-    }
+    } : {}
   }
 );
 

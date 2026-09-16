@@ -7,7 +7,7 @@ const Health_Medicine = sequelize.define('Health_Medicine', {
     primaryKey: true,
     autoIncrement: true
   },
-  illnesses: {
+  Diseases: {
     type: DataTypes.TEXT
   },
   vaccinations: {

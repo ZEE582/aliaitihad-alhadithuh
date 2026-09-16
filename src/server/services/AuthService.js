@@ -4,8 +4,12 @@ const passwordService = require('./PasswordService');
 
 class AuthService {
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_key_change_this_in_production';
-    this.jwtExpiration = '7d';
+    if (!process.env.JWT_SECRET) {
+      console.error('CRITICAL SECURITY ERROR: JWT_SECRET environment variable is not defined!');
+      throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is missing in .env file.');
+    }
+    this.jwtSecret = process.env.JWT_SECRET;
+    this.jwtExpiration = process.env.JWT_EXPIRATION || '7d';
   }
 
   async register(userData) {

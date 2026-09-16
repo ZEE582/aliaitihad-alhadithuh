@@ -2,10 +2,12 @@ import { useState } from "react";
 import { ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useRegistrationRequests } from "../../context/RegistrationRequestsContext";
 
+import { strings as S } from "../../constants/strings";
+
 const STEPS = [
-  "بيانات الطفل",
-  "الحالة الصحية والعائلية",
-  "السلوكيات والتواصل",
+  S.registrationForm.stepChildData,
+  S.registrationForm.stepHealthAndFamily,
+  S.registrationForm.stepBehaviorAndCommunication,
 ];
 
 const HEALTH_CONDITIONS = [
@@ -360,16 +362,14 @@ export default function RegistrationForm({
             className="text-lg font-bold mb-2"
             style={{ color: "#2F3A36" }}
           >
-            تم إرسال طلب التسجيل بنجاح
+            {S.registrationForm.submittedSuccessTitle}
           </h2>
 
           <p
             className="text-sm leading-6 mb-6"
             style={{ color: "#7A8580" }}
           >
-            شكرًا لتقديم طلب التسجيل في روضة الاتحاد الحديثة.
-            ستقوم إدارة الروضة بمراجعة الطلب والتواصل معكم
-            لتحديد موعد المقابلة واستكمال إجراءات التسجيل.
+            {S.registrationForm.submittedSuccessMessage}
           </p>
 
           <div
@@ -380,9 +380,7 @@ export default function RegistrationForm({
               color: "#7A8580",
             }}
           >
-            يرجى الاحتفاظ بمعلومات التواصل الخاصة بكم، حيث
-            سيتم استخدامها من قبل إدارة الروضة للتواصل معكم
-            بخصوص الطلب.
+            {S.registrationForm.keepContactInfoMessage}
           </div>
 
           <button
@@ -390,7 +388,7 @@ export default function RegistrationForm({
             className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition"
             style={{ backgroundColor: "#4C8577" }}
           >
-            رجوع لتسجيل الدخول
+            {S.registrationForm.backToLoginButton}
           </button>
         </div>
       </div>
@@ -412,7 +410,7 @@ export default function RegistrationForm({
           style={{ color: "#4C8577" }}
         >
           <ArrowRight size={16} />
-          رجوع لتسجيل الدخول
+          {S.registrationForm.backToLoginButton}
         </button>
 
         {/* العنوان */}
@@ -421,16 +419,14 @@ export default function RegistrationForm({
             className="text-xl font-bold mb-1"
             style={{ color: "#2F3A36" }}
           >
-            طلب تسجيل طفل جديد
+            {S.registrationForm.formTitle}
           </h1>
 
           <p
             className="text-sm leading-6"
             style={{ color: "#7A8580" }}
           >
-            يرجى تعبئة البيانات التالية لتقديم طلب التسجيل.
-            بعد إرسال الطلب ستقوم إدارة الروضة بمراجعته
-            والتواصل معكم لاستكمال إجراءات التسجيل.
+            {S.registrationForm.formIntro}
           </p>
         </div>
 
@@ -474,17 +470,17 @@ export default function RegistrationForm({
           ========================================= */}
           {step === 0 && (
             <>
-              <Section title="بيانات الطفل الأساسية">
+              <Section title={S.registrationForm.sectionBasicChildData}>
                 <TextField
-                  label="اسم الطفل الرباعي"
+                  label={S.registrationForm.childFullNameLabel}
                   value={form.childName}
                   onChange={update("childName")}
                   required
-                  placeholder="أدخل اسم الطفل الكامل"
+                  placeholder={S.registrationForm.childFullNamePlaceholder}
                 />
 
                 <RadioGroup
-                  label="الجنس"
+                  label={S.registrationForm.genderLabel}
                   options={["ذكر", "أنثى"]}
                   value={form.gender}
                   onChange={update("gender")}
@@ -492,7 +488,7 @@ export default function RegistrationForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <TextField
-                    label="تاريخ الميلاد"
+                    label={S.registrationForm.birthDateLabel}
                     type="date"
                     value={form.birthDate}
                     onChange={update("birthDate")}
@@ -500,31 +496,31 @@ export default function RegistrationForm({
                   />
 
                   <TextField
-                    label="مكان الولادة"
+                    label={S.registrationForm.birthPlaceLabel}
                     value={form.birthPlace}
                     onChange={update("birthPlace")}
-                    placeholder="مثال: مستشفى النجاح"
+                    placeholder={S.registrationForm.birthPlacePlaceholder}
                   />
                 </div>
 
                 <TextField
-                  label="تاريخ دخول الروضة المتوقع"
+                  label={S.registrationForm.expectedEnrollDateLabel}
                   type="date"
                   value={form.enrollDate}
                   onChange={update("enrollDate")}
                 />
               </Section>
 
-              <Section title="عنوان السكن والتواصل">
+              <Section title={S.registrationForm.sectionAddressAndContact}>
                 <TextField
-                  label="عنوان السكن الحالي"
+                  label={S.registrationForm.currentAddressLabel}
                   value={form.address}
                   onChange={update("address")}
-                  placeholder="المدينة / المنطقة"
+                  placeholder={S.registrationForm.currentAddressPlaceholder}
                 />
 
                 <TextField
-                  label="هاتف البيت"
+                  label={S.registrationForm.homePhoneLabel}
                   value={form.homePhone}
                   onChange={update("homePhone")}
                   type="tel"
@@ -533,14 +529,14 @@ export default function RegistrationForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <TextField
-                    label="عدد الإخوة"
+                    label={S.registrationForm.siblingsCountLabel}
                     type="number"
                     value={form.siblingsCount}
                     onChange={update("siblingsCount")}
                   />
 
                   <TextField
-                    label="ترتيب الطفل في الأسرة"
+                    label={S.registrationForm.childOrderLabel}
                     type="number"
                     value={form.childOrder}
                     onChange={update("childOrder")}
@@ -548,9 +544,9 @@ export default function RegistrationForm({
                 </div>
               </Section>
 
-              <Section title="بيانات الأب">
+              <Section title={S.registrationForm.sectionFatherData}>
                 <TextField
-                  label="اسم الأب"
+                  label={S.registrationForm.fatherNameLabel}
                   value={form.fatherName}
                   onChange={update("fatherName")}
                   required
@@ -558,20 +554,20 @@ export default function RegistrationForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <TextField
-                    label="عمل الأب"
+                    label={S.registrationForm.fatherJobLabel}
                     value={form.fatherJob}
                     onChange={update("fatherJob")}
                   />
 
                   <TextField
-                    label="مكان العمل"
+                    label={S.registrationForm.workplaceLabel}
                     value={form.fatherWorkplace}
                     onChange={update("fatherWorkplace")}
                   />
                 </div>
 
                 <TextField
-                  label="جوال الأب"
+                  label={S.registrationForm.fatherPhoneLabel}
                   value={form.fatherPhone}
                   onChange={update("fatherPhone")}
                   type="tel"
@@ -580,9 +576,9 @@ export default function RegistrationForm({
                 />
               </Section>
 
-              <Section title="بيانات الأم">
+              <Section title={S.registrationForm.sectionMotherData}>
                 <TextField
-                  label="اسم الأم"
+                  label={S.registrationForm.motherNameLabel}
                   value={form.motherName}
                   onChange={update("motherName")}
                   required
@@ -590,20 +586,20 @@ export default function RegistrationForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <TextField
-                    label="عمل الأم"
+                    label={S.registrationForm.motherJobLabel}
                     value={form.motherJob}
                     onChange={update("motherJob")}
                   />
 
                   <TextField
-                    label="مكان العمل"
+                    label={S.registrationForm.workplaceLabel}
                     value={form.motherWorkplace}
                     onChange={update("motherWorkplace")}
                   />
                 </div>
 
                 <TextField
-                  label="جوال الأم"
+                  label={S.registrationForm.motherPhoneLabel}
                   value={form.motherPhone}
                   onChange={update("motherPhone")}
                   type="tel"
@@ -612,7 +608,7 @@ export default function RegistrationForm({
                 />
               </Section>
 
-              <Section title="الوضع الحالي للوالدين">
+              <Section title={S.registrationForm.sectionParentsStatus}>
                 <RadioGroup
                   label=""
                   options={PARENTS_STATUS}
@@ -628,84 +624,84 @@ export default function RegistrationForm({
           ========================================= */}
           {step === 1 && (
             <>
-              <Section title="الحالة العائلية">
+              <Section title={S.registrationForm.sectionFamilyStatus}>
                 <RadioGroup
-                  label="هل أحد الوالدين مسافر؟"
+                  label={S.registrationForm.travelingParentQuestion}
                   options={["الأب", "الأم", "لا يوجد"]}
                   value={form.travelingParent}
                   onChange={update("travelingParent")}
                 />
 
                 <RadioGroup
-                  label="هل أحد الوالدين متوفى؟"
+                  label={S.registrationForm.deceasedParentQuestion}
                   options={["الأب", "الأم", "لا يوجد"]}
                   value={form.deceasedParent}
                   onChange={update("deceasedParent")}
                 />
 
                 <TextField
-                  label="صلة القرابة بين الوالدين"
+                  label={S.registrationForm.parentsRelationLabel}
                   value={form.parentsRelation}
                   onChange={update("parentsRelation")}
-                  placeholder="إن وجدت"
+                  placeholder={S.registrationForm.parentsRelationPlaceholder}
                 />
               </Section>
 
-              <Section title="الحالة الصحية">
+              <Section title={S.registrationForm.sectionHealthStatus}>
                 <CheckboxGroup
-                  label="هل يعاني الطفل من أي أمراض أو حالات صحية؟"
+                  label={S.registrationForm.healthConditionsQuestion}
                   options={HEALTH_CONDITIONS}
                   values={form.healthConditions}
                   onToggle={toggleCheckbox("healthConditions")}
                 />
 
                 <TextField
-                  label="حالة صحية أخرى"
+                  label={S.registrationForm.otherConditionLabel}
                   value={form.otherCondition}
                   onChange={update("otherCondition")}
-                  placeholder="اذكر أي حالة غير موجودة في القائمة"
+                  placeholder={S.registrationForm.otherConditionPlaceholder}
                 />
 
                 <YesNo
-                  label="هل سبق وأجريت للطفل عملية؟"
+                  label={S.registrationForm.surgeryQuestion}
                   value={form.hadSurgery}
                   onChange={update("hadSurgery")}
                 />
 
                 {form.hadSurgery === "نعم" && (
                   <TextField
-                    label="تفاصيل العملية"
+                    label={S.registrationForm.surgeryDetailsLabel}
                     value={form.surgeryDetails}
                     onChange={update("surgeryDetails")}
-                    placeholder="اذكر نوع العملية وتاريخها إن أمكن"
+                    placeholder={S.registrationForm.surgeryDetailsPlaceholder}
                   />
                 )}
 
                 <YesNo
-                  label="هل يتناول الطفل أدوية حاليًا؟"
+                  label={S.registrationForm.medicineQuestion}
                   value={form.takesMedicine}
                   onChange={update("takesMedicine")}
                 />
 
                 {form.takesMedicine === "نعم" && (
                   <TextField
-                    label="تفاصيل الأدوية"
+                    label={S.registrationForm.medicineDetailsLabel}
                     value={form.medicineDetails}
                     onChange={update("medicineDetails")}
-                    placeholder="اسم الدواء أو الأدوية"
+                    placeholder={S.registrationForm.medicineDetailsPlaceholder}
                   />
                 )}
 
                 <YesNo
-                  label="هل أخذ الطفل جميع التطعيمات اللازمة؟"
+                  label={S.registrationForm.vaccinationQuestion}
                   value={form.vaccinated}
                   onChange={update("vaccinated")}
                 />
               </Section>
 
-              <Section title="الاحتياجات الخاصة">
+              <Section title={S.registrationForm.sectionSpecialNeeds}>
                 <CheckboxGroup
-                  label="هل لدى الطفل أي احتياجات خاصة؟"
+                  label={S.registrationForm.specialNeedsQuestion}
                   options={SPECIAL_NEEDS}
                   values={form.specialNeeds}
                   onToggle={toggleCheckbox("specialNeeds")}
@@ -713,17 +709,17 @@ export default function RegistrationForm({
 
                 {form.specialNeeds.length > 0 && (
                   <TextField
-                    label="الجهة المشرفة على الحالة"
+                    label={S.registrationForm.specialNeedsSupervisorLabel}
                     value={form.specialNeedsSupervisor}
                     onChange={update(
                       "specialNeedsSupervisor"
                     )}
-                    placeholder="اسم المركز أو الجهة إن وجدت"
+                    placeholder={S.registrationForm.specialNeedsSupervisorPlaceholder}
                   />
                 )}
 
                 <YesNo
-                  label="هل يوجد في الأسرة شخص من ذوي الاحتياجات الخاصة؟"
+                  label={S.registrationForm.familySpecialNeedsQuestion}
                   value={form.familyHasSpecialNeeds}
                   onChange={update(
                     "familyHasSpecialNeeds"
@@ -733,7 +729,7 @@ export default function RegistrationForm({
                 {form.familyHasSpecialNeeds === "نعم" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <TextField
-                      label="العدد"
+                      label={S.registrationForm.countLabel}
                       type="number"
                       value={
                         form.familySpecialNeedsCount
@@ -744,7 +740,7 @@ export default function RegistrationForm({
                     />
 
                     <TextField
-                      label="نوع الحالة"
+                      label={S.registrationForm.conditionTypeLabel}
                       value={
                         form.familySpecialNeedsType
                       }
@@ -763,59 +759,59 @@ export default function RegistrationForm({
           ========================================= */}
           {step === 2 && (
             <>
-              <Section title="سلوكيات وعادات الطفل">
+              <Section title={S.registrationForm.sectionBehaviorAndHabits}>
                 <YesNo
-                  label="هل يبلل فراشه؟"
+                  label={S.registrationForm.bedwettingQuestion}
                   value={form.bedwetting}
                   onChange={update("bedwetting")}
                 />
 
                 <YesNo
-                  label="هل يتناول فطوره بانتظام؟"
+                  label={S.registrationForm.breakfastQuestion}
                   value={form.eatsBreakfast}
                   onChange={update("eatsBreakfast")}
                 />
 
                 <YesNo
-                  label="هل ينام بشكل طبيعي؟"
+                  label={S.registrationForm.sleepQuestion}
                   value={form.sleepsNormally}
                   onChange={update("sleepsNormally")}
                 />
 
                 <YesNo
-                  label="هل يتصف بالعصبية؟"
+                  label={S.registrationForm.nervousQuestion}
                   value={form.nervous}
                   onChange={update("nervous")}
                 />
 
                 <YesNo
-                  label="هل يميل للانطواء أو الخجل؟"
+                  label={S.registrationForm.introvertShyQuestion}
                   value={form.introvertShy}
                   onChange={update("introvertShy")}
                 />
 
                 <YesNo
-                  label="هل تظهر عليه سلوكيات عدوانية؟"
+                  label={S.registrationForm.aggressiveQuestion}
                   value={form.aggressive}
                   onChange={update("aggressive")}
                 />
 
                 <YesNo
-                  label="هل يعاني من التأتأة؟"
+                  label={S.registrationForm.stutteringQuestion}
                   value={form.stuttering}
                   onChange={update("stuttering")}
                 />
               </Section>
 
-              <Section title="وسيلة الاتصال في حالات الطوارئ">
+              <Section title={S.registrationForm.sectionEmergencyContact}>
                 <TextField
-                  label="اسم ورقم الشخص الذي يتم التواصل معه"
+                  label={S.registrationForm.emergencyContactLabel}
                   value={form.emergencyContact}
                   onChange={update(
                     "emergencyContact"
                   )}
                   required
-                  placeholder="الاسم - رقم الهاتف"
+                  placeholder={S.registrationForm.emergencyContactPlaceholder}
                 />
               </Section>
 
@@ -827,11 +823,7 @@ export default function RegistrationForm({
                   color: "#7A8580",
                 }}
               >
-                نود إعلامكم بأن المعلومات الواردة في هذه
-                الاستمارة تستخدم لأغراض التسجيل والتواصل
-                مع إدارة الروضة، وسيتم التعامل معها بسرية.
-                ويتحمل ولي الأمر مسؤولية صحة البيانات
-                المقدمة.
+                {S.registrationForm.privacyNotice}
               </div>
             </>
           )}
@@ -849,7 +841,7 @@ export default function RegistrationForm({
                   color: "#4A5551",
                 }}
               >
-                السابق
+                {S.registrationForm.prevStepButton}
                 <ArrowRight size={16} />
               </button>
             )}
@@ -863,7 +855,7 @@ export default function RegistrationForm({
                   backgroundColor: "#4C8577",
                 }}
               >
-                التالي
+                {S.registrationForm.nextStepButton}
                 <ArrowLeft size={16} />
               </button>
             ) : (
@@ -874,7 +866,7 @@ export default function RegistrationForm({
                   backgroundColor: "#4C8577",
                 }}
               >
-                إرسال طلب التسجيل
+                {S.registrationForm.submitButton}
               </button>
             )}
           </div>

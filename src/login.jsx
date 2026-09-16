@@ -1,3 +1,4 @@
+import { strings as S } from "./constants/strings";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import RegistrationForm from "./pages/registration-requests/RegistrationForm";
@@ -16,10 +17,10 @@ export default function LoginPage({ onLoginSuccess }) {
     useState(false);
 
   const roles = [
-    { key: "admin", label: "مدير/ة" },
-    { key: "secretary", label: "سكرتير/ة" },
-    { key: "teacher", label: "معلم/ة" },
-    { key: "parent", label: "ولي أمر" },
+    { key: "admin", label: S.login.roleAdmin },
+    { key: "secretary", label: S.login.roleSecretary },
+    { key: "teacher", label: S.login.roleTeacher },
+    { key: "parent", label: S.login.roleParent },
   ];
 
   const handleSubmit = (e) => {
@@ -27,7 +28,7 @@ export default function LoginPage({ onLoginSuccess }) {
     setError("");
 
     if (!email || !password) {
-      setError("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
+      setError(S.login.missingCredentialsError);
       return;
     }
 
@@ -36,13 +37,6 @@ export default function LoginPage({ onLoginSuccess }) {
     // مؤقتًا لحد ما نربط الـ API
     setTimeout(() => {
       setLoading(false);
-
-      console.log("تسجيل الدخول:", {
-        email,
-        password,
-        remember,
-        role: selectedRole,
-      });
 
       onLoginSuccess &&
         onLoginSuccess(selectedRole);
@@ -109,14 +103,14 @@ export default function LoginPage({ onLoginSuccess }) {
             className="text-xl font-bold"
             style={{ color: "#2F3A36" }}
           >
-            روضة الاتحاد الحديثة
+            {S.common.appName}
           </h1>
 
           <p
             className="text-sm mt-1"
             style={{ color: "#7A8580" }}
           >
-            نظام إدارة الروضة
+            {S.login.appSubtitle}
           </p>
         </div>
 
@@ -141,7 +135,7 @@ export default function LoginPage({ onLoginSuccess }) {
               className="block text-sm font-medium mb-1.5"
               style={{ color: "#2F3A36" }}
             >
-              الدخول كـ
+              {S.login.loginAsLabel}
             </label>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -188,7 +182,7 @@ export default function LoginPage({ onLoginSuccess }) {
               className="block text-sm font-medium mb-1.5"
               style={{ color: "#2F3A36" }}
             >
-              البريد الإلكتروني
+              {S.login.emailLabel}
             </label>
 
             <div className="relative">
@@ -205,7 +199,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 onChange={(e) =>
                   setEmail(e.target.value)
                 }
-                placeholder="example@email.com"
+                placeholder={S.login.emailPlaceholder}
                 className="w-full rounded-xl py-2.5 pr-10 pl-3 text-sm outline-none transition"
                 style={{
                   border: "1px solid #E2DCCC",
@@ -229,7 +223,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 className="block text-sm font-medium"
                 style={{ color: "#2F3A36" }}
               >
-                كلمة المرور
+                {S.login.passwordLabel}
               </label>
 
               <button
@@ -237,7 +231,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 className="text-xs font-medium"
                 style={{ color: "#4C8577" }}
               >
-                نسيت كلمة المرور؟
+                {S.login.forgotPassword}
               </button>
 
             </div>
@@ -261,7 +255,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 onChange={(e) =>
                   setPassword(e.target.value)
                 }
-                placeholder="••••••••"
+                placeholder={S.login.passwordPlaceholder}
                 className="w-full rounded-xl py-2.5 pr-10 pl-10 text-sm outline-none transition"
                 style={{
                   border: "1px solid #E2DCCC",
@@ -282,8 +276,8 @@ export default function LoginPage({ onLoginSuccess }) {
                 style={{ color: "#A8B0AB" }}
                 aria-label={
                   showPassword
-                    ? "إخفاء كلمة المرور"
-                    : "إظهار كلمة المرور"
+                    ? S.login.hidePasswordAria
+                    : S.login.showPasswordAria
                 }
               >
                 {showPassword ? (
@@ -333,7 +327,7 @@ export default function LoginPage({ onLoginSuccess }) {
               }}
             />
 
-            تذكرني على هذا الجهاز
+            {S.login.rememberMe}
           </label>
 
           {/* ==========================================
@@ -349,8 +343,8 @@ export default function LoginPage({ onLoginSuccess }) {
             }}
           >
             {loading
-              ? "جارٍ تسجيل الدخول..."
-              : "تسجيل الدخول"}
+              ? S.login.loginLoading
+              : S.login.loginButton}
           </button>
 
           {/* ==========================================
@@ -371,7 +365,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   className="text-xs mb-2"
                   style={{ color: "#7A8580" }}
                 >
-                  أول مرة تستخدم النظام؟
+                  {S.login.firstTimeMessage}
                 </p>
 
                 <button
@@ -386,7 +380,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     border: "1px solid #4C857750",
                   }}
                 >
-                  ولي أمر جديد؟ قدّم طلب تسجيل طفل
+                  {S.login.newParentCta}
                   <ArrowRight size={16} />
                 </button>
 
@@ -404,9 +398,9 @@ export default function LoginPage({ onLoginSuccess }) {
           className="text-center text-sm mt-6 leading-6"
           style={{ color: "#7A8580" }}
         >
-          واجهت مشكلة بتسجيل الدخول؟
+          {S.login.loginHelp}
           <br />
-          تواصلوا مع إدارة الروضة
+          {S.login.contactAdmin}
         </p>
 
       </div>

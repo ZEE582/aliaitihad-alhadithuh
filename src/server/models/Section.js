@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Section = sequelize.define('Section', {
-  SectionID: {
+  section_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
@@ -14,14 +14,15 @@ const Section = sequelize.define('Section', {
   },
   Name_level: {
     type: DataTypes.STRING(50),
-    allowNull: false
+    allowNull: false,
+    unique: true
+  },
+  Level: {
+    type: DataTypes.STRING(50)
   },
   Capacity: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    validate: {
-      min: 1
-    }
+    validate: { min: 1 }
   },
   classID: {
     type: DataTypes.INTEGER,
@@ -35,7 +36,7 @@ const Section = sequelize.define('Section', {
     type: DataTypes.INTEGER,
     references: {
       model: 'Teachers',
-      key: 'TID'
+      key: 'PersonID'
     }
   }
 }, {
