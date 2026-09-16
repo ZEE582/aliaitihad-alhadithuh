@@ -6,16 +6,20 @@ const { validateRequest } = require('../middleware/validation');
 
 const router = express.Router();
 
-// Register
+// Register (Public registration is for parents by default, admin cannot be registered here)
 router.post('/register', [
   body('username').trim().notEmpty().withMessage('Username is required'),
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('fullName').trim().notEmpty().withMessage('Full name is required'),
-  body('roleType').isIn(['admin', 'teacher', 'parent']).withMessage('Invalid role type')
+  body('roleType').optional().isIn(['parent', 'teacher']).withMessage('Public registration only allows parent or teacher role')
 ], validateRequest, async (req, res) => {
   try {
-    const result = await authService.register(req.body);
+    const userData = {
+      ...req.body,
+      roleType: req.body.roleType === 'teacher' ? 'teacher' : 'parent'
+    };
+    const result = await authService.register(userData);
     res.status(201).json(result);
   } catch (error) {
     res.status(400).json({ message: error.message });

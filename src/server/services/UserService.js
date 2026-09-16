@@ -1,4 +1,5 @@
 const { User } = require('../models');
+const passwordService = require('./PasswordService');
 
 class UserService {
   async getAllUsers() {
@@ -19,14 +20,31 @@ class UserService {
     return user;
   }
 
-  async updateUser(id, updateData) {
+  async updateUser(id, updateData, requesterRole = 'parent') {
     const user = await User.findByPk(id);
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    await user.update(updateData);
+    // Build safe payload
+    const safeData = {};
+    if (updateData.fullName !== undefined) safeData.fullName = updateData.fullName;
+    if (updateData.email !== undefined) safeData.email = updateData.email;
+    if (updateData.phone !== undefined) safeData.phone = updateData.phone;
+    if (updateData.avatar !== undefined) safeData.avatar = updateData.avatar;
+
+    // Only admin can change roles
+    if (requesterRole === 'admin' && updateData.roleType !== undefined) {
+      safeData.roleType = updateData.roleType;
+    }
+
+    // Hash password if updating
+    if (updateData.password) {
+      safeData.password = await passwordService.hash(updateData.password);
+    }
+
+    await user.update(safeData);
 
     return await User.findByPk(id, {
       attributes: { exclude: ['password'] }

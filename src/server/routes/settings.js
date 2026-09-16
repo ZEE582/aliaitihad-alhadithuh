@@ -3,6 +3,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const mysql2 = require('mysql2/promise');
+const { auth, authorize } = require('../middleware/auth');
 
 const ENV_PATH = path.join(__dirname, '../.env');
 
@@ -29,8 +30,8 @@ function writeEnv(envObj) {
   fs.writeFileSync(ENV_PATH, content, 'utf8');
 }
 
-// GET /api/settings/database - get current DB settings
-router.get('/database', (req, res) => {
+// GET /api/settings/database - get current DB settings (Admin only)
+router.get('/database', auth, authorize('admin'), (req, res) => {
   try {
     const raw = fs.readFileSync(ENV_PATH, 'utf8');
     const env = parseEnv(raw);
@@ -46,8 +47,8 @@ router.get('/database', (req, res) => {
   }
 });
 
-// POST /api/settings/database/test - test connection
-router.post('/database/test', async (req, res) => {
+// POST /api/settings/database/test - test connection (Admin only)
+router.post('/database/test', auth, authorize('admin'), async (req, res) => {
   const { host, port, user, password, database } = req.body;
   try {
     const conn = await mysql2.createConnection({
@@ -62,8 +63,8 @@ router.post('/database/test', async (req, res) => {
   }
 });
 
-// PUT /api/settings/database - save DB settings to .env
-router.put('/database', (req, res) => {
+// PUT /api/settings/database - save DB settings to .env (Admin only)
+router.put('/database', auth, authorize('admin'), (req, res) => {
   const { host, port, user, password, database } = req.body;
   try {
     const raw = fs.readFileSync(ENV_PATH, 'utf8');

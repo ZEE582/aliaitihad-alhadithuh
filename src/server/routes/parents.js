@@ -87,8 +87,8 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Parent not found' });
     }
 
-    // Backend Auth Check: Parents can only update their own profile
-    if (req.user.roleType === 'parent' && parent.userId !== req.user.id) {
+    // Backend Auth Check: Only admin or the parent owner can update
+    if (req.user.roleType !== 'admin' && (req.user.roleType !== 'parent' || parent.userId !== req.user.id)) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 

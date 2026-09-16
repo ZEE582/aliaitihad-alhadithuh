@@ -40,8 +40,8 @@ router.post('/', auth, authorize('admin', 'teacher'), async (req, res) => {
   }
 });
 
-// Update child
-router.put('/:id', auth, async (req, res) => {
+// Update child (admin and teacher only)
+router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res) => {
   try {
     const child = await childService.updateChild(req.params.id, req.body, req.user.roleType, req.user.id);
     res.json(child);

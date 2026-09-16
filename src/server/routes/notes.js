@@ -1,5 +1,5 @@
 const express = require('express');
-const { Note, Child, Class, User } = require('../models');
+const { Note, Person, sequelize } = require('../models');
 const { auth, authorize } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
@@ -8,57 +8,33 @@ const router = express.Router();
 // Get all notes
 router.get('/', auth, async (req, res) => {
   try {
-    const { childId, classId, type, priority } = req.query;
+    const { category, senderId, receiverId } = req.query;
     let where = {};
 
-    // Parents can only see notes about their children
-    if (req.user.roleType === 'parent') {
-      const children = await Child.findAll({
-        where: { parentId: req.user.id },
-        attributes: ['id']
-      });
-      const childIds = children.map(c => c.id);
-      where.childId = { [Op.in]: childIds };
-    }
-
-    if (childId) where.childId = childId;
-    if (classId) where.classId = classId;
-    if (type) where.type = type;
-    if (priority) where.priority = priority;
-
-    // Hide private notes unless user is author or admin
-    if (req.user.roleType !== 'admin') {
-      where[Op.or] = [
-        { isPrivate: false },
-        { authorId: req.user.id }
-      ];
-    }
+    if (category) where.NoteCategory = category;
+    if (senderId) where.SenderID = senderId;
+    if (receiverId) where.ReceiverID = receiverId;
 
     const notes = await Note.findAll({
       where,
       include: [
         {
-          model: Child,
-          as: 'child',
-          attributes: ['id', 'firstName', 'lastName']
+          model: Person,
+          as: 'sender',
+          attributes: ['PersonID', 'Name']
         },
         {
-          model: Class,
-          as: 'class',
-          attributes: ['id', 'name', 'level']
-        },
-        {
-          model: User,
-          as: 'author',
-          attributes: ['id', 'fullName', 'roleType']
+          model: Person,
+          as: 'receiver',
+          attributes: ['PersonID', 'Name']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['NoteDate', 'DESC']]
     });
 
     res.json(notes);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'فشل جلب الملاحظات', error: error.message });
   }
 });
 
@@ -68,69 +44,59 @@ router.get('/:id', auth, async (req, res) => {
     const note = await Note.findByPk(req.params.id, {
       include: [
         {
-          model: Child,
-          as: 'child',
-          attributes: ['id', 'firstName', 'lastName']
+          model: Person,
+          as: 'sender',
+          attributes: ['PersonID', 'Name']
         },
         {
-          model: Class,
-          as: 'class',
-          attributes: ['id', 'name', 'level']
-        },
-        {
-          model: User,
-          as: 'author',
-          attributes: ['id', 'fullName', 'roleType']
+          model: Person,
+          as: 'receiver',
+          attributes: ['PersonID', 'Name']
         }
       ]
     });
     
     if (!note) {
-      return res.status(404).json({ message: 'Note not found' });
-    }
-
-    // Check privacy
-    if (note.isPrivate && note.authorId !== req.user.id && req.user.roleType !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized to view this note' });
+      return res.status(404).json({ message: 'الملاحظة غير موجودة' });
     }
 
     res.json(note);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'فشل جلب الملاحظة', error: error.message });
   }
 });
 
 // Create new note
 router.post('/', auth, async (req, res) => {
   try {
-    const note = await Note.create({
-      ...req.body,
-      authorId: req.user.id
+    const { NoteCategory, category, NoteText, text, note, SenderID, ReceiverID, NoteDate } = req.body;
+    
+    const noteRecord = await Note.create({
+      NoteCategory: NoteCategory || category || 'عام',
+      NoteText: NoteText || text || note || '',
+      SenderID: SenderID || req.user.id,
+      ReceiverID: ReceiverID || SenderID || req.user.id,
+      NoteDate: NoteDate || new Date()
     });
     
-    const newNote = await Note.findByPk(note.id, {
+    const newNote = await Note.findByPk(noteRecord.NoteID, {
       include: [
         {
-          model: Child,
-          as: 'child',
-          attributes: ['id', 'firstName', 'lastName']
+          model: Person,
+          as: 'sender',
+          attributes: ['PersonID', 'Name']
         },
         {
-          model: Class,
-          as: 'class',
-          attributes: ['id', 'name', 'level']
-        },
-        {
-          model: User,
-          as: 'author',
-          attributes: ['id', 'fullName', 'roleType']
+          model: Person,
+          as: 'receiver',
+          attributes: ['PersonID', 'Name']
         }
       ]
     });
     
     res.status(201).json(newNote);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'فشل إضافة الملاحظة', error: error.message });
   }
 });
 
@@ -140,39 +106,34 @@ router.put('/:id', auth, async (req, res) => {
     const note = await Note.findByPk(req.params.id);
     
     if (!note) {
-      return res.status(404).json({ message: 'Note not found' });
+      return res.status(404).json({ message: 'الملاحظة غير موجودة' });
     }
 
-    // Only author or admin can update
-    if (note.authorId !== req.user.id && req.user.roleType !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-
-    await note.update(req.body);
+    const { NoteCategory, category, NoteText, text, NoteDate } = req.body;
+    await note.update({
+      NoteCategory: NoteCategory || category || note.NoteCategory,
+      NoteText: NoteText || text || note.NoteText,
+      NoteDate: NoteDate || note.NoteDate
+    });
     
     const updatedNote = await Note.findByPk(req.params.id, {
       include: [
         {
-          model: Child,
-          as: 'child',
-          attributes: ['id', 'firstName', 'lastName']
+          model: Person,
+          as: 'sender',
+          attributes: ['PersonID', 'Name']
         },
         {
-          model: Class,
-          as: 'class',
-          attributes: ['id', 'name', 'level']
-        },
-        {
-          model: User,
-          as: 'author',
-          attributes: ['id', 'fullName', 'roleType']
+          model: Person,
+          as: 'receiver',
+          attributes: ['PersonID', 'Name']
         }
       ]
     });
 
     res.json(updatedNote);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'فشل تحديث الملاحظة', error: error.message });
   }
 });
 
@@ -182,18 +143,13 @@ router.delete('/:id', auth, async (req, res) => {
     const note = await Note.findByPk(req.params.id);
     
     if (!note) {
-      return res.status(404).json({ message: 'Note not found' });
-    }
-
-    // Only author or admin can delete
-    if (note.authorId !== req.user.id && req.user.roleType !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
+      return res.status(404).json({ message: 'الملاحظة غير موجودة' });
     }
 
     await note.destroy();
-    res.json({ message: 'Note deleted successfully' });
+    res.json({ message: 'تم حذف الملاحظة بنجاح' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'فشل حذف الملاحظة', error: error.message });
   }
 });
 

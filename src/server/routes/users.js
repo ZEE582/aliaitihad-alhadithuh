@@ -34,7 +34,7 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const updatedUser = await userService.updateUser(req.params.id, req.body);
+    const updatedUser = await userService.updateUser(req.params.id, req.body, req.user.roleType);
     res.json(updatedUser);
   } catch (error) {
     if (error.message === 'User not found') {

@@ -1,5 +1,5 @@
 const express = require('express');
-const { Report, Child, Class, User } = require('../models');
+const { Report, Child, ClassRoom, User, Guardian, Child_Guardian } = require('../models');
 const { auth, authorize } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
@@ -13,12 +13,17 @@ router.get('/', auth, async (req, res) => {
 
     // Parents can only see reports about their children
     if (req.user.roleType === 'parent') {
-      const children = await Child.findAll({
-        where: { parentId: req.user.id },
-        attributes: ['id']
-      });
-      const childIds = children.map(c => c.id);
-      where.childId = { [Op.in]: childIds };
+      const guardian = await Guardian.findOne({ where: { userId: req.user.id } });
+      if (guardian) {
+        const relations = await Child_Guardian.findAll({
+          where: { GID: guardian.GID },
+          attributes: ['child_PersonID']
+        });
+        const childIds = relations.map(r => r.child_PersonID);
+        where.childId = { [Op.in]: childIds };
+      } else {
+        return res.json([]);
+      }
     }
 
     if (type) where.type = type;
@@ -31,12 +36,12 @@ router.get('/', auth, async (req, res) => {
         {
           model: Child,
           as: 'child',
-          attributes: ['id', 'firstName', 'lastName']
+          attributes: ['PersonID', 'F_name', 'L_name']
         },
         {
-          model: Class,
+          model: ClassRoom,
           as: 'class',
-          attributes: ['id', 'name', 'level']
+          attributes: ['classID', 'className']
         },
         {
           model: User,
@@ -49,7 +54,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json(reports);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'فشل جلب التقارير', error: error.message });
   }
 });
 
@@ -61,12 +66,12 @@ router.get('/:id', auth, async (req, res) => {
         {
           model: Child,
           as: 'child',
-          attributes: ['id', 'firstName', 'lastName']
+          attributes: ['PersonID', 'F_name', 'L_name']
         },
         {
-          model: Class,
+          model: ClassRoom,
           as: 'class',
-          attributes: ['id', 'name', 'level']
+          attributes: ['classID', 'className']
         },
         {
           model: User,
@@ -77,20 +82,12 @@ router.get('/:id', auth, async (req, res) => {
     });
     
     if (!report) {
-      return res.status(404).json({ message: 'Report not found' });
-    }
-
-    // Parents can only view reports about their children
-    if (req.user.roleType === 'parent' && report.childId) {
-      const child = await Child.findByPk(report.childId);
-      if (child.parentId !== req.user.id) {
-        return res.status(403).json({ message: 'Not authorized' });
-      }
+      return res.status(404).json({ message: 'التقرير غير موجود' });
     }
 
     res.json(report);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'فشل جلب التقرير', error: error.message });
   }
 });
 

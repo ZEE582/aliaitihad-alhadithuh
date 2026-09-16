@@ -1,8 +1,32 @@
-const { Child, Person, ClassRoom, Section, sequelize } = require('../models');
+const { Child, Person, ClassRoom, Section, Guardian, Child_Guardian, Teacher, sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 class ChildService {
   async getAllChildren(userRole, userId) {
+    let where = {};
+
+    // Data segregation based on user role
+    if (userRole === 'parent') {
+      const guardian = await Guardian.findOne({ where: { userId } });
+      if (!guardian) return [];
+      const relations = await Child_Guardian.findAll({
+        where: { GID: guardian.GID },
+        attributes: ['child_PersonID']
+      });
+      const childIds = relations.map(r => r.child_PersonID);
+      where.PersonID = { [Op.in]: childIds };
+    } else if (userRole === 'teacher') {
+      const teacher = await Teacher.findOne({ where: { userId } });
+      if (teacher) {
+        const section = await Section.findOne({ where: { assigned_teacher_id: teacher.PersonID } });
+        if (section) {
+          where.section_id = section.section_id;
+        }
+      }
+    }
+
     return await Child.findAll({
+      where,
       include: [
         {
           model: Person,

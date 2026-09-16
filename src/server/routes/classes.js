@@ -19,12 +19,19 @@ router.get('/', auth, async (req, res) => {
 // Get class by ID
 router.get('/:id', auth, async (req, res) => {
   try {
+    const { Section, Teacher, Person } = require('../models');
     const classData = await Class.findByPk(req.params.id, {
       include: [
         {
-          model: Teacher,
-          as: 'teacher',
-          attributes: ['id', 'fullName', 'email', 'phone']
+          model: Section,
+          as: 'sections',
+          include: [
+            {
+              model: Teacher,
+              as: 'assignedTeacher',
+              include: [{ model: Person, as: 'person', attributes: ['PersonID', 'Name'] }]
+            }
+          ]
         }
       ]
     });
@@ -35,7 +42,7 @@ router.get('/:id', auth, async (req, res) => {
 
     res.json(classData);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
