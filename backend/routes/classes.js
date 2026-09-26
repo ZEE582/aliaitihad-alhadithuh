@@ -51,7 +51,7 @@ router.post('/', auth, authorize('admin'), async (req, res) => {
   try {
     const className = req.body.className || req.body.name;
     if (!className) {
-      return res.status(400).json({ message: 'اسم الفصل/القاعة مطلوب (className)' });
+      return res.status(400).json({ message: 'Class name is required (className)' });
     }
     const classData = await Class.create({ className });
     res.status(201).json(classData);
@@ -106,7 +106,7 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
 
 const { ClassRoom_ClassSession, classSession } = require('../models');
 
-// GET /api/classes/:id/sessions - جلب الحصص المرتبطة بهذه الغرفة الصفية
+// GET /api/classes/:id/sessions - Get sessions associated with this classroom
 router.get('/:id/sessions', auth, async (req, res) => {
   try {
     const classID = req.params.id;
@@ -120,30 +120,30 @@ router.get('/:id/sessions', auth, async (req, res) => {
     });
     res.json(room ? room.sessions : []);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب الحصص المرتبطة بالقاعة', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch associated sessions', error: error.message });
   }
 });
 
-// POST /api/classes/:id/sessions - ربط حصة بغرفة صفية (ClassRoom hosts ClassSession)
+// POST /api/classes/:id/sessions - Link session to classroom (ClassRoom hosts ClassSession)
 router.post('/:id/sessions', auth, authorize('admin'), async (req, res) => {
   try {
     const classID = req.params.id;
     const { SessionID } = req.body;
     if (!SessionID) {
-      return res.status(400).json({ message: 'SessionID مطلوب' });
+      return res.status(400).json({ message: 'SessionID is required' });
     }
 
     const [record, created] = await ClassRoom_ClassSession.findOrCreate({
       where: { classID, SessionID }
     });
 
-    res.status(201).json({ message: 'تم ربط الحصة بالغرفة بنجاح', record, created });
+    res.status(201).json({ message: 'Session linked to classroom successfully', record, created });
   } catch (error) {
-    res.status(500).json({ message: 'فشل ربط الحصة بالغرفة الصفية', error: error.message });
+    res.status(500).json({ message: 'Failed to link session to classroom', error: error.message });
   }
 });
 
-// DELETE /api/classes/:id/sessions/:sessionId - فك ربط حصة من غرفة صفية
+// DELETE /api/classes/:id/sessions/:sessionId - Unlink session from classroom
 router.delete('/:id/sessions/:sessionId', auth, authorize('admin'), async (req, res) => {
   try {
     const { id: classID, sessionId: SessionID } = req.params;
@@ -151,12 +151,12 @@ router.delete('/:id/sessions/:sessionId', auth, authorize('admin'), async (req, 
       where: { classID, SessionID }
     });
     if (!record) {
-      return res.status(404).json({ message: 'الربط غير موجود' });
+      return res.status(404).json({ message: 'Link not found' });
     }
     await record.destroy();
-    res.json({ message: 'تم فك الارتباط بنجاح' });
+    res.json({ message: 'Association removed successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'فشل فك الارتباط', error: error.message });
+    res.status(500).json({ message: 'Failed to remove association', error: error.message });
   }
 });
 

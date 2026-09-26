@@ -34,7 +34,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json(notes);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب الملاحظات', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch notes', error: error.message });
   }
 });
 
@@ -57,12 +57,12 @@ router.get('/:id', auth, async (req, res) => {
     });
     
     if (!note) {
-      return res.status(404).json({ message: 'الملاحظة غير موجودة' });
+      return res.status(404).json({ message: 'Note not found' });
     }
 
     res.json(note);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب الملاحظة', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch note', error: error.message });
   }
 });
 
@@ -72,7 +72,7 @@ router.post('/', auth, async (req, res) => {
     const { NoteCategory, category, NoteText, text, note, SenderID, ReceiverID, NoteDate } = req.body;
     
     const noteRecord = await Note.create({
-      NoteCategory: NoteCategory || category || 'عام',
+      NoteCategory: NoteCategory || category || 'General',
       NoteText: NoteText || text || note || '',
       SenderID: SenderID || req.user.id,
       ReceiverID: ReceiverID || SenderID || req.user.id,
@@ -96,7 +96,7 @@ router.post('/', auth, async (req, res) => {
     
     res.status(201).json(newNote);
   } catch (error) {
-    res.status(500).json({ message: 'فشل إضافة الملاحظة', error: error.message });
+    res.status(500).json({ message: 'Failed to create note', error: error.message });
   }
 });
 
@@ -106,7 +106,7 @@ router.put('/:id', auth, async (req, res) => {
     const note = await Note.findByPk(req.params.id);
     
     if (!note) {
-      return res.status(404).json({ message: 'الملاحظة غير موجودة' });
+      return res.status(404).json({ message: 'Note not found' });
     }
 
     const { NoteCategory, category, NoteText, text, NoteDate } = req.body;
@@ -133,7 +133,7 @@ router.put('/:id', auth, async (req, res) => {
 
     res.json(updatedNote);
   } catch (error) {
-    res.status(500).json({ message: 'فشل تحديث الملاحظة', error: error.message });
+    res.status(500).json({ message: 'Failed to update note', error: error.message });
   }
 });
 
@@ -143,13 +143,13 @@ router.delete('/:id', auth, async (req, res) => {
     const note = await Note.findByPk(req.params.id);
     
     if (!note) {
-      return res.status(404).json({ message: 'الملاحظة غير موجودة' });
+      return res.status(404).json({ message: 'Note not found' });
     }
 
     await note.destroy();
-    res.json({ message: 'تم حذف الملاحظة بنجاح' });
+    res.json({ message: 'Note deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'فشل حذف الملاحظة', error: error.message });
+    res.status(500).json({ message: 'Failed to delete note', error: error.message });
   }
 });
 

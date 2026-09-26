@@ -73,12 +73,12 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
 });
 
 // ==========================================
-// Health & Medicine Endpoints (السجل الصحي للطفل)
+// Health & Medicine Endpoints (Child Health Record)
 // ==========================================
 
 const { Health_Medicine, Child_Health_Medicine } = require('../models');
 
-// GET /api/children/:id/health - جلب السجل الصحي للطفل
+// GET /api/children/:id/health - Get child health record
 router.get('/:id/health', auth, async (req, res) => {
   try {
     const childId = req.params.id;
@@ -93,11 +93,11 @@ router.get('/:id/health', auth, async (req, res) => {
 
     res.json(relation.healthMedicine);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب السجل الصحي', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch health record', error: error.message });
   }
 });
 
-// PUT /api/children/:id/health - حفظ أو تحديث السجل الصحي للطفل
+// PUT /api/children/:id/health - Save or update child health record
 router.put('/:id/health', auth, authorize('admin', 'teacher'), async (req, res) => {
   try {
     const childId = req.params.id;
@@ -121,9 +121,9 @@ router.put('/:id/health', auth, authorize('admin', 'teacher'), async (req, res) 
       });
     }
 
-    res.json({ message: 'تم تحديث السجل الصحي بنجاح', health: healthRecord });
+    res.json({ message: 'Health record updated successfully', health: healthRecord });
   } catch (error) {
-    res.status(500).json({ message: 'فشل حفظ السجل الصحي', error: error.message });
+    res.status(500).json({ message: 'Failed to save health record', error: error.message });
   }
 });
 

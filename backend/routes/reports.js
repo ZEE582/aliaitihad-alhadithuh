@@ -54,7 +54,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json(reports);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب التقارير', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch reports', error: error.message });
   }
 });
 
@@ -82,12 +82,12 @@ router.get('/:id', auth, async (req, res) => {
     });
     
     if (!report) {
-      return res.status(404).json({ message: 'التقرير غير موجود' });
+      return res.status(404).json({ message: 'Report not found' });
     }
 
     res.json(report);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب التقرير', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch report', error: error.message });
   }
 });
 

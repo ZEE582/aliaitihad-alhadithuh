@@ -25,7 +25,7 @@ async function seedAdmin() {
       username: adminUsername,
       email: adminEmail,
       password: hashedPassword,
-      fullName: 'مدير النظام',
+      fullName: 'System Administrator',
       roleType: 'admin',
       phone: '0590000000'
     });

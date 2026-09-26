@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Kindergarten Database - Schema from ERD
--- (روضة الاتحاد الحديثة)
+-- (Al Ittihad Modern Kindergarten)
 -- Creates database + all tables + relationships
 -- Requires: MySQL 5.7+ / 8.x
 -- =====================================================================

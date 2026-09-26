@@ -68,7 +68,7 @@ router.get('/:id', auth, async (req, res) => {
 router.post('/', auth, authorize('admin'), async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    const fullName = `${req.body.F_name || ''} ${req.body.S_name || ''} ${req.body.L_name || ''}`.trim() || 'معلم جديد';
+    const fullName = `${req.body.F_name || ''} ${req.body.S_name || ''} ${req.body.L_name || ''}`.trim() || 'New Teacher';
 
     // 1. Create Person supertype
     const person = await Person.create({ Name: fullName }, { transaction });
@@ -77,14 +77,14 @@ router.post('/', auth, authorize('admin'), async (req, res) => {
     const teacher = await Teacher.create({
       PersonID: person.PersonID,
       userId: req.body.userId || null,
-      F_name: req.body.F_name || 'معلم',
+      F_name: req.body.F_name || 'Teacher',
       S_name: req.body.S_name || '',
       Th_name: req.body.Th_name || '',
-      L_name: req.body.L_name || 'المعلم',
+      L_name: req.body.L_name || 'Teacher',
       T_Number: req.body.T_Number || 'TEA-' + Math.floor(Math.random() * 10000),
-      specialty: req.body.specialty || 'عام',
+      specialty: req.body.specialty || 'General',
       years_of_experience: req.body.years_of_experience || 1,
-      Role: req.body.Role || 'معلم/ة',
+      Role: req.body.Role || 'Teacher',
       subject_id: req.body.subject_id || null
     }, { transaction });
 

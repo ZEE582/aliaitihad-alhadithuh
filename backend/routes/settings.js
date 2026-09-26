@@ -43,7 +43,7 @@ router.get('/database', auth, authorize('admin'), (req, res) => {
       database: env.DB_NAME || 'kindergarten_db',
     });
   } catch (err) {
-    res.status(500).json({ message: 'فشل قراءة الإعدادات', error: err.message });
+    res.status(500).json({ message: 'Failed to read settings', error: err.message });
   }
 });
 
@@ -57,9 +57,9 @@ router.post('/database/test', auth, authorize('admin'), async (req, res) => {
     });
     await conn.query('SELECT 1');
     await conn.end();
-    res.json({ success: true, message: 'الاتصال ناجح ✅' });
+    res.json({ success: true, message: 'Connection successful ✅' });
   } catch (err) {
-    res.status(400).json({ success: false, message: `فشل الاتصال: ${err.message}` });
+    res.status(400).json({ success: false, message: `Connection failed: ${err.message}` });
   }
 });
 
@@ -75,9 +75,9 @@ router.put('/database', auth, authorize('admin'), (req, res) => {
     env.DB_PASSWORD = password !== undefined ? password : env.DB_PASSWORD;
     env.DB_NAME = database || env.DB_NAME;
     writeEnv(env);
-    res.json({ success: true, message: 'تم حفظ الإعدادات. أعد تشغيل السيرفر لتفعيلها.' });
+    res.json({ success: true, message: 'Settings saved. Restart server to apply changes.' });
   } catch (err) {
-    res.status(500).json({ message: 'فشل حفظ الإعدادات', error: err.message });
+    res.status(500).json({ message: 'Failed to save settings', error: err.message });
   }
 });
 

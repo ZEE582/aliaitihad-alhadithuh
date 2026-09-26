@@ -55,7 +55,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json(attendance);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب سجلات الحضور', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch attendance records', error: error.message });
   }
 });
 
@@ -78,12 +78,12 @@ router.get('/:id', auth, async (req, res) => {
     });
     
     if (!attendance) {
-      return res.status(404).json({ message: 'سجل الحضور غير موجود' });
+      return res.status(404).json({ message: 'Attendance record not found' });
     }
 
     res.json(attendance);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب سجل الحضور', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch attendance record', error: error.message });
   }
 });
 
@@ -117,7 +117,7 @@ router.post('/', auth, authorize('admin', 'teacher'), async (req, res) => {
     
     res.status(201).json(newAttendance);
   } catch (error) {
-    res.status(500).json({ message: 'فشل تسجيل الحضور', error: error.message });
+    res.status(500).json({ message: 'Failed to create attendance record', error: error.message });
   }
 });
 
@@ -126,7 +126,7 @@ router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res) => {
   try {
     const attendance = await Attendance.findByPk(req.params.id);
     if (!attendance) {
-      return res.status(404).json({ message: 'سجل الحضور غير موجود' });
+      return res.status(404).json({ message: 'Attendance record not found' });
     }
 
     const { Status, status, Reason, reason, AttendanceDate, date } = req.body;
@@ -153,7 +153,7 @@ router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res) => {
 
     res.json(updatedAttendance);
   } catch (error) {
-    res.status(500).json({ message: 'فشل تحديث الحضور', error: error.message });
+    res.status(500).json({ message: 'Failed to update attendance', error: error.message });
   }
 });
 
@@ -162,22 +162,22 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
   try {
     const attendance = await Attendance.findByPk(req.params.id);
     if (!attendance) {
-      return res.status(404).json({ message: 'سجل الحضور غير موجود' });
+      return res.status(404).json({ message: 'Attendance record not found' });
     }
     await attendance.destroy();
-    res.json({ message: 'تم حذف سجل الحضور بنجاح' });
+    res.json({ message: 'Attendance record deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'فشل الحذف', error: error.message });
+    res.status(500).json({ message: 'Failed to delete', error: error.message });
   }
 });
 
 // ==========================================
-// Teacher Attendance Endpoints (حضور المعلمين)
+// Teacher Attendance Endpoints (Teacher Attendance)
 // ==========================================
 
 const { TeacherAttendance, Teacher } = require('../models');
 
-// GET /api/attendance/teachers - قائمة حضور المعلمين
+// GET /api/attendance/teachers/all - List teacher attendance records
 router.get('/teachers/all', auth, authorize('admin'), async (req, res) => {
   try {
     const { teacherId, date, status } = req.query;
@@ -199,16 +199,16 @@ router.get('/teachers/all', auth, authorize('admin'), async (req, res) => {
     });
     res.json(records);
   } catch (error) {
-    res.status(500).json({ message: 'فشل جلب سجلات حضور المعلمين', error: error.message });
+    res.status(500).json({ message: 'Failed to fetch teacher attendance records', error: error.message });
   }
 });
 
-// POST /api/attendance/teachers - تسجيل حضور لمعلم
+// POST /api/attendance/teachers - Create teacher attendance record
 router.post('/teachers', auth, authorize('admin'), async (req, res) => {
   try {
     const { TeacherID, Date: attDate, Status, Excuse, ExcuseAttachment } = req.body;
     if (!TeacherID || !attDate || !Status) {
-      return res.status(400).json({ message: 'TeacherID, Date و Status مطلوبة' });
+      return res.status(400).json({ message: 'TeacherID, Date, and Status are required' });
     }
 
     const record = await TeacherAttendance.create({
@@ -220,16 +220,16 @@ router.post('/teachers', auth, authorize('admin'), async (req, res) => {
     });
     res.status(201).json(record);
   } catch (error) {
-    res.status(500).json({ message: 'فشل تسجيل حضور المعلم', error: error.message });
+    res.status(500).json({ message: 'Failed to create teacher attendance record', error: error.message });
   }
 });
 
-// PUT /api/attendance/teachers/:id - تحديث حضور معلم
+// PUT /api/attendance/teachers/:id - Update teacher attendance record
 router.put('/teachers/:id', auth, authorize('admin'), async (req, res) => {
   try {
     const record = await TeacherAttendance.findByPk(req.params.id);
     if (!record) {
-      return res.status(404).json({ message: 'سجل الحضور غير موجود' });
+      return res.status(404).json({ message: 'Attendance record not found' });
     }
     const { Status, Excuse, ExcuseAttachment, Date: attDate } = req.body;
     await record.update({
@@ -240,21 +240,21 @@ router.put('/teachers/:id', auth, authorize('admin'), async (req, res) => {
     });
     res.json(record);
   } catch (error) {
-    res.status(500).json({ message: 'فشل تحديث سجل الحضور', error: error.message });
+    res.status(500).json({ message: 'Failed to update teacher attendance record', error: error.message });
   }
 });
 
-// DELETE /api/attendance/teachers/:id - حذف سجل حضور معلم
+// DELETE /api/attendance/teachers/:id - Delete teacher attendance record
 router.delete('/teachers/:id', auth, authorize('admin'), async (req, res) => {
   try {
     const record = await TeacherAttendance.findByPk(req.params.id);
     if (!record) {
-      return res.status(404).json({ message: 'سجل الحضور غير موجود' });
+      return res.status(404).json({ message: 'Attendance record not found' });
     }
     await record.destroy();
-    res.json({ message: 'تم حذف سجل حضور المعلم بنجاح' });
+    res.json({ message: 'Attendance record deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'فشل الحذف', error: error.message });
+    res.status(500).json({ message: 'Failed to delete attendance record', error: error.message });
   }
 });
 

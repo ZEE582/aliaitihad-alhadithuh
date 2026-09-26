@@ -38,7 +38,7 @@ const fileFilter = (req, file, cb) => {
   if (allowedExtensions.test(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('نوع الملف غير مدعوم! الأنواع المسموحة: صور (jpg, png, webp) ومستندات (pdf, doc, docx)'), false);
+    cb(new Error('Unsupported file type! Allowed: images (jpg, png, webp) and documents (pdf, doc, docx)'), false);
   }
 };
 
