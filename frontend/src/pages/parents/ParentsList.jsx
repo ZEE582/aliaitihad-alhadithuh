@@ -19,7 +19,7 @@ import { useParents } from "../../context/ParentsContext";
 import { strings as S } from "../../constants/strings";
 
 function StatusBadge({ status, onClick }) {
-  const isActive = status === "نشط";
+  const isActive = status === "ظ†ط´ط·";
 
   return (
     <button
@@ -42,7 +42,7 @@ function ParentDetails({ parent, onClose }) {
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="modal-root"
       style={{ backgroundColor: "#00000040" }}
     >
       <div
@@ -251,7 +251,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
   );
 
   const activeParents = parentsList.filter(
-    (p) => p.status === "نشط"
+    (p) => p.status === "ظ†ط´ط·"
   ).length;
 
   const handleAddClick = () => {
@@ -376,11 +376,11 @@ export default function ParentsList({ onNavigate, onLogout }) {
       </div>
 
       {/* Search + Add */}
-      <div className="flex items-center justify-between mb-5 gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-3">
+        <div className="relative w-full sm:flex-1 sm:max-w-sm">
           <Search
             size={16}
-            className="absolute top-1/2 -translate-y-1/2 right-3"
+            className="absolute top-1/2 -translate-y-1/2 right-3 pointer-events-none"
             style={{ color: "#A8B0AB" }}
           />
 
@@ -400,7 +400,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
 
         <button
           onClick={handleAddClick}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0 hover:opacity-90"
+          className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 sm:py-2.5 text-sm font-semibold text-white shrink-0 hover:opacity-90 w-full sm:w-auto"
           style={{ backgroundColor: "#4C8577" }}
         >
           <Plus size={18} />
@@ -410,7 +410,7 @@ export default function ParentsList({ onNavigate, onLogout }) {
 
       {/* Table */}
       <div
-        className="rounded-2xl overflow-hidden"
+        className="table-card rounded-2xl"
         style={{
           backgroundColor: "#FFFFFF",
           border: "1px solid #EDE7D9",
@@ -472,10 +472,11 @@ export default function ParentsList({ onNavigate, onLogout }) {
                   }}
                 >
                   <td
-                    className="px-5 py-3 font-medium"
+                    data-label=""
+                    className="card-title px-3 sm:px-5 py-3"
                     style={{ color: "#2F3A36" }}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
                         className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0"
                         style={{
@@ -486,37 +487,44 @@ export default function ParentsList({ onNavigate, onLogout }) {
                         {p.name?.charAt(0) || S.parents.rowAvatarFallback}
                       </div>
 
-                      {p.name}
+                      <span className="break-words">{p.name}</span>
                     </div>
                   </td>
 
                   <td
-                    className="px-5 py-3"
+                    data-label={S.common.tableHeaderContact}
+                    className="px-3 sm:px-5 py-3"
                     style={{ color: "#4A5551" }}
                   >
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 min-w-0">
                       <Phone
                         size={13}
+                        className="shrink-0"
                         style={{ color: "#A8B0AB" }}
                       />
-                      {p.phone}
+                      <span className="break-words">{p.phone}</span>
                     </span>
                   </td>
 
                   <td
-                    className="px-5 py-3"
+                    data-label={S.parents.detailChildrenLabel}
+                    className="px-3 sm:px-5 py-3"
                     style={{ color: "#4A5551" }}
                   >
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 min-w-0">
                       <Users
                         size={13}
+                        className="shrink-0"
                         style={{ color: "#A8B0AB" }}
                       />
-                      {p.childrenNames}
+                      <span className="break-words">{p.childrenNames}</span>
                     </span>
                   </td>
 
-                  <td className="px-5 py-3">
+                  <td
+                    data-label={S.parents.detailStatusLabel}
+                    className="px-3 sm:px-5 py-3"
+                  >
                     <StatusBadge
                       status={p.status}
                       onClick={() =>
@@ -525,15 +533,16 @@ export default function ParentsList({ onNavigate, onLogout }) {
                     />
                   </td>
 
-                  <td className="px-5 py-3">
+                  <td data-label="" className="card-actions px-3 sm:px-5 py-3">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
                           setViewingParent(p)
                         }
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{ color: "#6E8FB0" }}
                         title={S.common.viewDetails}
+                        aria-label={S.common.viewDetails}
                       >
                         <Eye size={16} />
                       </button>
@@ -542,9 +551,10 @@ export default function ParentsList({ onNavigate, onLogout }) {
                         onClick={() =>
                           handleEditClick(p)
                         }
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{ color: "#4C8577" }}
                         title={S.common.edit}
+                        aria-label={S.common.edit}
                       >
                         <Pencil size={16} />
                       </button>
@@ -553,9 +563,10 @@ export default function ParentsList({ onNavigate, onLogout }) {
                         onClick={() =>
                           handleDelete(p.id)
                         }
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{ color: "#C25B4A" }}
                         title={S.common.delete}
+                        aria-label={S.common.delete}
                       >
                         <Trash2 size={16} />
                       </button>

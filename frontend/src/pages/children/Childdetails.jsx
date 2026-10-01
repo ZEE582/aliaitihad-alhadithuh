@@ -543,8 +543,8 @@ export default function ChildDetails({
                 border: "1px solid #EDE7D9",
               }}
             >
-              <div className="flex items-center justify-between gap-3 mb-5">
-                <div>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <div className="min-w-0">
                   <h4
                     className="text-sm font-bold"
                     style={{ color: "#2F3A36" }}
@@ -651,7 +651,7 @@ export default function ChildDetails({
                       >
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <p
-                            className="text-sm font-medium leading-6"
+                            className="text-sm font-medium leading-6 min-w-0 break-words"
                             style={{
                               color: "#2F3A36",
                             }}

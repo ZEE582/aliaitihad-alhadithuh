@@ -62,12 +62,21 @@ export default function ToastContainer() {
 
   return (
     <div
-      className="fixed top-4 left-4 z-50 w-80 max-w-full"
+      className="fixed top-3 left-3 right-3 sm:left-4 sm:right-auto sm:top-4 z-50 w-auto sm:w-80 max-w-full pointer-events-none"
+      style={{
+        marginTop:
+          "env(safe-area-inset-top, 0px)",
+      }}
       aria-live="polite"
       aria-atomic="false"
     >
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
+        <div key={toast.id} className="pointer-events-auto">
+          <ToastItem
+            toast={toast}
+            onRemove={removeToast}
+          />
+        </div>
       ))}
     </div>
   );

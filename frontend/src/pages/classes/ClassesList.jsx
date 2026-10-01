@@ -82,19 +82,19 @@ export default function ClassesList({
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // ======================================================
-  // عدد الأطفال داخل الصف
+  // ط¹ط¯ط¯ ط§ظ„ط£ط·ظپط§ظ„ ط¯ط§ط®ظ„ ط§ظ„طµظپ
   // ======================================================
 
   const getChildrenForClass = (className) => {
     return childrenList.filter(
       (child) =>
         child.classroom === className &&
-        child.status === "نشط"
+        child.status === "ظ†ط´ط·"
     );
   };
 
   // ======================================================
-  // البحث
+  // ط§ظ„ط¨ط­ط«
   // ======================================================
 
   const filtered = classesList.filter((item) => {
@@ -109,7 +109,7 @@ export default function ClassesList({
   });
 
   // ======================================================
-  // إضافة
+  // ط¥ط¶ط§ظپط©
   // ======================================================
 
   const handleAddClick = () => {
@@ -118,7 +118,7 @@ export default function ClassesList({
   };
 
   // ======================================================
-  // تعديل
+  // طھط¹ط¯ظٹظ„
   // ======================================================
 
   const handleEditClick = (classItem) => {
@@ -127,7 +127,7 @@ export default function ClassesList({
   };
 
   // ======================================================
-  // حفظ
+  // ط­ظپط¸
   // ======================================================
 
   const handleSave = (formData) => {
@@ -150,7 +150,7 @@ export default function ClassesList({
   };
 
   // ======================================================
-  // حذف
+  // ط­ط°ظپ
   // ======================================================
 
   const handleDelete = (classId) => {
@@ -186,7 +186,7 @@ export default function ClassesList({
   };
 
   // ======================================================
-  // فتح تفاصيل الصف
+  // ظپطھط­ طھظپط§طµظٹظ„ ط§ظ„طµظپ
   // ======================================================
 
   const handleViewClass = (classItem) => {
@@ -343,7 +343,7 @@ export default function ClassesList({
                   childrenList.filter(
                     (child) =>
                       child.status ===
-                      "نشط"
+                      "ظ†ط´ط·"
                   ).length
                 }
               </p>
@@ -422,7 +422,7 @@ export default function ClassesList({
       ================================================== */}
 
       <div
-        className="rounded-2xl overflow-hidden"
+        className="table-card rounded-2xl"
         style={{
           backgroundColor:
             "#FFFFFF",
@@ -523,10 +523,13 @@ export default function ClassesList({
                       "1px solid #F3EFE3",
                   }}
                 >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
+                  <td
+                    data-label=""
+                    className="card-title px-3 sm:px-5 py-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                         style={{
                           backgroundColor:
                             "#EAF2EF",
@@ -542,7 +545,7 @@ export default function ClassesList({
                       </div>
 
                       <span
-                        className="font-semibold"
+                        className="font-semibold break-words"
                         style={{
                           color:
                             "#2F3A36",
@@ -554,24 +557,31 @@ export default function ClassesList({
                   </td>
 
                   <td
-                    className="px-5 py-4"
+                    data-label={S.classForm.labelTeacher}
+                    className="px-3 sm:px-5 py-4"
                     style={{
                       color:
                         "#4A5551",
                     }}
                   >
-                    {classItem.teacher}
+                    <span className="break-words">
+                      {classItem.teacher}
+                    </span>
                   </td>
 
                   <td
-                    className="px-5 py-4"
+                    data-label={S.classes.childrenDetailLabel}
+                    className="px-3 sm:px-5 py-4"
                     style={{
                       color:
                         "#4A5551",
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <Users size={15} />
+                      <Users
+                        size={15}
+                        className="shrink-0"
+                      />
 
                       <span>
                         {classChildren.length}
@@ -580,7 +590,8 @@ export default function ClassesList({
                   </td>
 
                   <td
-                    className="px-5 py-4"
+                    data-label={S.classes.capacityDetailLabel}
+                    className="px-3 sm:px-5 py-4"
                     style={{
                       color:
                         "#4A5551",
@@ -606,7 +617,10 @@ export default function ClassesList({
                     </div>
                   </td>
 
-                  <td className="px-5 py-4">
+                  <td
+                    data-label={S.common.tableHeaderStatus}
+                    className="px-3 sm:px-5 py-4"
+                  >
                     <CapacityBadge
                       current={
                         classChildren.length
@@ -615,9 +629,12 @@ export default function ClassesList({
                     />
                   </td>
 
-                  <td className="px-5 py-4">
+                  <td
+                    data-label=""
+                    className="card-actions px-3 sm:px-5 py-4"
+                  >
                     <div className="flex items-center gap-2">
-                      {/* عرض */}
+                      {/* ط¹ط±ط¶ */}
                       <button
                         type="button"
                         onClick={() =>
@@ -625,17 +642,18 @@ export default function ClassesList({
                             classItem
                           )
                         }
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{
                           color:
                             "#6E8FB0",
                         }}
                         title={S.classes.viewClassDetailsTitle}
+                        aria-label={S.classes.viewClassDetailsTitle}
                       >
                         <Eye size={16} />
                       </button>
 
-                      {/* تعديل */}
+                      {/* طھط¹ط¯ظٹظ„ */}
                       <button
                         type="button"
                         onClick={() =>
@@ -643,17 +661,18 @@ export default function ClassesList({
                             classItem
                           )
                         }
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{
                           color:
                             "#4C8577",
                         }}
                         title={S.classes.editClassTitle}
+                        aria-label={S.classes.editClassTitle}
                       >
                         <Pencil size={16} />
                       </button>
 
-                      {/* حذف */}
+                      {/* ط­ط°ظپ */}
                       <button
                         type="button"
                         onClick={() =>
@@ -661,12 +680,13 @@ export default function ClassesList({
                             classItem.id
                           )
                         }
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{
                           color:
                             "#C25B4A",
                         }}
                         title={S.classes.deleteClassTitle}
+                        aria-label={S.classes.deleteClassTitle}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -691,13 +711,13 @@ export default function ClassesList({
       </div>
 
       {/* ==================================================
-          تفاصيل الصف
+          طھظپط§طµظٹظ„ ط§ظ„طµظپ
       ================================================== */}
 
       {selectedClass && (
         <div
           dir="rtl"
-          className="fixed inset-0 flex items-center justify-center p-4 z-50"
+          className="modal-root"
           style={{
             backgroundColor:
               "#00000040",
@@ -793,7 +813,7 @@ export default function ClassesList({
 
                 return (
                   <>
-                    <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 mb-5">
                       <div
                         className="rounded-2xl p-4 text-center"
                         style={{

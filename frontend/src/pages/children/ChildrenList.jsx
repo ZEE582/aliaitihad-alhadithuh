@@ -83,11 +83,11 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
       onLogout={onLogout}
       pageTitle={S.children.pageTitle}
     >
-      <div className="flex items-center justify-between mb-5 gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-3">
+        <div className="relative w-full sm:flex-1 sm:max-w-sm">
           <Search
             size={16}
-            className="absolute top-1/2 -translate-y-1/2 right-3"
+            className="absolute top-1/2 -translate-y-1/2 right-3 pointer-events-none"
             style={{ color: "#A8B0AB" }}
           />
 
@@ -107,7 +107,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
 
         <button
           onClick={handleAddClick}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0"
+          className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 sm:py-2.5 text-sm font-semibold text-white shrink-0 w-full sm:w-auto"
           style={{ backgroundColor: "#4C8577" }}
         >
           <Plus size={18} />
@@ -116,7 +116,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
       </div>
 
       <div
-        className="rounded-2xl overflow-hidden"
+        className="table-card rounded-2xl"
         style={{
           backgroundColor: "#FFFFFF",
           border: "1px solid #EDE7D9",
@@ -181,47 +181,52 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
                 style={{ borderBottom: "1px solid #F3EFE3" }}
               >
                 <td
-                  className="px-5 py-3 font-medium"
+                  data-label={S.children.tableName}
+                  className="px-3 sm:px-5 py-3 font-medium"
                   style={{ color: "#2F3A36" }}
                 >
                   {child.name}
                 </td>
 
                 <td
-                  className="px-5 py-3"
+                  data-label={S.children.tableClassroom}
+                  className="px-3 sm:px-5 py-3"
                   style={{ color: "#4A5551" }}
                 >
                   {child.classroom}
                 </td>
 
                 <td
-                  className="px-5 py-3"
+                  data-label={S.children.tableAge}
+                  className="px-3 sm:px-5 py-3"
                   style={{ color: "#4A5551" }}
                 >
                   {child.age}
                 </td>
 
                 <td
-                  className="px-5 py-3"
+                  data-label={S.children.tableParent}
+                  className="px-3 sm:px-5 py-3"
                   style={{ color: "#4A5551" }}
                 >
                   {child.parent}
                 </td>
 
-                <td className="px-5 py-3">
+                <td data-label={S.children.tableStatus} className="px-3 sm:px-5 py-3">
                   <StatusBadge
                     status={child.status}
                     onClick={() => toggleChildStatus(child.id)}
                   />
                 </td>
 
-                <td className="px-5 py-3">
+                <td data-label="" className="px-3 sm:px-5 py-3">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
                         onOpenChild && onOpenChild(child)
                       }
-                      className="p-1.5 rounded-lg hover:opacity-70"
+                      aria-label={S.common.viewDetails}
+                      className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                       style={{ color: "#6E8FB0" }}
                     >
                       <Eye size={16} />
@@ -229,7 +234,8 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
 
                     <button
                       onClick={() => handleEditClick(child)}
-                      className="p-1.5 rounded-lg hover:opacity-70"
+                      aria-label={S.common.edit}
+                      className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                       style={{ color: "#4C8577" }}
                     >
                       <Pencil size={16} />
@@ -237,7 +243,8 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
 
                     <button
                       onClick={() => handleDelete(child.id)}
-                      className="p-1.5 rounded-lg hover:opacity-70"
+                      aria-label={S.common.delete}
+                      className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                       style={{ color: "#C25B4A" }}
                     >
                       <Trash2 size={16} />
@@ -251,7 +258,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
 
         {filtered.length === 0 && (
           <p
-            className="text-center text-sm py-8"
+            className="text-center text-sm py-8 px-4"
             style={{ color: "#A8B0AB" }}
           >
             {S.children.noResults}

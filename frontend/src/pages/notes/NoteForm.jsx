@@ -47,7 +47,7 @@ export default function NoteForm({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      className="modal-root"
       style={{
         backgroundColor: "#00000040",
       }}
@@ -122,7 +122,7 @@ export default function NoteForm({
                     key={child.id}
                     value={child.name}
                   >
-                    {child.name} — {child.classroom}
+                    {child.name} â€” {child.classroom}
                   </option>
                 ))}
               </select>

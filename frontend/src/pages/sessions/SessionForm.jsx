@@ -11,11 +11,11 @@ import {
 import { strings as S } from "../../constants/strings";
 
 const days = [
-  "الأحد",
-  "الاثنين",
-  "الثلاثاء",
-  "الأربعاء",
-  "الخميس",
+  "ط§ظ„ط£ط­ط¯",
+  "ط§ظ„ط§ط«ظ†ظٹظ†",
+  "ط§ظ„ط«ظ„ط§ط«ط§ط،",
+  "ط§ظ„ط£ط±ط¨ط¹ط§ط،",
+  "ط§ظ„ط®ظ…ظٹط³",
 ];
 
 export default function SessionForm({
@@ -48,7 +48,7 @@ export default function SessionForm({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      className="modal-root"
       style={{ backgroundColor: "#00000040" }}
     >
       <div

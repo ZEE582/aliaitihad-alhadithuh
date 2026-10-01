@@ -94,7 +94,7 @@ export default function SubjectForm({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="modal-root"
       style={{ backgroundColor: "#00000040" }}
     >
       <div

@@ -30,70 +30,70 @@ import { useToast } from "../../context/ToastContext";
 import { strings as S } from "../../constants/strings";
 
 const days = [
-  "الأحد",
-  "الاثنين",
-  "الثلاثاء",
-  "الأربعاء",
-  "الخميس",
+  "ط§ظ„ط£ط­ط¯",
+  "ط§ظ„ط§ط«ظ†ظٹظ†",
+  "ط§ظ„ط«ظ„ط§ط«ط§ط،",
+  "ط§ظ„ط£ط±ط¨ط¹ط§ط،",
+  "ط§ظ„ط®ظ…ظٹط³",
 ];
 
 const initialSessions = [
   {
     id: 1,
-    day: "الأحد",
+    day: "ط§ظ„ط£ط­ط¯",
     time: "9:00 - 9:45",
-    subject: "اللغة العربية",
-    classroom: "صف الفراشات",
-    teacher: "أ. سارة الحاج",
+    subject: "ط§ظ„ظ„ط؛ط© ط§ظ„ط¹ط±ط¨ظٹط©",
+    classroom: "طµظپ ط§ظ„ظپط±ط§ط´ط§طھ",
+    teacher: "ط£. ط³ط§ط±ط© ط§ظ„ط­ط§ط¬",
     completed: false,
     note: "",
   },
   {
     id: 2,
-    day: "الأحد",
+    day: "ط§ظ„ط£ط­ط¯",
     time: "10:00 - 10:45",
-    subject: "الرياضيات",
-    classroom: "صف الفراشات",
-    teacher: "أ. ريم عودة",
+    subject: "ط§ظ„ط±ظٹط§ط¶ظٹط§طھ",
+    classroom: "طµظپ ط§ظ„ظپط±ط§ط´ط§طھ",
+    teacher: "ط£. ط±ظٹظ… ط¹ظˆط¯ط©",
     completed: false,
     note: "",
   },
   {
     id: 3,
-    day: "الاثنين",
+    day: "ط§ظ„ط§ط«ظ†ظٹظ†",
     time: "9:00 - 9:45",
-    subject: "التربية الفنية",
-    classroom: "صف النجوم",
-    teacher: "أ. نور سلامة",
+    subject: "ط§ظ„طھط±ط¨ظٹط© ط§ظ„ظپظ†ظٹط©",
+    classroom: "طµظپ ط§ظ„ظ†ط¬ظˆظ…",
+    teacher: "ط£. ظ†ظˆط± ط³ظ„ط§ظ…ط©",
     completed: false,
     note: "",
   },
   {
     id: 4,
-    day: "الثلاثاء",
+    day: "ط§ظ„ط«ظ„ط§ط«ط§ط،",
     time: "9:00 - 9:45",
-    subject: "النشاط الحركي",
-    classroom: "صف القمر",
-    teacher: "أ. لينا خليل",
+    subject: "ط§ظ„ظ†ط´ط§ط· ط§ظ„ط­ط±ظƒظٹ",
+    classroom: "طµظپ ط§ظ„ظ‚ظ…ط±",
+    teacher: "ط£. ظ„ظٹظ†ط§ ط®ظ„ظٹظ„",
     completed: false,
     note: "",
   },
 ];
 
 function SubjectIcon({ subject }) {
-  if (subject?.includes("عربية")) {
+  if (subject?.includes("ط¹ط±ط¨ظٹط©")) {
     return <BookOpen size={20} />;
   }
 
-  if (subject?.includes("رياضيات")) {
+  if (subject?.includes("ط±ظٹط§ط¶ظٹط§طھ")) {
     return <Calculator size={20} />;
   }
 
-  if (subject?.includes("فنية")) {
+  if (subject?.includes("ظپظ†ظٹط©")) {
     return <Palette size={20} />;
   }
 
-  if (subject?.includes("حركي")) {
+  if (subject?.includes("ط­ط±ظƒظٹ")) {
     return <Activity size={20} />;
   }
 
@@ -116,7 +116,7 @@ export default function SessionsList({
     useState(null);
 
   const [activeDay, setActiveDay] =
-    useState("الأحد");
+    useState("ط§ظ„ط£ط­ط¯");
 
   // Session Form
   const [formOpen, setFormOpen] =
@@ -125,18 +125,18 @@ export default function SessionsList({
   const [editingSession, setEditingSession] =
     useState(null);
 
-  // اختيار نوع الملاحظة
+  // ط§ط®طھظٹط§ط± ظ†ظˆط¹ ط§ظ„ظ…ظ„ط§ط­ط¸ط©
   const [noteChoiceSession, setNoteChoiceSession] =
     useState(null);
 
-  // ملاحظة الحصة
+  // ظ…ظ„ط§ط­ط¸ط© ط§ظ„ط­طµط©
   const [lessonNoteSession, setLessonNoteSession] =
     useState(null);
 
   const [lessonNoteText, setLessonNoteText] =
     useState("");
 
-  // ملاحظة الطفل
+  // ظ…ظ„ط§ط­ط¸ط© ط§ظ„ط·ظپظ„
   const [childNoteSession, setChildNoteSession] =
     useState(null);
 
@@ -147,7 +147,7 @@ export default function SessionsList({
     useState(false);
 
   // ==========================================
-  // الصلاحيات
+  // ط§ظ„طµظ„ط§ط­ظٹط§طھ
   // ==========================================
 
   const roleType =
@@ -161,11 +161,11 @@ export default function SessionsList({
     roleType === "teacher";
 
   /*
-    المعلمة مسموح لها تتعامل فقط مع الحصص
-    التي هي المعلمة المسؤولة عنها.
+    ط§ظ„ظ…ط¹ظ„ظ…ط© ظ…ط³ظ…ظˆط­ ظ„ظ‡ط§ طھطھط¹ط§ظ…ظ„ ظپظ‚ط· ظ…ط¹ ط§ظ„ط­طµطµ
+    ط§ظ„طھظٹ ظ‡ظٹ ط§ظ„ظ…ط¹ظ„ظ…ط© ط§ظ„ظ…ط³ط¤ظˆظ„ط© ط¹ظ†ظ‡ط§.
 
-    نعتمد على اسم المعلمة الموجود في الحصة
-    ونقارنه باسم المستخدم الحالي.
+    ظ†ط¹طھظ…ط¯ ط¹ظ„ظ‰ ط§ط³ظ… ط§ظ„ظ…ط¹ظ„ظ…ط© ط§ظ„ظ…ظˆط¬ظˆط¯ ظپظٹ ط§ظ„ط­طµط©
+    ظˆظ†ظ‚ط§ط±ظ†ظ‡ ط¨ط§ط³ظ… ط§ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ط­ط§ظ„ظٹ.
   */
   const isMySession = (session) => {
     if (!isTeacher) return false;
@@ -176,7 +176,7 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // أطفال صف المعلمة فقط
+  // ط£ط·ظپط§ظ„ طµظپ ط§ظ„ظ…ط¹ظ„ظ…ط© ظپظ‚ط·
   // ==========================================
 
   const teacherChildren =
@@ -189,7 +189,7 @@ export default function SessionsList({
       : [];
 
   // ==========================================
-  // الحصص حسب اليوم
+  // ط§ظ„ط­طµطµ ط­ط³ط¨ ط§ظ„ظٹظˆظ…
   // ==========================================
 
   const filtered = sessions.filter(
@@ -198,7 +198,7 @@ export default function SessionsList({
   );
 
   // ==========================================
-  // إدارة الحصص
+  // ط¥ط¯ط§ط±ط© ط§ظ„ط­طµطµ
   // ==========================================
 
   const handleAddClick = () => {
@@ -264,14 +264,14 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // المعلمة تؤكد تنفيذ حصتها فقط
+  // ط§ظ„ظ…ط¹ظ„ظ…ط© طھط¤ظƒط¯ طھظ†ظپظٹط° ط­طµطھظ‡ط§ ظپظ‚ط·
   // ==========================================
 
   const handleToggleCompleted = (session) => {
     if (!isTeacher) return;
 
-    // حماية إضافية:
-    // لا تسمحي للمعلمة بتعديل حصة غيرها
+    // ط­ظ…ط§ظٹط© ط¥ط¶ط§ظپظٹط©:
+    // ظ„ط§ طھط³ظ…ط­ظٹ ظ„ظ„ظ…ط¹ظ„ظ…ط© ط¨طھط¹ط¯ظٹظ„ ط­طµط© ط؛ظٹط±ظ‡ط§
     if (!isMySession(session)) return;
 
     setSessions((prev) =>
@@ -287,21 +287,21 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // فتح اختيار نوع الملاحظة
+  // ظپطھط­ ط§ط®طھظٹط§ط± ظ†ظˆط¹ ط§ظ„ظ…ظ„ط§ط­ط¸ط©
   // ==========================================
 
   const handleOpenNoteOptions = (session) => {
     if (!isTeacher) return;
 
-    // المعلمة لا تستطيع إضافة ملاحظة
-    // على حصة ليست لها
+    // ط§ظ„ظ…ط¹ظ„ظ…ط© ظ„ط§ طھط³طھط·ظٹط¹ ط¥ط¶ط§ظپط© ظ…ظ„ط§ط­ط¸ط©
+    // ط¹ظ„ظ‰ ط­طµط© ظ„ظٹط³طھ ظ„ظ‡ط§
     if (!isMySession(session)) return;
 
     setNoteChoiceSession(session);
   };
 
   // ==========================================
-  // إغلاق اختيار نوع الملاحظة
+  // ط¥ط؛ظ„ط§ظ‚ ط§ط®طھظٹط§ط± ظ†ظˆط¹ ط§ظ„ظ…ظ„ط§ط­ط¸ط©
   // ==========================================
 
   const handleCloseNoteOptions = () => {
@@ -309,7 +309,7 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // اختيار "ملاحظة عن الحصة"
+  // ط§ط®طھظٹط§ط± "ظ…ظ„ط§ط­ط¸ط© ط¹ظ† ط§ظ„ط­طµط©"
   // ==========================================
 
   const handleChooseLessonNote = () => {
@@ -332,7 +332,7 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // إغلاق ملاحظة الحصة
+  // ط¥ط؛ظ„ط§ظ‚ ظ…ظ„ط§ط­ط¸ط© ط§ظ„ط­طµط©
   // ==========================================
 
   const handleCloseLessonNote = () => {
@@ -341,14 +341,14 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // حفظ ملاحظة الحصة
+  // ط­ظپط¸ ظ…ظ„ط§ط­ط¸ط© ط§ظ„ط­طµط©
   // ==========================================
 
   const handleSaveLessonNote = () => {
     if (!lessonNoteSession) return;
 
-    // حماية:
-    // لا يمكن حفظ ملاحظة لحصة ليست للمعلمة
+    // ط­ظ…ط§ظٹط©:
+    // ظ„ط§ ظٹظ…ظƒظ† ط­ظپط¸ ظ…ظ„ط§ط­ط¸ط© ظ„ط­طµط© ظ„ظٹط³طھ ظ„ظ„ظ…ط¹ظ„ظ…ط©
     if (!isMySession(lessonNoteSession)) {
       handleCloseLessonNote();
       return;
@@ -370,7 +370,7 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // اختيار "ملاحظة عن طفل"
+  // ط§ط®طھظٹط§ط± "ظ…ظ„ط§ط­ط¸ط© ط¹ظ† ط·ظپظ„"
   // ==========================================
 
   const handleChooseChildNote = () => {
@@ -391,7 +391,7 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // إغلاق اختيار الطفل
+  // ط¥ط؛ظ„ط§ظ‚ ط§ط®طھظٹط§ط± ط§ظ„ط·ظپظ„
   // ==========================================
 
   const handleCloseChildSelector = () => {
@@ -400,7 +400,7 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // فتح NoteForm بعد اختيار الطفل
+  // ظپطھط­ NoteForm ط¨ط¹ط¯ ط§ط®طھظٹط§ط± ط§ظ„ط·ظپظ„
   // ==========================================
 
   const handleContinueToChildNote = () => {
@@ -436,7 +436,7 @@ export default function SessionsList({
   };
 
   // ==========================================
-  // حفظ ملاحظة الطفل
+  // ط­ظپط¸ ظ…ظ„ط§ط­ط¸ط© ط§ظ„ط·ظپظ„
   // ==========================================
 
   const handleSaveChildNote = (formData) => {
@@ -449,9 +449,9 @@ export default function SessionsList({
     }
 
     /*
-      نتحقق مرة ثانية من الطفل قبل الحفظ.
-      حتى لو حاول أحد تغيير القيمة من الفورم،
-      لن تُحفظ ملاحظة لطفل خارج صف المعلمة.
+      ظ†طھط­ظ‚ظ‚ ظ…ط±ط© ط«ط§ظ†ظٹط© ظ…ظ† ط§ظ„ط·ظپظ„ ظ‚ط¨ظ„ ط§ظ„ط­ظپط¸.
+      ط­طھظ‰ ظ„ظˆ ط­ط§ظˆظ„ ط£ط­ط¯ طھط؛ظٹظٹط± ط§ظ„ظ‚ظٹظ…ط© ظ…ظ† ط§ظ„ظپظˆط±ظ…طŒ
+      ظ„ظ† طھظڈط­ظپط¸ ظ…ظ„ط§ط­ط¸ط© ظ„ط·ظپظ„ ط®ط§ط±ط¬ طµظپ ط§ظ„ظ…ط¹ظ„ظ…ط©.
     */
 
     const allowedChild =
@@ -472,8 +472,8 @@ export default function SessionsList({
       {
         ...formData,
 
-        // معلومات إضافية تربط الملاحظة
-        // بالمعلمة والحصة التي جاءت منها
+        // ظ…ط¹ظ„ظˆظ…ط§طھ ط¥ط¶ط§ظپظٹط© طھط±ط¨ط· ط§ظ„ظ…ظ„ط§ط­ط¸ط©
+        // ط¨ط§ظ„ظ…ط¹ظ„ظ…ط© ظˆط§ظ„ط­طµط© ط§ظ„طھظٹ ط¬ط§ط،طھ ظ…ظ†ظ‡ط§
         sessionId:
           childNoteSession.id,
 
@@ -851,13 +851,13 @@ export default function SessionsList({
 
                   {/* ========================================== */}
                   {/* Teacher Actions */}
-                  {/* فقط للحصة التي تدرسها المعلمة */}
+                  {/* ظپظ‚ط· ظ„ظ„ط­طµط© ط§ظ„طھظٹ طھط¯ط±ط³ظ‡ط§ ط§ظ„ظ…ط¹ظ„ظ…ط© */}
                   {/* ========================================== */}
 
                   {isTeacher &&
                     mySession && (
                       <div className="flex flex-wrap items-center gap-2 mt-4">
-                        {/* تم تنفيذ الحصة */}
+                        {/* طھظ… طھظ†ظپظٹط° ط§ظ„ط­طµط© */}
 
                         <button
                           onClick={() =>
@@ -898,7 +898,7 @@ export default function SessionsList({
                           )}
                         </button>
 
-                        {/* الملاحظات */}
+                        {/* ط§ظ„ظ…ظ„ط§ط­ط¸ط§طھ */}
 
                         <button
                           type="button"
@@ -928,7 +928,7 @@ export default function SessionsList({
 
                   {/* ========================================== */}
                   {/* Existing Lesson Note */}
-                  {/* فقط ملاحظة الحصة */}
+                  {/* ظپظ‚ط· ظ…ظ„ط§ط­ط¸ط© ط§ظ„ط­طµط© */}
                   {/* ========================================== */}
 
                   {isTeacher &&
@@ -1098,7 +1098,7 @@ export default function SessionsList({
 
       {/* ========================================== */}
       {/* Note Type Choice Modal */}
-      {/* ملاحظة عن الحصة / ملاحظة عن طفل */}
+      {/* ظ…ظ„ط§ط­ط¸ط© ط¹ظ† ط§ظ„ط­طµط© / ظ…ظ„ط§ط­ط¸ط© ط¹ظ† ط·ظپظ„ */}
       {/* ========================================== */}
 
       {noteChoiceSession &&
@@ -1108,7 +1108,7 @@ export default function SessionsList({
         ) && (
           <div
             dir="rtl"
-            className="fixed inset-0 flex items-center justify-center p-4 z-50"
+            className="modal-root"
             style={{
               backgroundColor:
                 "#00000040",
@@ -1134,10 +1134,10 @@ export default function SessionsList({
                     "1px solid #EDE7D9",
                 }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
                     <h3
-                      className="text-base font-bold"
+                      className="text-base font-bold break-words"
                       style={{
                         color:
                           "#2F3A36",
@@ -1147,7 +1147,7 @@ export default function SessionsList({
                     </h3>
 
                     <p
-                      className="text-xs mt-1"
+                      className="text-xs mt-1 break-words"
                       style={{
                         color:
                           "#7A8580",
@@ -1300,7 +1300,7 @@ export default function SessionsList({
         ) && (
           <div
             dir="rtl"
-            className="fixed inset-0 flex items-center justify-center p-4 z-50"
+            className="modal-root"
             style={{
               backgroundColor:
                 "#00000040",
@@ -1326,10 +1326,10 @@ export default function SessionsList({
                     "1px solid #EDE7D9",
                 }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
                       style={{
                         backgroundColor:
                           "#FCF3DE",
@@ -1342,9 +1342,9 @@ export default function SessionsList({
                       />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <h3
-                        className="text-base font-bold"
+                        className="text-base font-bold break-words"
                         style={{
                           color:
                             "#2F3A36",
@@ -1354,7 +1354,7 @@ export default function SessionsList({
                       </h3>
 
                       <p
-                        className="text-xs mt-1"
+                        className="text-xs mt-1 break-words"
                         style={{
                           color:
                             "#7A8580",
@@ -1482,7 +1482,7 @@ export default function SessionsList({
         !childNoteFormOpen && (
           <div
             dir="rtl"
-            className="fixed inset-0 flex items-center justify-center p-4 z-50"
+            className="modal-root"
             style={{
               backgroundColor:
                 "#00000040",
@@ -1508,10 +1508,10 @@ export default function SessionsList({
                     "1px solid #EDE7D9",
                 }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
                       style={{
                         backgroundColor:
                           "#FCF3DE",
@@ -1524,9 +1524,9 @@ export default function SessionsList({
                       />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <h3
-                        className="text-base font-bold"
+                        className="text-base font-bold break-words"
                         style={{
                           color:
                             "#2F3A36",
@@ -1536,7 +1536,7 @@ export default function SessionsList({
                       </h3>
 
                       <p
-                        className="text-xs mt-1"
+                        className="text-xs mt-1 break-words"
                         style={{
                           color:
                             "#7A8580",
@@ -1688,7 +1688,7 @@ export default function SessionsList({
 
       {/* ========================================== */}
       {/* Child Note Form */}
-      {/* NoteForm الموجود عندك */}
+      {/* NoteForm ط§ظ„ظ…ظˆط¬ظˆط¯ ط¹ظ†ط¯ظƒ */}
       {/* ========================================== */}
 
       {childNoteFormOpen &&

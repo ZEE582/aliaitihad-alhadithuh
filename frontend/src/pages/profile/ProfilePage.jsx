@@ -77,7 +77,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
           {/* Main Content */}
           <div className="p-6 pt-12">
             {/* Profile Header */}
-            <div className="flex items-start justify-between gap-4 mb-7">
+            <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4 mb-7">
               <div>
                 <h3
                   className="text-xl font-bold"
@@ -169,15 +169,15 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                       border: "1px solid #EDE7D9",
                     }}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                         style={{ backgroundColor: "#EAF2EF" }}
                       >
                         <Phone size={17} style={{ color: "#4C8577" }} />
                       </div>
 
-                      <div>
+                      <div className="min-w-0">
                         <p
                           className="text-xs mb-1"
                           style={{ color: "#A8B0AB" }}
@@ -187,7 +187,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
 
                         <p
                           dir="ltr"
-                          className="text-sm font-medium text-right"
+                          className="text-sm font-medium text-right truncate"
                           style={{ color: "#2F3A36" }}
                         >
                           {user.phone}
@@ -286,6 +286,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                     {/* Name */}
                     <div>
                       <label
+                        htmlFor="profile-name"
                         className="block text-sm font-semibold mb-1.5"
                         style={{ color: "#2F3A36" }}
                       >
@@ -300,9 +301,12 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                         />
 
                         <input
+                          id="profile-name"
+                          name="profile-name"
                           type="text"
                           value={form.name}
                           onChange={handleChange("name")}
+                          autoComplete="name"
                           className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                           style={{
                             border: "1px solid #E2DCCC",
@@ -316,6 +320,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                     {/* Email */}
                     <div>
                       <label
+                        htmlFor="profile-email"
                         className="block text-sm font-semibold mb-1.5"
                         style={{ color: "#2F3A36" }}
                       >
@@ -330,10 +335,13 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                         />
 
                         <input
+                          id="profile-email"
+                          name="profile-email"
                           type="email"
                           value={form.email}
                           onChange={handleChange("email")}
                           dir="ltr"
+                          autoComplete="email"
                           className="w-full rounded-xl py-3 px-3 pl-10 text-sm outline-none"
                           style={{
                             border: "1px solid #E2DCCC",
@@ -347,6 +355,7 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                     {/* Phone */}
                     <div>
                       <label
+                        htmlFor="profile-phone"
                         className="block text-sm font-semibold mb-1.5"
                         style={{ color: "#2F3A36" }}
                       >
@@ -361,10 +370,13 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                         />
 
                         <input
+                          id="profile-phone"
+                          name="profile-phone"
                           type="tel"
                           value={form.phone}
                           onChange={handleChange("phone")}
                           dir="ltr"
+                          autoComplete="tel"
                           className="w-full rounded-xl py-3 px-3 pl-10 text-sm outline-none"
                           style={{
                             border: "1px solid #E2DCCC",

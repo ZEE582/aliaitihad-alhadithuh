@@ -139,7 +139,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
 
       {/* Teachers table */}
       <div
-        className="rounded-2xl overflow-hidden"
+        className="table-card rounded-2xl"
         style={{
           backgroundColor: "#FFFFFF",
           border: "1px solid #EDE7D9",
@@ -205,7 +205,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
                   style={{ borderBottom: "1px solid #F3EFE3" }}
                 >
                   {/* Teacher */}
-                  <td className="px-5 py-4">
+                  <td data-label="" className="card-title px-3 sm:px-5 py-3">
                     <div className="flex items-center gap-3">
                       <div
                         className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
@@ -217,9 +217,9 @@ export default function TeachersList({ onNavigate, onLogout }) {
                         {teacher.name?.charAt(0) || S.teachers.initialsFallback}
                       </div>
 
-                      <div>
+                      <div className="min-w-0">
                         <p
-                          className="font-semibold"
+                          className="font-semibold break-words"
                           style={{ color: "#2F3A36" }}
                         >
                           {teacher.name}
@@ -229,7 +229,7 @@ export default function TeachersList({ onNavigate, onLogout }) {
                           className="flex items-center gap-1 mt-1 text-xs"
                           style={{ color: "#A8B0AB" }}
                         >
-                          <Phone size={11} />
+                          <Phone size={11} className="shrink-0" />
                           {teacher.phone}
                         </span>
                       </div>
@@ -238,40 +238,46 @@ export default function TeachersList({ onNavigate, onLogout }) {
 
                   {/* Subjects */}
                   <td
-                    className="px-5 py-4"
+                    data-label={S.teachers.tableHeaderSubjects}
+                    className="px-3 sm:px-5 py-4"
                     style={{ color: "#4A5551" }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <BookOpen
                         size={14}
+                        className="shrink-0"
                         style={{ color: "#6E8FB0" }}
                       />
-                      <span>{teacher.subject}</span>
+                      <span className="break-words">{teacher.subject}</span>
                     </div>
                   </td>
 
                   {/* Classrooms */}
                   <td
-                    className="px-5 py-4"
+                    data-label={S.teachers.tableHeaderClassrooms}
+                    className="px-3 sm:px-5 py-4"
                     style={{ color: "#4A5551" }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <School
                         size={14}
+                        className="shrink-0"
                         style={{ color: "#E8B24D" }}
                       />
-                      <span>{teacher.classroom}</span>
+                      <span className="break-words">{teacher.classroom}</span>
                     </div>
                   </td>
 
                   {/* Weekly lessons */}
                   <td
-                    className="px-5 py-4"
+                    data-label={S.teachers.tableHeaderWeeklyLessons}
+                    className="px-3 sm:px-5 py-4"
                     style={{ color: "#4A5551" }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <CalendarDays
                         size={14}
+                        className="shrink-0"
                         style={{ color: "#4C8577" }}
                       />
 
@@ -282,7 +288,10 @@ export default function TeachersList({ onNavigate, onLogout }) {
                   </td>
 
                   {/* Status */}
-                  <td className="px-5 py-4">
+                  <td
+                    data-label={S.teachers.tableHeaderStatus}
+                    className="px-3 sm:px-5 py-4"
+                  >
                     <StatusBadge
                       status={teacher.status || "نشط"}
                       onClick={() => toggleTeacherStatus(teacher.id)}
@@ -290,31 +299,34 @@ export default function TeachersList({ onNavigate, onLogout }) {
                   </td>
 
                   {/* Actions */}
-                  <td className="px-5 py-4">
+                  <td data-label="" className="card-actions px-3 sm:px-5 py-4">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setViewingTeacher(teacher)}
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{ color: "#6E8FB0" }}
                         title={S.common.viewDetails}
+                        aria-label={S.common.viewDetails}
                       >
                         <Eye size={16} />
                       </button>
 
                       <button
                         onClick={() => handleEditClick(teacher)}
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{ color: "#4C8577" }}
                         title={S.common.edit}
+                        aria-label={S.common.edit}
                       >
                         <Pencil size={16} />
                       </button>
 
                       <button
                         onClick={() => handleDelete(teacher.id)}
-                        className="p-1.5 rounded-lg hover:opacity-70"
+                        className="p-2 rounded-lg hover:opacity-70 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         style={{ color: "#C25B4A" }}
                         title={S.common.delete}
+                        aria-label={S.common.delete}
                       >
                         <Trash2 size={16} />
                       </button>

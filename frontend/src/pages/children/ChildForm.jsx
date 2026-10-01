@@ -2,9 +2,9 @@ import { useState } from "react";
 import { X, AlertCircle } from "lucide-react";
 import { strings as S } from "../../constants/strings";
 
-// الحد القانوني لعمر القبول بالروضة: من 3 سنين و8 أشهر لغاية 5 سنين بالضبط
-const MIN_AGE_MONTHS = 3 * 12 + 8; // 44 شهر
-const MAX_AGE_MONTHS = 5 * 12; // 60 شهر
+// ط§ظ„ط­ط¯ ط§ظ„ظ‚ط§ظ†ظˆظ†ظٹ ظ„ط¹ظ…ط± ط§ظ„ظ‚ط¨ظˆظ„ ط¨ط§ظ„ط±ظˆط¶ط©: ظ…ظ† 3 ط³ظ†ظٹظ† ظˆ8 ط£ط´ظ‡ط± ظ„ط؛ط§ظٹط© 5 ط³ظ†ظٹظ† ط¨ط§ظ„ط¶ط¨ط·
+const MIN_AGE_MONTHS = 3 * 12 + 8; // 44 ط´ظ‡ط±
+const MAX_AGE_MONTHS = 5 * 12; // 60 ط´ظ‡ط±
 
 function calculateAgeInMonths(birthDateStr) {
   if (!birthDateStr) return null;
@@ -76,12 +76,12 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      className="modal-root"
       style={{ backgroundColor: "#00000040" }}
     >
-      <div className="w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: "#FFFFFF" }}>
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold" style={{ color: "#2F3A36" }}>
+      <div className="w-full max-w-md rounded-2xl p-4 sm:p-6" style={{ backgroundColor: "#FFFFFF" }}>
+        <div className="flex items-center justify-between mb-4 sm:mb-5">
+          <h3 className="text-base sm:text-lg font-bold" style={{ color: "#2F3A36" }}>
             {isEdit ? S.childForm.modalTitleEdit : S.childForm.modalTitleAdd}
           </h3>
           <button onClick={onClose} style={{ color: "#A8B0AB" }}>
@@ -91,13 +91,16 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
+            <label htmlFor="child-name" className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
               {S.childForm.fieldNameLabel}
             </label>
             <input
+              id="child-name"
+              name="child-name"
               type="text"
               value={form.name}
               onChange={handleChange("name")}
+              autoComplete="name"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }}
               required
@@ -105,13 +108,16 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
+            <label htmlFor="child-classroom" className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
               {S.childForm.fieldClassroomLabel}
             </label>
             <input
+              id="child-classroom"
+              name="child-classroom"
               type="text"
               value={form.classroom}
               onChange={handleChange("classroom")}
+              autoComplete="organization"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }}
               required
@@ -119,13 +125,16 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
+            <label htmlFor="child-birthdate" className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
               {S.childForm.fieldBirthDateLabel}
             </label>
             <input
+              id="child-birthdate"
+              name="child-birthdate"
               type="date"
               value={form.birthDate}
               onChange={handleChange("birthDate")}
+              autoComplete="bday"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
                 border: `1px solid ${ageError ? "#C25B4A" : "#E2DCCC"}`,
@@ -134,7 +143,7 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
               }}
               required
             />
-            {/* عرض العمر المحسوب تلقائياً، يساعد يلي بتعبي الفورم تتأكد بسرعة */}
+            {/* ط¹ط±ط¶ ط§ظ„ط¹ظ…ط± ط§ظ„ظ…ط­ط³ظˆط¨ طھظ„ظ‚ط§ط¦ظٹط§ظ‹طŒ ظٹط³ط§ط¹ط¯ ظٹظ„ظٹ ط¨طھط¹ط¨ظٹ ط§ظ„ظپظˆط±ظ… طھطھط£ظƒط¯ ط¨ط³ط±ط¹ط© */}
             {currentMonths !== null && !ageError && (
               <p className="text-xs mt-1.5" style={{ color: "#7A8580" }}>
                 {S.childForm.currentAgeHint(formatAge(currentMonths))}
@@ -152,13 +161,16 @@ export default function ChildForm({ initialData = null, onClose, onSave }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
+            <label htmlFor="child-parent" className="block text-sm font-medium mb-1.5" style={{ color: "#2F3A36" }}>
               {S.childForm.fieldParentLabel}
             </label>
             <input
+              id="child-parent"
+              name="child-parent"
               type="text"
               value={form.parent}
               onChange={handleChange("parent")}
+              autoComplete="name"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{ border: "1px solid #E2DCCC", backgroundColor: "#FCFAF4", color: "#2F3A36" }}
               required

@@ -62,10 +62,16 @@ export default function LoginPage({ onLoginSuccess }) {
   return (
     <div
       dir="rtl"
-      className="min-h-screen w-full flex items-center justify-center px-4"
-      style={{ backgroundColor: "#FBF7EF" }}
+      className="min-h-screen min-h-[100dvh] w-full flex items-center justify-center px-4"
+      style={{
+        backgroundColor: "#FBF7EF",
+        paddingTop:
+          "calc(1rem + env(safe-area-inset-top, 0px))",
+        paddingBottom:
+          "calc(1rem + env(safe-area-inset-bottom, 0px))",
+      }}
     >
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm py-6">
 
         {/* ==========================================
             الشعار
@@ -147,7 +153,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     setSelectedRole(r.key);
                     setError("");
                   }}
-                  className="rounded-xl py-2 text-xs font-semibold transition"
+                  className="rounded-xl py-3 sm:py-2 text-xs font-semibold transition min-h-[44px]"
                   style={{
                     backgroundColor:
                       selectedRole === r.key
@@ -194,12 +200,14 @@ export default function LoginPage({ onLoginSuccess }) {
 
               <input
                 id="email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(e) =>
                   setEmail(e.target.value)
                 }
                 placeholder={S.login.emailPlaceholder}
+                autoComplete="email"
                 className="w-full rounded-xl py-2.5 pr-10 pl-3 text-sm outline-none transition"
                 style={{
                   border: "1px solid #E2DCCC",
@@ -246,6 +254,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
               <input
                 id="password"
+                name="password"
                 type={
                   showPassword
                     ? "text"
@@ -256,6 +265,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   setPassword(e.target.value)
                 }
                 placeholder={S.login.passwordPlaceholder}
+                autoComplete="current-password"
                 className="w-full rounded-xl py-2.5 pr-10 pl-10 text-sm outline-none transition"
                 style={{
                   border: "1px solid #E2DCCC",
@@ -312,10 +322,13 @@ export default function LoginPage({ onLoginSuccess }) {
           ========================================== */}
 
           <label
+            htmlFor="remember"
             className="flex items-center gap-2 text-sm cursor-pointer select-none"
             style={{ color: "#5B655F" }}
           >
             <input
+              id="remember"
+              name="remember"
               type="checkbox"
               checked={remember}
               onChange={(e) =>

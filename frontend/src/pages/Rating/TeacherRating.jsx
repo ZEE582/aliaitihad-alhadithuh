@@ -43,14 +43,14 @@ function Stars({
   disabled = false,
 }) {
   return (
-    <div className="flex items-center gap-1.5" dir="ltr">
+    <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0" dir="ltr">
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
           type="button"
           disabled={disabled}
           onClick={() => onChange(star)}
-          className="transition-transform hover:scale-110 disabled:cursor-default"
+          className="transition-transform hover:scale-110 disabled:cursor-default p-1.5 -m-0.5 sm:p-0 sm:m-0 min-w-[36px] min-h-[36px] flex items-center justify-center"
           aria-label={S.rating.starAriaLabel(star)}
         >
           <Star
@@ -81,14 +81,14 @@ function RatingCard({
 }) {
   return (
     <div
-      className="rounded-xl p-4 flex items-center justify-between gap-4"
+      className="rounded-xl p-4 flex items-center justify-between gap-3 sm:gap-4"
       style={{
         backgroundColor: "#FCFAF4",
         border: "1px solid #EDE7D9",
       }}
     >
       <p
-        className="text-sm font-medium"
+        className="text-sm font-medium min-w-0 break-words"
         style={{ color: "#2F3A36" }}
       >
         {label}

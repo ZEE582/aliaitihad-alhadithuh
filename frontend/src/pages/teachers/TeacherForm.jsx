@@ -32,7 +32,7 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="modal-root"
       style={{ backgroundColor: "#00000040" }}
     >
       <div
@@ -77,9 +77,10 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* الاسم */}
+          {/* ط§ظ„ط§ط³ظ… */}
           <div>
             <label
+              htmlFor="teacher-name"
               className="flex items-center gap-2 text-sm font-medium mb-1.5"
               style={{ color: "#2F3A36" }}
             >
@@ -88,11 +89,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             </label>
 
             <input
+              id="teacher-name"
+              name="teacher-name"
               type="text"
               value={form.name}
               onChange={handleChange("name")}
               placeholder={S.teacherForm.namePlaceholder}
               required
+              autoComplete="name"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
                 border: "1px solid #E2DCCC",
@@ -102,9 +106,10 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             />
           </div>
 
-          {/* الهاتف */}
+          {/* ط§ظ„ظ‡ط§طھظپ */}
           <div>
             <label
+              htmlFor="teacher-phone"
               className="flex items-center gap-2 text-sm font-medium mb-1.5"
               style={{ color: "#2F3A36" }}
             >
@@ -113,11 +118,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             </label>
 
             <input
+              id="teacher-phone"
+              name="teacher-phone"
               type="tel"
               value={form.phone}
               onChange={handleChange("phone")}
               placeholder="05XXXXXXXX"
               required
+              autoComplete="tel"
               dir="ltr"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
@@ -128,9 +136,10 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             />
           </div>
 
-          {/* المواد */}
+          {/* ط§ظ„ظ…ظˆط§ط¯ */}
           <div>
             <label
+              htmlFor="teacher-subject"
               className="flex items-center gap-2 text-sm font-medium mb-1.5"
               style={{ color: "#2F3A36" }}
             >
@@ -139,11 +148,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             </label>
 
             <input
+              id="teacher-subject"
+              name="teacher-subject"
               type="text"
               value={form.subject}
               onChange={handleChange("subject")}
               placeholder={S.teacherForm.subjectsPlaceholder}
               required
+              autoComplete="off"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
                 border: "1px solid #E2DCCC",
@@ -160,9 +172,10 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             </p>
           </div>
 
-          {/* الصفوف */}
+          {/* ط§ظ„طµظپظˆظپ */}
           <div>
             <label
+              htmlFor="teacher-classroom"
               className="flex items-center gap-2 text-sm font-medium mb-1.5"
               style={{ color: "#2F3A36" }}
             >
@@ -171,11 +184,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             </label>
 
             <input
+              id="teacher-classroom"
+              name="teacher-classroom"
               type="text"
               value={form.classroom}
               onChange={handleChange("classroom")}
               placeholder={S.teacherForm.classroomsPlaceholder}
               required
+              autoComplete="off"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
                 border: "1px solid #E2DCCC",
@@ -192,9 +208,10 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             </p>
           </div>
 
-          {/* الحصص الأسبوعية */}
+          {/* ط§ظ„ط­طµطµ ط§ظ„ط£ط³ط¨ظˆط¹ظٹط© */}
           <div>
             <label
+              htmlFor="teacher-weekly-lessons"
               className="flex items-center gap-2 text-sm font-medium mb-1.5"
               style={{ color: "#2F3A36" }}
             >
@@ -203,11 +220,14 @@ export default function TeacherForm({ initialData = null, onClose, onSave }) {
             </label>
 
             <input
+              id="teacher-weekly-lessons"
+              name="teacher-weekly-lessons"
               type="number"
               min="0"
               value={form.weeklyLessons}
               onChange={handleChange("weeklyLessons")}
               placeholder={S.teacherForm.weeklyLessonsPlaceholder}
+              autoComplete="off"
               className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
               style={{
                 border: "1px solid #E2DCCC",

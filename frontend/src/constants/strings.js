@@ -727,6 +727,7 @@ export const strings = {
     pageTitle: "الرسائل",
     noThreads: "لا توجد محادثات بعد",
     announceAllButton: "إعلان عام لكل الصف",
+    backToList: "رجوع للمحادثات",
     studentItemSubtitle: (v) => `ولي أمر ${v.childName}`,
     studentNoMessages: "لا توجد رسائل بعد",
   },

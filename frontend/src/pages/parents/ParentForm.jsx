@@ -34,7 +34,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="modal-root"
       style={{ backgroundColor: "#00000040" }}
     >
       <div
@@ -156,6 +156,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
             {/* Name */}
             <div>
               <label
+                htmlFor="parent-name"
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
@@ -170,11 +171,14 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 />
 
                 <input
+                  id="parent-name"
+                  name="parent-name"
                   type="text"
                   value={form.name}
                   onChange={handleChange("name")}
                   required
                   placeholder={S.parentForm.namePlaceholder}
+                  autoComplete="name"
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -188,6 +192,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
             {/* Phone */}
             <div>
               <label
+                htmlFor="parent-phone"
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
@@ -202,12 +207,15 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 />
 
                 <input
+                  id="parent-phone"
+                  name="parent-phone"
                   type="tel"
                   value={form.phone}
                   onChange={handleChange("phone")}
                   required
                   dir="ltr"
                   placeholder="059XXXXXXX"
+                  autoComplete="tel"
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -221,6 +229,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
             {/* Email */}
             <div>
               <label
+                htmlFor="parent-email"
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
@@ -235,11 +244,14 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 />
 
                 <input
+                  id="parent-email"
+                  name="parent-email"
                   type="email"
                   value={form.email}
                   onChange={handleChange("email")}
                   dir="ltr"
                   placeholder="example@email.com"
+                  autoComplete="email"
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -253,6 +265,7 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
             {/* Children */}
             <div>
               <label
+                htmlFor="parent-children"
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
@@ -267,11 +280,14 @@ export default function ParentForm({ initialData = null, onClose, onSave }) {
                 />
 
                 <input
+                  id="parent-children"
+                  name="parent-children"
                   type="text"
                   value={form.childrenNames}
                   onChange={handleChange("childrenNames")}
                   required
                   placeholder={S.parentForm.childrenPlaceholder}
+                  autoComplete="off"
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",

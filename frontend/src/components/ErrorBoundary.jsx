@@ -23,7 +23,7 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div
-          className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8 text-center"
+          className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center bg-gray-50 p-4 sm:p-8 text-center"
           dir="rtl"
         >
           <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full">

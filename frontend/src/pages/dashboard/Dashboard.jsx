@@ -428,9 +428,9 @@ function TeacherDashboard({ onNavigate }) {
                       backgroundColor: "#FCFAF4",
                     }}
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                         style={{
                           backgroundColor: "#EAF2EF",
                           color: "#4C8577",
@@ -440,7 +440,7 @@ function TeacherDashboard({ onNavigate }) {
                       </div>
 
                       <span
-                        className="font-medium"
+                        className="font-medium truncate"
                         style={{ color: "#2F3A36" }}
                       >
                         {c.name}
@@ -509,9 +509,9 @@ function TeacherDashboard({ onNavigate }) {
                         "1px solid #F3EFE3",
                     }}
                   >
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
                       <span
-                        className="font-semibold"
+                        className="font-semibold min-w-0 truncate"
                         style={{ color: "#2F3A36" }}
                       >
                         {m.fromName} — {child?.name}
@@ -1191,7 +1191,10 @@ function AdminDashboard({ onNavigate }) {
                   "1px solid #F3EFE3",
               }}
             >
-              <span style={{ color: "#4A5551" }}>
+              <span
+                className="min-w-0 truncate"
+                style={{ color: "#4A5551" }}
+              >
                 {a.text}
               </span>
 

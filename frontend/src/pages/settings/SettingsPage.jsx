@@ -57,7 +57,8 @@ function ToggleRow({
       <button
         type="button"
         onClick={onChange}
-        className="w-11 h-6 rounded-full relative transition-all shrink-0"
+        aria-label={label}
+        className="w-12 h-8 rounded-full relative transition-all shrink-0 flex items-center justify-start sm:w-11 sm:h-6"
         style={{
           backgroundColor: checked ? "#4C8577" : "#E2DCCC",
         }}
@@ -211,24 +212,24 @@ export default function SettingsPage({ onNavigate, onLogout }) {
               border: "1px solid #F0ECE2",
             }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                 style={{ backgroundColor: "#FCFAF4" }}
               >
                 <Lock size={16} style={{ color: "#4C8577" }} />
               </div>
 
-              <div className="text-right">
+              <div className="text-right min-w-0">
                 <p
-                  className="text-sm font-semibold"
+                  className="text-sm font-semibold break-words"
                   style={{ color: "#2F3A36" }}
                 >
                   {S.settings.changePasswordLabel}
                 </p>
 
                 <p
-                  className="text-xs mt-0.5"
+                  className="text-xs mt-0.5 break-words"
                   style={{ color: "#A8B0AB" }}
                 >
                   {S.settings.changePasswordDesc}
@@ -258,20 +259,21 @@ export default function SettingsPage({ onNavigate, onLogout }) {
           />
 
           <div
-            className="flex items-center justify-between gap-4 rounded-2xl p-3.5"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-3.5"
             style={{
               backgroundColor: "#FCFAF4",
               border: "1px solid #EDE7D9",
             }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <Globe
                 size={17}
+                className="shrink-0"
                 style={{ color: "#4C8577" }}
               />
 
               <span
-                className="text-sm font-medium"
+                className="text-sm font-medium truncate"
                 style={{ color: "#2F3A36" }}
               >
                 {S.settings.systemLanguageLabel}
@@ -279,7 +281,7 @@ export default function SettingsPage({ onNavigate, onLogout }) {
             </div>
 
             <select
-              className="rounded-xl py-2 px-3 text-sm outline-none"
+              className="rounded-xl py-2.5 px-3 text-sm outline-none min-w-[8rem] shrink-0"
               style={{
                 border: "1px solid #E2DCCC",
                 backgroundColor: "#FFFFFF",

@@ -303,7 +303,7 @@ export default function NotesList({
       {/* Header */}
 
       <div className="mb-6">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div>
             <div className="flex items-center gap-2">
               <div
@@ -458,9 +458,9 @@ export default function NotesList({
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <p
-                          className="text-sm font-bold"
+                          className="text-sm font-bold break-words"
                           style={{
                             color: "#2F3A36",
                           }}
@@ -469,7 +469,7 @@ export default function NotesList({
                         </p>
 
                         <p
-                          className="text-sm mt-1.5 leading-6"
+                          className="text-sm mt-1.5 leading-6 break-words"
                           style={{
                             color: "#4A5551",
                           }}

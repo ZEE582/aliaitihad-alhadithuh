@@ -7,6 +7,7 @@ import {
   UserRound,
   CheckCircle2,
   Timer,
+  ChevronRight,
 } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -17,7 +18,7 @@ import { useMessages } from "../../context/MessagesContext";
 import { strings as S } from "../../constants/strings";
 
 // ========================================
-// استخراج اسم المعلم من بيانات الطفل
+// ط§ط³طھط®ط±ط§ط¬ ط§ط³ظ… ط§ظ„ظ…ط¹ظ„ظ… ظ…ظ† ط¨ظٹط§ظ†ط§طھ ط§ظ„ط·ظپظ„
 // ========================================
 
 function getTeacherName(child) {
@@ -32,7 +33,7 @@ function getTeacherName(child) {
 }
 
 // ========================================
-// استخراج اسم ولي الأمر
+// ط§ط³طھط®ط±ط§ط¬ ط§ط³ظ… ظˆظ„ظٹ ط§ظ„ط£ظ…ط±
 // ========================================
 
 function getParentName(child) {
@@ -67,7 +68,7 @@ function ChatThread({
     useState(null);
 
   // ========================================
-  // الرسائل حسب الدور
+  // ط§ظ„ط±ط³ط§ط¦ظ„ ط­ط³ط¨ ط§ظ„ط¯ظˆط±
   // ========================================
 
   const thread =
@@ -77,7 +78,7 @@ function ChatThread({
     );
 
   // ========================================
-  // تحديد الطرف الآخر
+  // طھط­ط¯ظٹط¯ ط§ظ„ط·ط±ظپ ط§ظ„ط¢ط®ط±
   // ========================================
 
   const isParent =
@@ -89,7 +90,7 @@ function ChatThread({
       : getParentName(child);
 
   // ========================================
-  // إرسال رسالة
+  // ط¥ط±ط³ط§ظ„ ط±ط³ط§ظ„ط©
   // ========================================
 
   const handleSend = () => {
@@ -110,7 +111,7 @@ function ChatThread({
     setText("");
 
     // ======================================
-    // ولي الأمر أرسل خارج الوقت
+    // ظˆظ„ظٹ ط§ظ„ط£ظ…ط± ط£ط±ط³ظ„ ط®ط§ط±ط¬ ط§ظ„ظˆظ‚طھ
     // ======================================
 
     if (
@@ -144,7 +145,7 @@ function ChatThread({
     }
 
     // ======================================
-    // ولي الأمر أرسل ضمن الوقت
+    // ظˆظ„ظٹ ط§ظ„ط£ظ…ط± ط£ط±ط³ظ„ ط¶ظ…ظ† ط§ظ„ظˆظ‚طھ
     // ======================================
 
     if (
@@ -163,7 +164,7 @@ function ChatThread({
     }
 
     // ======================================
-    // المعلم أرسل لولي الأمر
+    // ط§ظ„ظ…ط¹ظ„ظ… ط£ط±ط³ظ„ ظ„ظˆظ„ظٹ ط§ظ„ط£ظ…ط±
     // ======================================
 
     setSendNotice({
@@ -177,7 +178,7 @@ function ChatThread({
   };
 
   // ========================================
-  // عنوان المحادثة
+  // ط¹ظ†ظˆط§ظ† ط§ظ„ظ…ط­ط§ط¯ط«ط©
   // ========================================
 
   const title =
@@ -244,7 +245,7 @@ function ChatThread({
         </div>
 
         {/* ==================================
-            وقت التواصل لولي الأمر فقط
+            ظˆظ‚طھ ط§ظ„طھظˆط§طµظ„ ظ„ظˆظ„ظٹ ط§ظ„ط£ظ…ط± ظپظ‚ط·
         ================================== */}
 
         {isParent && (
@@ -271,7 +272,7 @@ function ChatThread({
         )}
 
         {/* ==================================
-            تنبيه للمعلم
+            طھظ†ط¨ظٹظ‡ ظ„ظ„ظ…ط¹ظ„ظ…
         ================================== */}
 
         {!isParent && (
@@ -303,7 +304,7 @@ function ChatThread({
       >
 
         {/* ==================================
-            إشعار الإرسال
+            ط¥ط´ط¹ط§ط± ط§ظ„ط¥ط±ط³ط§ظ„
         ================================== */}
 
         {sendNotice && (
@@ -345,7 +346,7 @@ function ChatThread({
         )}
 
         {/* ==================================
-            لا يوجد رسائل
+            ظ„ط§ ظٹظˆط¬ط¯ ط±ط³ط§ط¦ظ„
         ================================== */}
 
         {thread.length === 0 && (
@@ -385,7 +386,7 @@ function ChatThread({
         )}
 
         {/* ==================================
-            عرض الرسائل
+            ط¹ط±ط¶ ط§ظ„ط±ط³ط§ط¦ظ„
         ================================== */}
 
         {thread.map((m) => {
@@ -430,7 +431,7 @@ function ChatThread({
                 }}
               >
 
-                {/* إعلان */}
+                {/* ط¥ط¹ظ„ط§ظ† */}
 
                 {m.type ===
                   "announcement" && (
@@ -445,13 +446,13 @@ function ChatThread({
                   </p>
                 )}
 
-                {/* نص الرسالة */}
+                {/* ظ†طµ ط§ظ„ط±ط³ط§ظ„ط© */}
 
                 <p className="text-sm leading-6">
                   {m.text}
                 </p>
 
-                {/* الاسم والوقت */}
+                {/* ط§ظ„ط§ط³ظ… ظˆط§ظ„ظˆظ‚طھ */}
 
                 <p
                   className="text-[10px] mt-1"
@@ -459,10 +460,10 @@ function ChatThread({
                     opacity: 0.7,
                   }}
                 >
-                  {m.fromName} · {m.date}
+                  {m.fromName} آ· {m.date}
                 </p>
 
-                {/* رسالة مؤجلة */}
+                {/* ط±ط³ط§ظ„ط© ظ…ط¤ط¬ظ„ط© */}
 
                 {isPending &&
                   isMine && (
@@ -579,7 +580,7 @@ function AnnouncementModal({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      className="modal-root"
       style={{
         backgroundColor:
           "#00000040",
@@ -702,7 +703,7 @@ export default function MessagesPage({
   } = useMessages();
 
   // ========================================
-  // الأطفال حسب الدور
+  // ط§ظ„ط£ط·ظپط§ظ„ ط­ط³ط¨ ط§ظ„ط¯ظˆط±
   // ========================================
 
   const relevantChildren =
@@ -740,7 +741,7 @@ export default function MessagesPage({
     );
 
   // ========================================
-  // لا يوجد أطفال
+  // ظ„ط§ ظٹظˆط¬ط¯ ط£ط·ظپط§ظ„
   // ========================================
 
   if (
@@ -781,7 +782,7 @@ export default function MessagesPage({
   }
 
   // ========================================
-  // واجهة ولي الأمر
+  // ظˆط§ط¬ظ‡ط© ظˆظ„ظٹ ط§ظ„ط£ظ…ط±
   // ========================================
 
   if (
@@ -803,7 +804,8 @@ export default function MessagesPage({
             border:
               "1px solid #EDE7D9",
 
-            height: "70vh",
+            height:
+              "min(70vh, 70dvh)",
           }}
         >
           <ChatThread
@@ -823,7 +825,7 @@ export default function MessagesPage({
   }
 
   // ========================================
-  // واجهة المعلم
+  // ظˆط§ط¬ظ‡ط© ط§ظ„ظ…ط¹ظ„ظ…
   // ========================================
 
   return (
@@ -834,9 +836,35 @@ export default function MessagesPage({
       pageTitle={S.messages.pageTitle}
     >
 
-      {/* إعلان عام */}
+      {/* ط¥ط¹ظ„ط§ظ† ط¹ط§ظ… */}
 
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+
+        {/* On mobile the thread takes over the screen; this returns to the list. */}
+        {selectedChild && (
+          <button
+            onClick={() =>
+              setSelectedChildId(
+                null
+              )
+            }
+            className="flex lg:hidden items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold"
+            style={{
+              backgroundColor:
+                "#FCFAF4",
+              color: "#2F3A36",
+              border:
+                "1px solid #EDE7D9",
+            }}
+          >
+            <ChevronRight
+              size={16}
+              className="shrink-0"
+            />
+
+            {S.messages.backToList}
+          </button>
+        )}
 
         <button
           onClick={() =>
@@ -844,7 +872,7 @@ export default function MessagesPage({
               true
             )
           }
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white mr-auto lg:mr-0"
           style={{
             backgroundColor:
               "#4C8577",
@@ -860,16 +888,23 @@ export default function MessagesPage({
       <div
         className="grid grid-cols-1 lg:grid-cols-3 gap-4"
         style={{
-          height: "65vh",
+          /* dvh keeps the panes inside the viewport when iOS shows/hides the
+             URL bar; the min() guard prevents overflow on short landscape phones. */
+          height:
+            "min(65vh, 65dvh)",
         }}
       >
 
         {/* ==================================
-            قائمة الطلاب
+            ظ‚ط§ط¦ظ…ط© ط§ظ„ط·ظ„ط§ط¨
         ================================== */}
 
         <div
-          className="rounded-2xl overflow-hidden lg:col-span-1"
+          className={`rounded-2xl overflow-hidden lg:col-span-1 ${
+            selectedChild
+              ? "hidden lg:block"
+              : "block"
+          }`}
           style={{
             backgroundColor:
               "#FFFFFF",
@@ -924,7 +959,7 @@ export default function MessagesPage({
                     }}
                   >
 
-                    {/* صورة/رمز الطفل */}
+                    {/* طµظˆط±ط©/ط±ظ…ط² ط§ظ„ط·ظپظ„ */}
 
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -987,11 +1022,15 @@ export default function MessagesPage({
         </div>
 
         {/* ==================================
-            المحادثة
+            ط§ظ„ظ…ط­ط§ط¯ط«ط©
         ================================== */}
 
         <div
-          className="rounded-2xl overflow-hidden lg:col-span-2"
+          className={`rounded-2xl overflow-hidden lg:col-span-2 ${
+            selectedChild
+              ? "block"
+              : "hidden lg:block"
+          }`}
           style={{
             backgroundColor:
               "#FFFFFF",

@@ -1,14 +1,477 @@
-* {
-  font-family: 'Cairo', system-ui, -apple-system, sans-serif;
-  box-sizing: border-box;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   1. BASE / RESET HARDENING
+   Prevents iOS Safari from inflating font sizes in landscape and from
+   allowing any child to force horizontal page scroll.
+   ========================================================================== */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  height: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  min-height: 100%;
+  /* Kill the iOS rubber-band flash of the whole document background */
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
+  font-family: "Cairo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #FDFBF7;
+  background-color: #fdfbf7;
+  /* Long Arabic strings / emails / phone numbers must never blow out layout */
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+#root {
+  min-height: 100%;
+  /* iPad Safari: fill the viewport even when the URL bar is expanded */
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* iOS: remove the grey flash + callout menu on long press for buttons/links */
+button,
+a,
+[role="button"],
+label,
+summary {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+/* iOS: inputs below 16px make Safari zoom the whole viewport on focus, and it
+   won't zoom back out. This is the single most common cause of "the page zooms
+   and won't reset" on iPhone. The floor is scoped to TOUCH devices so desktop
+   keeps the intended compact 14px controls. */
+@media (any-pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Only strip the native control on the inputs where it actively hurts.
+   `appearance: none` on <select> would delete the dropdown arrow and remove
+   the affordance, so selects keep their native chrome. */
+input[type="checkbox"],
+input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"] {
+  min-height: 2.75rem;
+}
+
+/* Date/time pickers get an explicit min-height so the native control is
+   comfortably tappable on touch devices. */
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 1.15rem;
+  min-height: 1.15rem;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Icons keep their intrinsic size but must never force a wide container */
+svg {
+  max-width: 100%;
+}
+
+/* Every scrollable region in this app scrolls smoothly on iOS */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Never let a dropdown/modal/toast exceed the viewport width */
+.max-w-screen,
+.modal-root {
+  max-width: 100vw;
+}
+
+/* ==========================================================================
+   2. FORM CONTROLS
+   Full-width controls are the right default on phones, but forcing this at
+   every breakpoint would stretch inline filters and toolbar dropdowns on
+   desktop, so it is scoped to small screens.
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Chrome/Safari renders number inputs with extra spin controls that steal
+   horizontal space and are awkward to hit on touch. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Placeholder contrast on iOS is low by default */
+input::placeholder,
+textarea::placeholder {
+  color: #a8a29e;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   3. TABLES → CARD LAYOUT ON MOBILE
+   The app renders several raw <table> grids. Below the `sm` breakpoint we
+   stack each row into a card using data-label attributes so nothing is ever
+   horizontally clipped on a phone.
+   Usage: <div class="table-card"><table>…<td data-label="الاسم">…</td></table></div>
+   ========================================================================== */
+
+.table-card {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.table-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-card thead {
+  display: none;
+}
+
+.table-card tr {
+  display: block;
+  margin-bottom: 0.75rem;
+  border: 1px solid #ede7d9;
+  border-radius: 0.875rem;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.table-card td,
+.table-card th {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: start;
+  padding: 0.625rem 0.875rem;
+  border: 0;
+  border-bottom: 1px solid #f3efe6;
+  vertical-align: middle;
+  /* Long cell content wraps instead of pushing the card wide */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.table-card tr > *:last-child {
+  border-bottom: 0;
+}
+
+.table-card td::before,
+.table-card th::before {
+  content: attr(data-label);
+  font-weight: 600;
+  color: #7a7267;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Cells with no label (pure action columns) stay clean */
+.table-card td:empty,
+.table-card td[data-label=""] {
+  display: none;
+}
+
+/* An explicitly empty label means "no caption for this cell" — suppress the
+   generated ::before box so action rows don't get a phantom empty label. */
+.table-card td[data-label=""]::before,
+.table-card th[data-label=""]::before {
+  content: none;
+}
+
+/* `.card-title` promotes the first cell of a row into a card header: full
+   width, no caption, slightly heavier background. */
+.table-card td.card-title {
+  justify-content: flex-start;
+  background: #fcfaf4;
+  font-weight: 700;
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid #ede7d9;
+}
+
+/* `.card-actions` spans the row and right-aligns the button cluster. */
+.table-card td.card-actions {
+  justify-content: flex-end;
+  background: #fcfaf4;
+  padding: 0.5rem 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .table-card td.card-title,
+  .table-card td.card-actions {
+    background: transparent;
+    justify-content: initial;
+  }
+}
+
+@media (min-width: 768px) {
+  .table-card thead {
+    display: table-header-group;
+  }
+  .table-card tr {
+    display: table-row;
+    margin-bottom: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .table-card td,
+  .table-card th {
+    display: table-cell;
+    width: auto;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3efe6;
+  }
+  .table-card td::before,
+  .table-card th::before {
+    content: none;
+  }
+  .table-card td:empty {
+    display: table-cell;
+  }
+}
+
+/* ==========================================================================
+   4. SCROLL CONTAINERS
+   ========================================================================== */
+
+.horiz-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.horiz-scroll > * {
+  flex-shrink: 0;
+}
+
+/* Slim, unobtrusive scrollbars (WebKit + Firefox) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* ==========================================================================
+   5. MODALS / OVERLAYS
+   Modal was previously non-scrollable with no max height. `.modal-root` is
+   applied to modal backdrops; the panel scrolls internally.
+   ========================================================================== */
+
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  /* Respect notch + home-indicator on phones */
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-inline-end: calc(1rem + env(safe-area-inset-right, 0px));
+  padding-inline-start: calc(1rem + env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.modal-root > * {
+  margin: auto;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Small phones: full-bleed bottom-sheet feel so nothing is cramped */
+@media (max-width: 479px) {
+  .modal-root {
+    padding: 0.75rem;
+    align-items: flex-end;
+  }
+  .modal-root > * {
+    max-height: calc(100dvh - 1.5rem);
+  }
+}
+
+/* Sticky footer inside a scrolling modal stays clear of the home indicator */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ==========================================================================
+   6. ANIMATION UTILITIES
+   `animate-in` / `animate-out` were referenced in JSX but never defined,
+   so modals and dropdowns appeared with no transition. Defined here.
+   ========================================================================== */
+
+@keyframes kf-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes kf-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-in {
+  animation: kf-fade-in 0.2s ease-out both;
+}
+.animate-in-scale {
+  animation: kf-scale-in 0.2s ease-out both;
+}
+
+/* Respect users who ask the OS to reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   7. BREAKPOINT-LEVEL TOUCH TARGETS
+   Inline icon buttons and small chips are frequently h-6..h-9 / py-1..py-2 in
+   the desktop markup. On touch devices we grow every interactive control so
+   nothing is mis-tapped. This intentionally overrides the inline size classes.
+   ========================================================================== */
+
+@media (any-pointer: coarse) {
+  button,
+  a[role="button"],
+  [role="tab"],
+  nav a,
+  summary,
+  label[role="button"] {
+    min-height: 40px;
+  }
+
+  /* Icon-only buttons that are square need their width grown too */
+  button[class*="w-7"],
+  button[class*="w-8"],
+  button[class*="w-9"] {
+    min-width: 40px;
+  }
+
+  /* Row-style buttons (chips, small inline actions) need horizontal breathing room */
+  button[class*="py-1"],
+  button[class*="py-1.5"] {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+}
+
+/* Very small phones (<380px, e.g. iPhone SE 1st gen) — tighten the shell */
+@media (max-width: 379px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* ==========================================================================
+   8. LANDSCAPE PHONES — height is scarce, avoid 100vh traps
+   ========================================================================== */
+
+@media (max-height: 480px) and (orientation: landscape) {
+  .modal-root > * {
+    max-height: calc(100dvh - 1rem);
+  }
+}
+
+/* ==========================================================================
+   9. PRINT (iPad users frequently print schedules/reports)
+   ========================================================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+  }
 }

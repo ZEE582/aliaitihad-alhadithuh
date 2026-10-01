@@ -36,7 +36,7 @@ export default function ClassForm({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      className="modal-root"
       style={{ backgroundColor: "#00000040" }}
     >
       <div
@@ -161,6 +161,7 @@ export default function ClassForm({
             {/* Name */}
             <div>
               <label
+                htmlFor="class-name"
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
@@ -175,11 +176,14 @@ export default function ClassForm({
                 />
 
                 <input
+                  id="class-name"
+                  name="class-name"
                   type="text"
                   value={form.name}
                   onChange={handleChange("name")}
                   required
                   placeholder={S.classForm.classNamePlaceholder}
+                  autoComplete="off"
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -193,6 +197,7 @@ export default function ClassForm({
             {/* Teacher */}
             <div>
               <label
+                htmlFor="class-teacher"
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
@@ -207,11 +212,14 @@ export default function ClassForm({
                 />
 
                 <input
+                  id="class-teacher"
+                  name="class-teacher"
                   type="text"
                   value={form.teacher}
                   onChange={handleChange("teacher")}
                   required
                   placeholder={S.classForm.teacherPlaceholder}
+                  autoComplete="name"
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",
@@ -225,6 +233,7 @@ export default function ClassForm({
             {/* Capacity */}
             <div>
               <label
+                htmlFor="class-capacity"
                 className="block text-sm font-semibold mb-1.5"
                 style={{ color: "#2F3A36" }}
               >
@@ -239,12 +248,15 @@ export default function ClassForm({
                 />
 
                 <input
+                  id="class-capacity"
+                  name="class-capacity"
                   type="number"
                   min="1"
                   value={form.capacity}
                   onChange={handleChange("capacity")}
                   required
                   placeholder={S.classForm.capacityPlaceholder}
+                  autoComplete="off"
                   className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                   style={{
                     border: "1px solid #E2DCCC",

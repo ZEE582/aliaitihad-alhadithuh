@@ -33,20 +33,20 @@ const PARENTS_STATUS = [
 function Section({ title, children }) {
   return (
     <div
-      className="rounded-2xl p-5 mb-4"
+      className="rounded-2xl p-4 sm:p-5 mb-3 sm:mb-4"
       style={{
         backgroundColor: "#FFFFFF",
         border: "1px solid #EDE7D9",
       }}
     >
       <h3
-        className="text-sm font-bold mb-4"
+        className="text-xs sm:text-sm font-bold mb-3 sm:mb-4"
         style={{ color: "#2F3A36" }}
       >
         {title}
       </h3>
 
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-3 sm:space-y-4">{children}</div>
     </div>
   );
 }
@@ -58,10 +58,19 @@ function TextField({
   type = "text",
   required = false,
   placeholder = "",
+  id,
+  name,
+  autoComplete,
 }) {
+  // Auto-generate id and name if not provided
+  const fieldId = id || name || label?.replace(/\s+/g, '-').toLowerCase();
+  const fieldName = name || fieldId;
+  const autoComp = autoComplete || (type === 'email' ? 'email' : type === 'tel' ? 'tel' : type === 'date' ? 'bday' : 'off');
+
   return (
     <div>
       <label
+        htmlFor={fieldId}
         className="block text-sm font-medium mb-1.5"
         style={{ color: "#2F3A36" }}
       >
@@ -72,11 +81,14 @@ function TextField({
       </label>
 
       <input
+        id={fieldId}
+        name={fieldName}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
         placeholder={placeholder}
+        autoComplete={autoComp}
         className="w-full rounded-xl py-2.5 px-3 text-sm outline-none transition"
         style={{
           border: "1px solid #E2DCCC",
@@ -138,9 +150,9 @@ function RadioGroup({
 
 function YesNo({ label, value, onChange }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-1">
+    <div className="flex items-center justify-between gap-3 sm:gap-4 py-1">
       <span
-        className="text-sm"
+        className="text-sm min-w-0 break-words"
         style={{ color: "#2F3A36" }}
       >
         {label}
@@ -398,7 +410,7 @@ export default function RegistrationForm({
   return (
     <div
       dir="rtl"
-      className="min-h-screen w-full px-4 py-8"
+      className="min-h-screen w-full px-4 py-6 sm:py-8"
       style={{ backgroundColor: "#FBF7EF" }}
     >
       <div className="max-w-2xl mx-auto">
@@ -406,7 +418,7 @@ export default function RegistrationForm({
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-2 text-sm font-medium mb-5 transition"
+          className="flex items-center gap-2 text-sm font-medium mb-4 sm:mb-5 transition"
           style={{ color: "#4C8577" }}
         >
           <ArrowRight size={16} />
@@ -414,16 +426,16 @@ export default function RegistrationForm({
         </button>
 
         {/* العنوان */}
-        <div className="mb-6">
+        <div className="mb-5 sm:mb-6">
           <h1
-            className="text-xl font-bold mb-1"
+            className="text-lg sm:text-xl font-bold mb-1"
             style={{ color: "#2F3A36" }}
           >
             {S.registrationForm.formTitle}
           </h1>
 
           <p
-            className="text-sm leading-6"
+            className="text-xs sm:text-sm leading-6"
             style={{ color: "#7A8580" }}
           >
             {S.registrationForm.formIntro}
@@ -431,7 +443,7 @@ export default function RegistrationForm({
         </div>
 
         {/* شريط الخطوات */}
-        <div className="flex items-start gap-2 mb-7">
+        <div className="flex items-start gap-1 sm:gap-2 mb-6 sm:mb-7">
           {STEPS.map((label, index) => {
             const active = index <= step;
 
@@ -441,7 +453,7 @@ export default function RegistrationForm({
                 className="flex-1"
               >
                 <div
-                  className="h-1.5 rounded-full mb-1.5"
+                  className="h-1.5 rounded-full mb-1 sm:mb-1.5"
                   style={{
                     backgroundColor: active
                       ? "#4C8577"
@@ -450,7 +462,7 @@ export default function RegistrationForm({
                 />
 
                 <p
-                  className="text-[11px] font-medium text-center"
+                  className="text-[10px] sm:text-[11px] font-medium text-center hidden sm:block"
                   style={{
                     color: active
                       ? "#4C8577"
@@ -834,7 +846,7 @@ export default function RegistrationForm({
               <button
                 type="button"
                 onClick={handlePrev}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold transition"
                 style={{
                   border: "1px solid #E2DCCC",
                   backgroundColor: "#FFFFFF",
@@ -850,7 +862,7 @@ export default function RegistrationForm({
               <button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white transition"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-white transition"
                 style={{
                   backgroundColor: "#4C8577",
                 }}
@@ -861,7 +873,7 @@ export default function RegistrationForm({
             ) : (
               <button
                 type="submit"
-                className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white transition"
+                className="flex-1 rounded-xl py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-white transition"
                 style={{
                   backgroundColor: "#4C8577",
                 }}

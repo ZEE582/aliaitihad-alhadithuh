@@ -312,7 +312,7 @@ export default function ReportsPage({ onNavigate, onLogout }) {
 
       {/* Results Preview */}
       <div
-        className="rounded-3xl p-10 min-h-[260px] flex flex-col items-center justify-center text-center"
+          className="rounded-3xl p-6 sm:p-10 min-h-[260px] flex flex-col items-center justify-center text-center"
         style={{
           backgroundColor: "#FFFFFF",
           border: "1px solid #EDE7D9",

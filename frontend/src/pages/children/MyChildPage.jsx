@@ -159,8 +159,8 @@ export default function MyChildPage({
                     "linear-gradient(135deg, #EEF6F3 0%, #FCFAF4 100%)",
                 }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
                     <div
                       className="w-16 h-16 rounded-2xl flex items-center justify-center text-lg font-bold shrink-0 shadow-sm"
                       style={{
@@ -171,7 +171,7 @@ export default function MyChildPage({
                       {getInitials(child.name)}
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <p
                         className="text-xs mb-1"
                         style={{
@@ -182,7 +182,7 @@ export default function MyChildPage({
                       </p>
 
                       <h2
-                        className="text-xl font-bold"
+                        className="text-xl font-bold break-words"
                         style={{
                           color: "#2F3A36",
                         }}
@@ -336,7 +336,7 @@ export default function MyChildPage({
                     {teacher?.phone && (
                       <a
                         href={`tel:${teacher.phone}`}
-                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                         style={{
                           backgroundColor:
                             "#EEF6F3",

@@ -669,7 +669,7 @@ export default function AttendancePage({
                 )}
               </div>
 
-              <div className="flex items-center gap-3 mt-4">
+              <div className="flex flex-wrap items-center gap-3 mt-4">
                 <button
                   onClick={
                     handleSaveTeacherAttendance
@@ -1060,7 +1060,7 @@ export default function AttendancePage({
 
       {canEditAttendance && (
         <div className="flex items-center justify-end mb-5">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {savedMessage && (
               <span
                 className="flex items-center gap-1.5 text-sm font-medium"
@@ -1143,9 +1143,9 @@ export default function AttendancePage({
                 }}
               >
                 <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 min-w-0">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center font-bold"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0"
                       style={{
                         backgroundColor:
                           "#EEF6F3",
@@ -1158,10 +1158,10 @@ export default function AttendancePage({
                       )}
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span
-                          className="text-sm font-bold"
+                          className="text-sm font-bold truncate"
                           style={{
                             color:
                               "#2F3A36",
