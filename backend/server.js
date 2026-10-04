@@ -5,6 +5,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const { sequelize } = require('./models');
+const { auth } = require('./middleware/auth');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -28,8 +29,8 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve uploaded files statically (authenticated users only)
+app.use('/uploads', auth, express.static(path.join(__dirname, 'uploads')));
 
 // Targeted Rate Limiter for Login Endpoint
 const loginLimiter = rateLimit({
@@ -40,6 +41,15 @@ const loginLimiter = rateLimit({
   message: { message: 'Too many login attempts from this IP, please try again after 15 minutes.' }
 });
 
+// Targeted Rate Limiter for Registration Endpoint
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Limit each IP to 5 registration requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many registration attempts from this IP, please try again after an hour.' }
+});
+
 // Database Connection & Sync
 sequelize.sync({ alter: true })
   .then(() => console.log('MySQL database connected and synchronized successfully'))
@@ -47,6 +57,7 @@ sequelize.sync({ alter: true })
 
 // Routes
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/register', registerLimiter);
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/children', require('./routes/children'));

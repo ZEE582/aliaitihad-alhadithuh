@@ -32,7 +32,7 @@ const storage = multer.diskStorage({
 
 // File filter (images + common document formats)
 const fileFilter = (req, file, cb) => {
-  const allowedExtensions = /jpeg|jpg|png|webp|pdf|doc|docx/;
+  const allowedExtensions = /^(jpe?g|png|webp|pdf|docx?)$/;
   const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
   
   if (allowedExtensions.test(ext)) {

@@ -17,13 +17,10 @@ class ChildService {
       where.PersonID = { [Op.in]: childIds };
     } else if (userRole === 'teacher') {
       const teacher = await Teacher.findOne({ where: { userId } });
-      if (teacher) {
-        const section = await Section.findOne({ where: { assigned_teacher_id: teacher.PersonID } });
-        if (section) {
-          where.section_id = section.section_id;
-        }
-      
-      }
+      if (!teacher) return [];
+      const section = await Section.findOne({ where: { assigned_teacher_id: teacher.PersonID } });
+      if (!section) return [];
+      where.section_id = section.section_id;
     }
 
     return await Child.findAll({

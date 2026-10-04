@@ -41,6 +41,22 @@ class UserService {
 
     // Hash password if updating
     if (updateData.password) {
+      // Changing a password requires proving ownership of the account
+      if (requesterRole !== 'admin') {
+        if (!updateData.currentPassword) {
+          throw new Error('Current password is required');
+        }
+
+        const isMatch = await passwordService.compare(
+          updateData.currentPassword,
+          user.password
+        );
+
+        if (!isMatch) {
+          throw new Error('Current password is incorrect');
+        }
+      }
+
       safeData.password = await passwordService.hash(updateData.password);
     }
 

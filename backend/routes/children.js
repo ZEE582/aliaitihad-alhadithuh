@@ -109,6 +109,8 @@ router.get('/:id/health', auth, async (req, res) => {
 router.put('/:id/health', auth, authorize('admin', 'teacher'), async (req, res) => {
   try {
     const childId = req.params.id;
+    await assertCanAccessChild(req.user, childId);
+
     const { Diseases, vaccinations, allergies } = req.body;
 
     let relation = await Child_Health_Medicine.findOne({
@@ -131,6 +133,9 @@ router.put('/:id/health', auth, authorize('admin', 'teacher'), async (req, res) 
 
     res.json({ message: 'Health record updated successfully', health: healthRecord });
   } catch (error) {
+    if (error.message === 'Not authorized') {
+      return res.status(403).json({ message: error.message });
+    }
     res.status(500).json({ message: 'Failed to save health record', error: error.message });
   }
 });

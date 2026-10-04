@@ -17,6 +17,10 @@ router.get('/', auth, authorize('admin'), async (req, res) => {
 // Get user by ID
 router.get('/:id', auth, async (req, res) => {
   try {
+    if (req.user.roleType !== 'admin' && parseInt(req.params.id) !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
     const user = await userService.getUserById(req.params.id);
     res.json(user);
   } catch (error) {
@@ -37,6 +41,9 @@ router.put('/:id', auth, async (req, res) => {
     const updatedUser = await userService.updateUser(req.params.id, req.body, req.user.roleType);
     res.json(updatedUser);
   } catch (error) {
+    if (error.message === 'Current password is required' || error.message === 'Current password is incorrect') {
+      return res.status(403).json({ message: error.message });
+    }
     if (error.message === 'User not found') {
       return res.status(404).json({ message: error.message });
     }

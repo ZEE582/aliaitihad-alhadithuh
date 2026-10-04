@@ -15,6 +15,14 @@ router.get('/', auth, async (req, res) => {
     if (senderId) where.SenderID = senderId;
     if (receiverId) where.ReceiverID = receiverId;
 
+    // A parent may only list notes they sent or received
+    if (req.user.roleType === 'parent') {
+      where[Op.or] = [
+        { SenderID: req.user.id },
+        { ReceiverID: req.user.id }
+      ];
+    }
+
     const notes = await Note.findAll({
       where,
       include: [
@@ -69,13 +77,13 @@ router.get('/:id', auth, async (req, res) => {
 // Create new note
 router.post('/', auth, async (req, res) => {
   try {
-    const { NoteCategory, category, NoteText, text, note, SenderID, ReceiverID, NoteDate } = req.body;
-    
+    const { NoteCategory, category, NoteText, text, note, ReceiverID, NoteDate } = req.body;
+
     const noteRecord = await Note.create({
       NoteCategory: NoteCategory || category || 'General',
       NoteText: NoteText || text || note || '',
-      SenderID: SenderID || req.user.id,
-      ReceiverID: ReceiverID || SenderID || req.user.id,
+      SenderID: req.user.id,
+      ReceiverID: ReceiverID || req.user.id,
       NoteDate: NoteDate || new Date()
     });
     
@@ -107,6 +115,10 @@ router.put('/:id', auth, async (req, res) => {
     
     if (!note) {
       return res.status(404).json({ message: 'Note not found' });
+    }
+
+    if (req.user.roleType !== 'admin' && note.SenderID !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
     }
 
     const { NoteCategory, category, NoteText, text, NoteDate } = req.body;
@@ -144,6 +156,10 @@ router.delete('/:id', auth, async (req, res) => {
     
     if (!note) {
       return res.status(404).json({ message: 'Note not found' });
+    }
+
+    if (req.user.roleType !== 'admin' && note.SenderID !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
     }
 
     await note.destroy();

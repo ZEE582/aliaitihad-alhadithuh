@@ -1,5 +1,6 @@
 const express = require('express');
-const { Guardian: Parent, User, Child } = require('../models');
+const { Guardian: Parent, User, Child, Child_Guardian } = require('../models');
+const { assertCanAccessChild } = require('../utils/access');
 const { auth, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -47,13 +48,34 @@ router.get('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Parent not found' });
     }
 
-    // Parents can only view their own profile
-    if (req.user.roleType === 'parent' && parent.userId !== req.user.id) {
+    // Role-based access: admin, the guardian himself, or a teacher
+    // responsible for one of this guardian's children
+    if (req.user.roleType === 'admin') {
+      // allowed
+    } else if (req.user.roleType === 'parent') {
+      if (parent.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
+    } else if (req.user.roleType === 'teacher') {
+      const link = await Child_Guardian.findOne({
+        where: { GID: parent.GID },
+        attributes: ['child_PersonID']
+      });
+
+      if (!link) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
+
+      await assertCanAccessChild(req.user, link.child_PersonID);
+    } else {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
     res.json(parent);
   } catch (error) {
+    if (error.message === 'Not authorized') {
+      return res.status(403).json({ message: error.message });
+    }
     res.status(500).json({ message: 'Server error' });
   }
 });

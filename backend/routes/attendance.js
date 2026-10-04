@@ -1,5 +1,6 @@
 const express = require('express');
 const { Attendance, Child, ClassRoom, Guardian, Child_Guardian } = require('../models');
+const { assertCanAccessChild } = require('../utils/access');
 const { auth, authorize } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
@@ -103,9 +104,12 @@ router.get('/:id', auth, async (req, res) => {
 router.post('/', auth, authorize('admin', 'teacher'), async (req, res) => {
   try {
     const { child_PersonID, childId, classID, classId, AttendanceDate, date, Status, status, Reason, reason } = req.body;
-    
+
+    const targetChildId = child_PersonID || childId;
+    await assertCanAccessChild(req.user, targetChildId);
+
     const attendance = await Attendance.create({
-      child_PersonID: child_PersonID || childId,
+      child_PersonID: targetChildId,
       classID: classID || classId || 1,
       AttendanceDate: AttendanceDate || date || new Date(),
       Status: Status || status || 'Present',
@@ -129,6 +133,9 @@ router.post('/', auth, authorize('admin', 'teacher'), async (req, res) => {
     
     res.status(201).json(newAttendance);
   } catch (error) {
+    if (error.message === 'Not authorized') {
+      return res.status(403).json({ message: error.message });
+    }
     res.status(500).json({ message: 'Failed to create attendance record', error: error.message });
   }
 });
@@ -140,6 +147,8 @@ router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res) => {
     if (!attendance) {
       return res.status(404).json({ message: 'Attendance record not found' });
     }
+
+    await assertCanAccessChild(req.user, attendance.child_PersonID);
 
     const { Status, status, Reason, reason, AttendanceDate, date } = req.body;
     await attendance.update({
@@ -165,6 +174,9 @@ router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res) => {
 
     res.json(updatedAttendance);
   } catch (error) {
+    if (error.message === 'Not authorized') {
+      return res.status(403).json({ message: error.message });
+    }
     res.status(500).json({ message: 'Failed to update attendance', error: error.message });
   }
 });

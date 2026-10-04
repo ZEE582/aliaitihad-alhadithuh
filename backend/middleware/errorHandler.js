@@ -13,6 +13,10 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({ message: 'Invalid reference', details: err.errors });
   }
 
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(500).json({ message: 'Server error' });
+  }
+
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 };
 

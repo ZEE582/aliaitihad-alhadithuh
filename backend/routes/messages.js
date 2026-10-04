@@ -130,8 +130,11 @@ router.get('/:id', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     const message = await Message.create({
-      ...req.body,
-      senderId: req.user.id
+      senderId: req.user.id,
+      receiverId: req.body.receiverId,
+      subject: req.body.subject,
+      content: req.body.content,
+      replyTo: req.body.replyTo
     });
     
     const newMessage = await Message.findByPk(message.id, {

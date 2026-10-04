@@ -10,7 +10,7 @@ class AuthService {
       throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is missing in .env file.');
     }
     this.jwtSecret = process.env.JWT_SECRET;
-    this.jwtExpiration = process.env.JWT_EXPIRATION || '7d';
+    this.jwtExpiration = process.env.JWT_EXPIRATION || '1d';
   }
 
   async register(userData) {
@@ -70,7 +70,7 @@ class AuthService {
 
   async verifyToken(token) {
     try {
-      const decoded = jwt.verify(token, this.jwtSecret);
+      const decoded = jwt.verify(token, this.jwtSecret, { algorithms: ['HS256'] });
       const user = await User.findByPk(decoded.userId, {
         attributes: { exclude: ['password'] }
       });
@@ -89,7 +89,7 @@ class AuthService {
     return jwt.sign(
       { userId: user.id, roleType: user.roleType },
       this.jwtSecret,
-      { expiresIn: this.jwtExpiration }
+      { expiresIn: this.jwtExpiration, algorithm: 'HS256' }
     );
   }
 
