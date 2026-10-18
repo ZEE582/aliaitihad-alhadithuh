@@ -26,6 +26,7 @@ const User = testDb.define('User', {
 });
 
 const passwordService = require('./services/PasswordService');
+const { auth, revokeToken, isRevoked } = require('./middleware/auth');
 
 // Custom test runner
 async function runTests() {
@@ -173,6 +174,41 @@ async function runTests() {
   } catch (err) {
     assert(true, '12. Tampered JWT is safely rejected');
   }
+
+  async function runAuthMiddleware(token) {
+    const req = { header: (name) => (name === 'Authorization' ? `Bearer ${token}` : undefined) };
+    const out = { status: null, body: null, nextCalled: false };
+    const res = {
+      status(code) { out.status = code; return this; },
+      json(payload) { out.body = payload; return this; }
+    };
+    await auth(req, res, () => { out.nextCalled = true; });
+    return out;
+  }
+
+  const logoutToken = jwt.sign({ userId: 999999, roleType: 'parent' }, process.env.JWT_SECRET, { expiresIn: '1h', algorithm: 'HS256' });
+  const beforeLogout = await runAuthMiddleware(logoutToken);
+  const okBefore = isRevoked(logoutToken) === false && beforeLogout.body?.message !== 'Token has been revoked';
+  revokeToken(logoutToken);
+  const afterLogout = await runAuthMiddleware(logoutToken);
+  assert(
+    okBefore && isRevoked(logoutToken) === true &&
+      afterLogout.status === 401 && afterLogout.body?.message === 'Token has been revoked',
+    '13. Logout revokes the presented token: auth rejects it with "Token has been revoked"'
+  );
+
+  const otherToken = jwt.sign({ userId: 999998, roleType: 'parent' }, process.env.JWT_SECRET, { expiresIn: '1h', algorithm: 'HS256' });
+  const otherRun = await runAuthMiddleware(otherToken);
+  assert(
+    isRevoked(otherToken) === false && otherRun.body?.message !== 'Token has been revoked',
+    '14. Logout is scoped to that token: other sessions stay valid'
+  );
+
+  const relogin = await authService.login('parent@gmail.com', 'Parent@123');
+  assert(
+    relogin.token !== logoutToken && isRevoked(relogin.token) === false,
+    '15. Login after logout issues a fresh, non-revoked token'
+  );
 
   console.log(`\n==============================`);
   console.log(`Summary: ${passed} Passed, ${failed} Failed`);
