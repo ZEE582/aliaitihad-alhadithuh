@@ -1,4 +1,4 @@
-const { Child, Person, ClassRoom, Section, Guardian, Child_Guardian, Teacher, sequelize } = require('../models');
+const { Child, Person, ClassRoom, Section, Guardian, Child_Guardian, Teacher, Attendance, Report, Child_Health_Medicine, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 class ChildService {
@@ -77,8 +77,12 @@ class ChildService {
   async createChild(childData) {
     const transaction = await sequelize.transaction();
     try {
-      const fullName = childData.Name || 
-        `${childData.F_name || childData.firstName || ''} ${childData.L_name || childData.lastName || ''}`.trim() || 'New Child';
+      const fullName = childData.Name ||
+        [childData.F_name, childData.S_name, childData.Th_name, childData.L_name]
+          .filter(Boolean)
+          .join(' ') ||
+        [childData.firstName, childData.lastName].filter(Boolean).join(' ') ||
+        'New Child';
 
       // 1. Create Person supertype
       const person = await Person.create({ Name: fullName }, { transaction });
@@ -120,7 +124,22 @@ class ChildService {
         throw new Error('Child not found');
       }
 
+      const nameTouched = ['F_name', 'S_name', 'Th_name', 'L_name'].some(
+        (field) => updateData[field] !== undefined
+      );
+
       await child.update(updateData, { transaction });
+
+      if (nameTouched) {
+        const fullName = [child.F_name, child.S_name, child.Th_name, child.L_name]
+          .filter(Boolean)
+          .join(' ');
+        await Person.update(
+          { Name: fullName },
+          { where: { PersonID: child.PersonID }, transaction }
+        );
+      }
+
       await transaction.commit();
 
       return await this.getChildById(id);
@@ -139,6 +158,20 @@ class ChildService {
       }
 
       const personId = child.PersonID;
+
+      const [attendanceCount, reportCount, guardianLinkCount, healthLinkCount] = await Promise.all([
+        Attendance.count({ where: { child_PersonID: personId }, transaction }),
+        Report.count({ where: { childId: personId }, transaction }),
+        Child_Guardian.count({ where: { child_PersonID: personId }, transaction }),
+        Child_Health_Medicine.count({ where: { child_PersonID: personId }, transaction })
+      ]);
+
+      if (attendanceCount > 0 || reportCount > 0 || guardianLinkCount > 0 || healthLinkCount > 0) {
+        const error = new Error('Child has linked records and cannot be deleted');
+        error.status = 409;
+        throw error;
+      }
+
       await child.destroy({ transaction });
       await Person.destroy({ where: { PersonID: personId }, transaction });
 

@@ -1,47 +1,30 @@
 const express = require('express');
 const { body } = require('express-validator');
 const authService = require('../services/AuthService');
-const { auth } = require('../middleware/auth');
+const { auth, revokeToken } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validation');
 
 const router = express.Router();
-
-// Register (Public registration always creates a parent account; staff roles are created by admin only)
-router.post('/register', [
-  body('username').trim().notEmpty().withMessage('Username is required'),
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('fullName').trim().notEmpty().withMessage('Full name is required')
-], validateRequest, async (req, res) => {
-  try {
-    const userData = {
-      ...req.body,
-      roleType: 'parent'
-    };
-    const result = await authService.register(userData);
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
 
 // Login
 router.post('/login', [
   body('username').trim().notEmpty().withMessage('Username is required'),
   body('password').notEmpty().withMessage('Password is required')
-], validateRequest, async (req, res) => {
+], validateRequest, async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const result = await authService.login(username, password);
     res.json(result);
   } catch (error) {
-    res.status(401).json({ message: error.message });
+    error.status = 401;
+    return next(error);
   }
 });
 
 // Get current user
 router.get('/me', auth, async (req, res) => {
   try {
+    const classroom = await authService.resolveClassroom(req.user);
     res.json({
       user: {
         id: req.user.id,
@@ -50,12 +33,20 @@ router.get('/me', auth, async (req, res) => {
         fullName: req.user.fullName,
         roleType: req.user.roleType,
         phone: req.user.phone,
-        avatar: req.user.avatar
+        avatar: req.user.avatar,
+        mustChangePassword: req.user.mustChangePassword,
+        classroom
       }
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// Logout (revokes the current token)
+router.post('/logout', auth, (req, res) => {
+  revokeToken(req.token);
+  res.json({ message: 'Logged out successfully' });
 });
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const express = require('express');
-const { Guardian: Parent, User, Child, Child_Guardian } = require('../models');
+const { Guardian: Parent, User, Child, Child_Guardian, RelationType } = require('../models');
 const { assertCanAccessChild } = require('../utils/access');
 const { auth, authorize } = require('../middleware/auth');
 
@@ -28,7 +28,7 @@ router.get('/', auth, authorize('admin', 'teacher'), async (req, res) => {
 });
 
 // Get parent by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth, async (req, res, next) => {
   try {
     const parent = await Parent.findByPk(req.params.id, {
       include: [
@@ -74,7 +74,8 @@ router.get('/:id', auth, async (req, res) => {
     res.json(parent);
   } catch (error) {
     if (error.message === 'Not authorized') {
-      return res.status(403).json({ message: error.message });
+      error.status = 403;
+      return next(error);
     }
     res.status(500).json({ message: 'Server error' });
   }
@@ -129,6 +130,69 @@ router.put('/:id', auth, async (req, res) => {
     res.json(updatedParent);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Link a child to a parent (admin only)
+router.post('/:id/children', auth, authorize('admin'), async (req, res, next) => {
+  try {
+    const parent = await Parent.findByPk(req.params.id);
+    if (!parent) {
+      return res.status(404).json({ message: 'Parent not found' });
+    }
+
+    const child = await Child.findByPk(req.body.childId);
+    if (!child) {
+      return res.status(404).json({ message: 'Child not found' });
+    }
+
+    const existing = await Child_Guardian.findOne({
+      where: { GID: parent.GID, child_PersonID: child.PersonID }
+    });
+    if (existing) {
+      return res.status(409).json({ message: 'Child already linked to this parent' });
+    }
+
+    let relationType = await RelationType.findOne();
+    if (!relationType) {
+      relationType = await RelationType.create({ relation_type: 'Parent' });
+    }
+
+    await Child_Guardian.create({
+      GID: parent.GID,
+      child_PersonID: child.PersonID,
+      RelationTypeID: relationType.RelationTypeID
+    });
+
+    res.status(201).json({ message: 'Child linked successfully' });
+  } catch (error) {
+    error.status = 500;
+    error.publicMessage = 'Failed to link child to parent';
+    return next(error);
+  }
+});
+
+// Unlink a child from a parent (admin only)
+router.delete('/:id/children/:childId', auth, authorize('admin'), async (req, res, next) => {
+  try {
+    const parent = await Parent.findByPk(req.params.id);
+    if (!parent) {
+      return res.status(404).json({ message: 'Parent not found' });
+    }
+
+    const link = await Child_Guardian.findOne({
+      where: { GID: parent.GID, child_PersonID: req.params.childId }
+    });
+    if (!link) {
+      return res.status(404).json({ message: 'Child not linked to this parent' });
+    }
+
+    await link.destroy();
+    res.json({ message: 'Child unlinked successfully' });
+  } catch (error) {
+    error.status = 500;
+    error.publicMessage = 'Failed to unlink child from parent';
+    return next(error);
   }
 });
 

@@ -18,6 +18,7 @@ const Health_Medicine = require('./Health_Medicine');
 const ClassRoom_ClassSession = require('./ClassRoom_ClassSession');
 const Child_Guardian = require('./Child_Guardian');
 const Child_Health_Medicine = require('./Child_Health_Medicine');
+const RegistrationRequest = require('./RegistrationRequest');
 
 // ---- Persons hierarchy (supertype: child & teacher, "is a") ----
 Person.hasOne(Child, { foreignKey: 'PersonID', as: 'childProfile' });
@@ -51,6 +52,9 @@ Subject.hasMany(classSession, { foreignKey: 'SubjectID', as: 'sessions' });
 
 classSession.belongsTo(Section, { foreignKey: 'section_id', as: 'section' });
 Section.hasMany(classSession, { foreignKey: 'section_id', as: 'sessions' });
+
+classSession.belongsTo(Teacher, { foreignKey: 'teacher_PersonID', as: 'sessionTeacher' });
+Teacher.hasMany(classSession, { foreignKey: 'teacher_PersonID', as: 'sessions' });
 
 // ClassRoom - classSession (M:N junction "hosts")
 ClassRoom.belongsToMany(classSession, {
@@ -101,11 +105,11 @@ Child_Health_Medicine.belongsTo(Child, { foreignKey: 'child_PersonID', as: 'chil
 Child_Health_Medicine.belongsTo(Health_Medicine, { foreignKey: 'CH_M_ID', as: 'healthMedicine' });
 Health_Medicine.hasOne(Child_Health_Medicine, { foreignKey: 'CH_M_ID', as: 'childRelation' });
 
-// ---- Notes (sender/receiver -> Persons) ----
-Note.belongsTo(Person, { foreignKey: 'SenderID', as: 'sender' });
-Note.belongsTo(Person, { foreignKey: 'ReceiverID', as: 'receiver' });
-Person.hasMany(Note, { foreignKey: 'SenderID', as: 'sentNotes' });
-Person.hasMany(Note, { foreignKey: 'ReceiverID', as: 'receivedNotes' });
+// ---- Notes (sender/receiver -> Users) ----
+Note.belongsTo(User, { foreignKey: 'SenderID', as: 'sender' });
+Note.belongsTo(User, { foreignKey: 'ReceiverID', as: 'receiver' });
+User.hasMany(Note, { foreignKey: 'SenderID', as: 'sentNotes' });
+User.hasMany(Note, { foreignKey: 'ReceiverID', as: 'receivedNotes' });
 
 // ---- Legacy User relationships (kept for authentication) ----
 User.hasOne(Guardian, { foreignKey: 'userId', as: 'guardianProfile' });
@@ -149,5 +153,6 @@ module.exports = {
   Health_Medicine,
   ClassRoom_ClassSession,
   Child_Guardian,
-  Child_Health_Medicine
+  Child_Health_Medicine,
+  RegistrationRequest
 };

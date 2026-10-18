@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
-const { User } = require('../models');
+const { User, Teacher, Section, ClassRoom } = require('../models');
 const passwordService = require('./PasswordService');
 
 class AuthService {
@@ -61,11 +61,31 @@ class AuthService {
     }
 
     const token = this.generateToken(user);
+    const classroom = await this.resolveClassroom(user);
 
     return {
       token,
-      user: this.sanitizeUser(user)
+      user: { ...this.sanitizeUser(user), classroom }
     };
+  }
+
+  async resolveClassroom(user) {
+    if (!user || user.roleType !== 'teacher') return null;
+
+    const teacher = await Teacher.findOne({ where: { userId: user.id } });
+    if (!teacher) return null;
+
+    const section = await Section.findOne({
+      where: { assigned_teacher_id: teacher.PersonID },
+      include: [{ model: ClassRoom, as: 'classRoom', attributes: ['className'] }]
+    });
+    if (!section) return null;
+
+    const label = [section.SectionName, section.classRoom && section.classRoom.className]
+      .filter(Boolean)
+      .join(' — ');
+
+    return label || null;
   }
 
   async verifyToken(token) {
@@ -94,8 +114,8 @@ class AuthService {
   }
 
   sanitizeUser(user) {
-    const { id, username, email, fullName, roleType, phone, avatar } = user;
-    return { id, username, email, fullName, roleType, phone, avatar };
+    const { id, username, email, fullName, roleType, phone, avatar, mustChangePassword } = user;
+    return { id, username, email, fullName, roleType, phone, avatar, mustChangePassword };
   }
 }
 
