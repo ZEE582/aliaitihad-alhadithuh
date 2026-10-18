@@ -36,6 +36,19 @@ const classSession = sequelize.define('classSession', {
       model: 'Sections',
       key: 'section_id'
     }
+  },
+  Duration: {
+    type: DataTypes.STRING(50)
+  },
+  Notes: {
+    type: DataTypes.TEXT
+  },
+  teacher_PersonID: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: 'Teachers',
+      key: 'PersonID'
+    }
   }
 }, {
   timestamps: true,
