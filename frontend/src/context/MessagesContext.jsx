@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { api } from "../services/api";
 
 const MessagesContext = createContext(null);
 
@@ -33,45 +34,63 @@ function isWithinWindow(date) {
 function getNextWindowStart(date) {
   const next = new Date(date);
 
-  // إذا لم يبدأ وقت التواصل بعد اليوم
   if (date.getHours() < WINDOW_START_HOUR) {
-    next.setHours(
-      WINDOW_START_HOUR,
-      0,
-      0,
-      0
-    );
+    next.setHours(WINDOW_START_HOUR, 0, 0, 0);
 
     return next;
   }
 
-  // إذا انتهى وقت التواصل
-  // ننتقل لليوم التالي
   next.setDate(next.getDate() + 1);
 
-  next.setHours(
-    WINDOW_START_HOUR,
-    0,
-    0,
-    0
-  );
+  next.setHours(WINDOW_START_HOUR, 0, 0, 0);
 
   return next;
 }
+
+const formatMessageDate = (value) => {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return "";
+  return (
+    date.toLocaleDateString("ar-EG", {
+      day: "numeric",
+      month: "short",
+    }) +
+    " " +
+    date.toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  );
+};
+
+const normalizeMessage = (message) => ({
+  id: message.id,
+  childId: message.childId,
+  fromRole: message.sender?.roleType || "",
+  fromName: message.sender?.fullName || "",
+  toRole: message.receiver?.roleType || "",
+  toName: message.receiver?.fullName || "",
+  text: message.content || "",
+  subject: message.subject || "",
+  type: "direct",
+  date: formatMessageDate(message.createdAt),
+  sentAt: message.createdAt,
+  visibleAt: message.createdAt,
+  pending: false,
+  senderId: message.senderId,
+  receiverId: message.receiverId,
+  isRead: !!message.isRead,
+});
 
 // ========================================
 // Messages Provider
 // ========================================
 
 export function MessagesProvider({ children }) {
-  const [messages, setMessages] =
-    useState(initialMessages);
+  const [messages, setMessages] = useState(initialMessages);
 
-  const [now, setNow] =
-    useState(new Date());
+  const [now, setNow] = useState(new Date());
 
-  // تحديث الوقت كل 30 ثانية
-  // حتى تختفي حالة الانتظار تلقائيًا عند حلول الوقت
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -80,73 +99,75 @@ export function MessagesProvider({ children }) {
     return () => clearInterval(interval);
   }, []);
 
+  const fetchMessagesFromApi = useCallback(async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+
+    try {
+      const data = await api.get("/messages");
+      if (Array.isArray(data)) {
+        setMessages((prev) => [
+          ...data.map(normalizeMessage),
+          ...prev.filter((m) => m.pending),
+        ]);
+      }
+    } catch (err) {
+      console.error("API Fetch Messages Error:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMessagesFromApi();
+  }, [fetchMessagesFromApi]);
+
   // ========================================
   // إرسال رسالة مباشرة
   // ========================================
 
   const sendMessage = ({
     childId,
+    receiverId,
     fromRole,
     fromName,
     text,
   }) => {
     const sentAt = new Date();
 
-    // القيد فقط على ولي الأمر
     const isRestricted =
-      fromRole === "parent" &&
-      !isWithinWindow(sentAt);
+      fromRole === "parent" && !isWithinWindow(sentAt);
 
-    const visibleAt = isRestricted
-      ? getNextWindowStart(sentAt)
-      : sentAt;
+    const visibleAt = isRestricted ? getNextWindowStart(sentAt) : sentAt;
 
     const newMessage = {
-      id:
-        Date.now() +
-        Math.random(),
-
+      id: Date.now() + Math.random(),
       childId,
-
       fromRole,
-
       fromName,
-
       text,
-
       type: "direct",
-
-      date:
-        sentAt.toLocaleDateString(
-          "ar-EG",
-          {
-            day: "numeric",
-            month: "short",
-          }
-        ) +
-        " " +
-        sentAt.toLocaleTimeString(
-          "ar-EG",
-          {
-            hour: "2-digit",
-            minute: "2-digit",
-          }
-        ),
-
-      sentAt:
-        sentAt.toISOString(),
-
-      visibleAt:
-        visibleAt.toISOString(),
-
-      pending:
-        isRestricted,
+      date: formatMessageDate(sentAt),
+      sentAt: sentAt.toISOString(),
+      visibleAt: visibleAt.toISOString(),
+      pending: isRestricted,
     };
 
-    setMessages((prev) => [
-      ...prev,
-      newMessage,
-    ]);
+    setMessages((prev) => [...prev, newMessage]);
+
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      api
+        .post("/messages", { childId, receiverId, content: text })
+        .then((saved) => {
+          const normalized = normalizeMessage(saved);
+          setMessages((prev) =>
+            prev.map((m) => (m.id === newMessage.id ? normalized : m))
+          );
+        })
+        .catch((err) => {
+          console.error("API Send Message Error:", err);
+          setMessages((prev) => prev.filter((m) => m.id !== newMessage.id));
+        });
+    }
 
     return newMessage;
   };
@@ -163,53 +184,47 @@ export function MessagesProvider({ children }) {
   }) => {
     const sentAt = new Date();
 
-    const newAnnouncements =
-      childIds.map((childId) => ({
-        id:
-          Date.now() +
-          Math.random() +
-          childId,
+    const newAnnouncements = childIds.map((childId) => ({
+      id: Date.now() + Math.random() + childId,
+      childId,
+      fromRole: "teacher",
+      fromName,
+      text,
+      type: "announcement",
+      date: formatMessageDate(sentAt),
+      sentAt: sentAt.toISOString(),
+      visibleAt: sentAt.toISOString(),
+      pending: false,
+    }));
 
-        childId,
+    setMessages((prev) => [...prev, ...newAnnouncements]);
 
-        fromRole: "teacher",
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
 
-        fromName,
-
-        text,
-
-        type: "announcement",
-
-        date:
-          sentAt.toLocaleDateString(
-            "ar-EG",
-            {
-              day: "numeric",
-              month: "short",
-            }
-          ) +
-          " " +
-          sentAt.toLocaleTimeString(
-            "ar-EG",
-            {
-              hour: "2-digit",
-              minute: "2-digit",
-            }
-          ),
-
-        sentAt:
-          sentAt.toISOString(),
-
-        visibleAt:
-          sentAt.toISOString(),
-
-        pending: false,
-      }));
-
-    setMessages((prev) => [
-      ...prev,
-      ...newAnnouncements,
-    ]);
+    Promise.all(
+      childIds.map((childId) =>
+        api
+          .post("/messages", { childId, content: text })
+          .then((saved) => ({ childId, saved }))
+          .catch((err) => {
+            console.error("API Send Announcement Error:", err);
+            return null;
+          })
+      )
+    ).then((results) => {
+      const savedMap = {};
+      results.forEach((r) => {
+        if (r) savedMap[r.childId] = normalizeMessage(r.saved);
+      });
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.type === "announcement" && savedMap[m.childId]
+            ? savedMap[m.childId]
+            : m
+        )
+      );
+    });
   };
 
   // ========================================
@@ -227,13 +242,10 @@ export function MessagesProvider({ children }) {
       )
 
       .filter((message) => {
-        // الرسائل العادية تظهر مباشرة
         if (!message.pending) {
           return true;
         }
 
-        // الرسالة المؤجلة:
-        // المعلم لا يراها قبل وقتها
         if (viewerRole === "teacher") {
           return (
             new Date(
@@ -242,7 +254,6 @@ export function MessagesProvider({ children }) {
           );
         }
 
-        // ولي الأمر يرى رسالته المؤجلة
         return true;
       })
 

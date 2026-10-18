@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { api } from "../services/api";
 import { useToast } from "./ToastContext";
+import { useUser } from "./UserContext";
 import { strings as S } from "../constants/strings";
 
 const ParentsContext = createContext(null);
@@ -48,14 +49,16 @@ export function ParentsProvider({ children }) {
   });
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useToast();
+  const { user } = useUser();
 
   useEffect(() => {
     localStorage.setItem("app_parents_list", JSON.stringify(parentsList));
   }, [parentsList]);
 
   const fetchParentsFromApi = useCallback(async () => {
+    if (user?.roleType !== "admin" && user?.roleType !== "teacher") return;
     const token = localStorage.getItem("auth_token");
-    if (!token || token.startsWith("demo_token_")) return;
+    if (!token) return;
 
     setLoading(true);
     try {
@@ -68,7 +71,7 @@ export function ParentsProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, [showError, user?.roleType]);
 
   useEffect(() => {
     fetchParentsFromApi();
@@ -87,7 +90,7 @@ export function ParentsProvider({ children }) {
       ...(formData.userId && { userId: formData.userId }),
     };
 
-    if (token && !token.startsWith("demo_token_")) {
+    if (token) {
       try {
         const saved = await api.post("/parents", payload);
         const formatted = formatParent(saved);
@@ -124,7 +127,7 @@ export function ParentsProvider({ children }) {
       ...(formData.phone && { G_phone: formData.phone }),
     };
 
-    if (token && !token.startsWith("demo_token_")) {
+    if (token) {
       try {
         const updated = await api.put(`/parents/${id}`, payload);
         const formatted = formatParent(updated);
@@ -152,7 +155,7 @@ export function ParentsProvider({ children }) {
   // =====================
   const deleteParent = async (id) => {
     const token = localStorage.getItem("auth_token");
-    if (token && !token.startsWith("demo_token_")) {
+    if (token) {
       try {
         await api.delete(`/parents/${id}`);
       } catch (err) {

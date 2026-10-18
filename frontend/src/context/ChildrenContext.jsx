@@ -5,20 +5,10 @@ import { strings as S } from "../constants/strings";
 
 const ChildrenContext = createContext(null);
 
-const initialChildren = [
-  {
-    id: 1, name: "رهف يوسف", classroom: "صف الفراشات", age: 4,
-    parent: "محمد يوسف", parentPhone: "059-1234567", status: "نشط",
-    notes: [{ id: 101, author: "أ. سارة الحاج", date: "14 يوليو 2026", type: "إيجابي", text: "كانت متفاعلة جدًا مع النشاط اليوم." }],
-  },
-  { id: 2, name: "يزن الأحمد", classroom: "صف النجوم", age: 5, parent: "علي الأحمد", parentPhone: "059-7654321", status: "نشط", notes: [] },
-  { id: 3, name: "سيلين خالد", classroom: "صف النجوم", age: 4, parent: "خالد درويش", parentPhone: "056-2233445", status: "نشط", notes: [] },
-  { id: 4, name: "زين محمود", classroom: "صف الفراشات", age: 3, parent: "محمود عودة", parentPhone: "059-9988776", status: "موقوف", notes: [] },
-];
-
 const getErrorMessage = (err, fallback) => {
   if (err?.status === 403) return S.context.children.error403;
   if (err?.status === 404) return S.context.children.error404;
+  if (err?.status === 409) return err?.message || fallback;
   if (err?.message?.toLowerCase().includes("network") || err?.message?.toLowerCase().includes("fetch"))
     return S.context.children.errorNetwork;
   return err?.message || fallback;
@@ -37,42 +27,56 @@ const calculateAgeYears = (birthDate) => {
   return years >= 0 ? years : "";
 };
 
+const toDateOnly = (value) => {
+  if (value == null) return "";
+  return String(value).slice(0, 10);
+};
+
 const normalizeChild = (child) => ({
   ...child,
   id: child.PersonID,
   name:
     child.person?.Name ||
-    [child.F_name, child.L_name].filter(Boolean).join(" "),
-  classroom:
-    child.section?.SectionName || child.classRoom?.className || "",
+    [child.F_name, child.S_name, child.Th_name, child.L_name].filter(Boolean).join(" "),
+  F_name: child.F_name || "",
+  S_name: child.S_name || "",
+  Th_name: child.Th_name || "",
+  L_name: child.L_name || "",
+  gender: child.gender || "",
+  birthDate: toDateOnly(child.birth_date),
   age: calculateAgeYears(child.birth_date),
+  classID: child.classID ?? "",
+  section_id: child.section_id ?? "",
+  sectionName: child.section?.SectionName || "",
+  className: child.classRoom?.className || "",
+  classroom:
+    [child.section?.SectionName, child.classRoom?.className].filter(Boolean).join(" — ") ||
+    S.common.notSpecified,
   parent: "",
-  status: "active",
+  status: S.common.statusActive,
+});
+
+const buildChildPayload = (formData) => ({
+  F_name: (formData.F_name || "").trim(),
+  S_name: (formData.S_name || "").trim(),
+  Th_name: (formData.Th_name || "").trim(),
+  L_name: (formData.L_name || "").trim(),
+  gender: formData.gender,
+  birth_date: formData.birth_date,
+  birthplace: (formData.birthplace || "").trim(),
+  classID: formData.classID === "" || formData.classID == null ? null : Number(formData.classID),
+  section_id:
+    formData.section_id === "" || formData.section_id == null ? null : Number(formData.section_id),
 });
 
 export function ChildrenProvider({ children }) {
-  const [childrenList, setChildrenList] = useState(() => {
-    const saved = localStorage.getItem("app_children_list");
-    if (!saved) return initialChildren;
-    try {
-      const parsed = JSON.parse(saved);
-      if (!Array.isArray(parsed)) return initialChildren;
-      const isUsable = parsed.every((c) => c && typeof c.name === "string");
-      return isUsable ? parsed : initialChildren;
-    } catch (err) {
-      return initialChildren;
-    }
-  });
+  const [childrenList, setChildrenList] = useState([]);
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useToast();
 
-  useEffect(() => {
-    localStorage.setItem("app_children_list", JSON.stringify(childrenList));
-  }, [childrenList]);
-
   const fetchChildrenFromApi = useCallback(async () => {
     const token = localStorage.getItem("auth_token");
-    if (!token || token.startsWith("demo_token_")) return;
+    if (!token) return;
 
     setLoading(true);
     try {
@@ -92,81 +96,75 @@ export function ChildrenProvider({ children }) {
 
   const addChild = async (formData) => {
     const token = localStorage.getItem("auth_token");
-
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        const savedApiChild = await api.post("/children", formData);
-        setChildrenList((prev) => [...prev, savedApiChild]);
-        showSuccess(S.context.children.addSuccess);
-        return savedApiChild;
-      } catch (err) {
-        console.error("API Add Child Error:", err);
-        const msg = getErrorMessage(err, S.context.children.addFailed);
-        showError(msg);
-        return { error: msg };
-      }
+    if (!token) {
+      const msg = S.context.children.errorNetwork;
+      showError(msg);
+      return { error: msg };
     }
 
-    // demo mode
-    const newChild = { id: Date.now(), status: "نشط", notes: [], ...formData };
-    setChildrenList((prev) => [...prev, newChild]);
-    showSuccess(S.context.children.addDemoSuccess);
-    return newChild;
+    try {
+      const saved = await api.post("/children", buildChildPayload(formData));
+
+      if (formData.guardianId) {
+        try {
+          await api.post(`/parents/${formData.guardianId}/children`, { childId: saved.PersonID });
+        } catch (linkErr) {
+          console.error("API Link Guardian Error:", linkErr);
+          showError(S.context.children.linkGuardianFailed);
+        }
+      }
+
+      await fetchChildrenFromApi();
+      showSuccess(S.context.children.addSuccess);
+      return normalizeChild(saved);
+    } catch (err) {
+      console.error("API Add Child Error:", err);
+      const msg = getErrorMessage(err, S.context.children.addFailed);
+      showError(msg);
+      return { error: msg };
+    }
   };
 
   const updateChild = async (id, formData) => {
     const token = localStorage.getItem("auth_token");
-
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        await api.put(`/children/${id}`, formData);
-        setChildrenList((prev) =>
-          prev.map((child) => (child.id === id ? { ...child, ...formData } : child))
-        );
-        showSuccess(S.context.children.updateSuccess);
-        return { success: true };
-      } catch (err) {
-        console.error("API Update Child Error:", err);
-        const msg = getErrorMessage(err, S.context.children.updateFailed);
-        showError(msg);
-        return { error: msg };
-      }
+    if (!token) {
+      const msg = S.context.children.errorNetwork;
+      showError(msg);
+      return { error: msg };
     }
 
-    // demo mode
-    setChildrenList((prev) =>
-      prev.map((child) => (child.id === id ? { ...child, ...formData } : child))
-    );
-    showSuccess(S.context.children.updateDemoSuccess);
+    try {
+      await api.put(`/children/${id}`, buildChildPayload(formData));
+      await fetchChildrenFromApi();
+      showSuccess(S.context.children.updateSuccess);
+      return { success: true };
+    } catch (err) {
+      console.error("API Update Child Error:", err);
+      const msg = getErrorMessage(err, S.context.children.updateFailed);
+      showError(msg);
+      return { error: msg };
+    }
   };
 
   const deleteChild = async (id) => {
     const token = localStorage.getItem("auth_token");
-
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        await api.delete(`/children/${id}`);
-      } catch (err) {
-        console.error("API Delete Child Error:", err);
-        const msg = getErrorMessage(err, S.context.children.deleteFailed);
-        showError(msg);
-        return { error: msg };
-      }
+    if (!token) {
+      const msg = S.context.children.errorNetwork;
+      showError(msg);
+      return { error: msg };
     }
 
-    setChildrenList((prev) => prev.filter((child) => child.id !== id));
-    showSuccess(S.context.children.deleteSuccess);
-    return { success: true };
-  };
-
-  const toggleChildStatus = (id) => {
-    setChildrenList((prev) =>
-      prev.map((child) =>
-        child.id === id
-          ? { ...child, status: child.status === "نشط" ? "موقوف" : "نشط" }
-          : child
-      )
-    );
+    try {
+      await api.delete(`/children/${id}`);
+      await fetchChildrenFromApi();
+      showSuccess(S.context.children.deleteSuccess);
+      return { success: true };
+    } catch (err) {
+      console.error("API Delete Child Error:", err);
+      const msg = getErrorMessage(err, S.context.children.deleteFailed);
+      showError(msg);
+      return { error: msg };
+    }
   };
 
   const addChildNote = (childId, noteData) => {
@@ -183,7 +181,15 @@ export function ChildrenProvider({ children }) {
 
   return (
     <ChildrenContext.Provider
-      value={{ childrenList, loading, addChild, updateChild, deleteChild, toggleChildStatus, addChildNote }}
+      value={{
+        childrenList,
+        loading,
+        refreshChildren: fetchChildrenFromApi,
+        addChild,
+        updateChild,
+        deleteChild,
+        addChildNote,
+      }}
     >
       {children}
     </ChildrenContext.Provider>

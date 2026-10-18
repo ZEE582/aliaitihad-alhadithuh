@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { api } from "../services/api";
 import { useToast } from "./ToastContext";
+import { useUser } from "./UserContext";
 import { strings as S } from "../constants/strings";
 
 const RegistrationRequestsContext = createContext(null);
@@ -21,14 +22,16 @@ export function RegistrationRequestsProvider({ children }) {
 
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useToast();
+  const { user } = useUser();
 
   useEffect(() => {
     localStorage.setItem("app_registration_requests", JSON.stringify(requests));
   }, [requests]);
 
   const fetchRequestsFromApi = useCallback(async () => {
+    if (user?.roleType !== "admin" && user?.roleType !== "secretary") return;
     const token = localStorage.getItem("auth_token");
-    if (!token || token.startsWith("demo_token_")) return;
+    if (!token) return;
 
     setLoading(true);
     try {
@@ -40,68 +43,48 @@ export function RegistrationRequestsProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, [showError, user?.roleType]);
 
   useEffect(() => {
     fetchRequestsFromApi();
   }, [fetchRequestsFromApi]);
 
   const submitRequest = async (formData) => {
-    const token = localStorage.getItem("auth_token");
-
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        const saved = await api.post("/registration-requests", formData);
-        setRequests((prev) => [saved, ...prev]);
-        showSuccess(S.context.registrationRequests.submitSuccess);
-        return saved;
-      } catch (err) {
-        console.error("API Submit Registration Request Error:", err);
-        const msg = getErrorMessage(err, S.context.registrationRequests.submitFailed);
-        showError(msg);
-        return { error: msg };
+    try {
+      const saved = await api.post("/registration-requests", formData);
+      const token = localStorage.getItem("auth_token");
+      if (token) {
+        fetchRequestsFromApi();
       }
+      showSuccess(S.context.registrationRequests.submitSuccess);
+      return saved;
+    } catch (err) {
+      console.error("API Submit Registration Request Error:", err);
+      const msg = getErrorMessage(err, S.context.registrationRequests.submitFailed);
+      showError(msg);
+      return { error: msg };
     }
-
-    // demo mode
-    const newRequest = {
-      id: Date.now(),
-      status: "pending",
-      submittedAt: new Date().toLocaleDateString("ar-EG", {
-        day: "numeric", month: "long", year: "numeric",
-      }),
-      ...formData,
-    };
-    setRequests((prev) => [newRequest, ...prev]);
-    showSuccess(S.context.registrationRequests.submitDemoSuccess);
-    return newRequest;
   };
 
-  const updateRequestStatus = async (id, status) => {
-    const token = localStorage.getItem("auth_token");
-
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        await api.put(`/registration-requests/${id}`, { status });
-        setRequests((prev) =>
-          prev.map((request) => (request.id === id ? { ...request, status } : request))
-        );
+  const updateRequestStatus = async (id, status, extra = {}) => {
+    try {
+      const data = await api.put(`/registration-requests/${id}`, { status, ...extra });
+      setRequests((prev) =>
+        prev.map((request) => (request.id === id ? { ...request, status } : request))
+      );
+      if (status === "approved" && !data?.tempPassword) {
+        showSuccess(S.context.registrationRequests.approvedLinkedExisting);
+      } else {
         const label = status === "approved" ? S.context.registrationRequests.statusApprovedLabel : status === "rejected" ? S.context.registrationRequests.statusRejectedLabel : S.context.registrationRequests.statusUpdatedLabel;
         showSuccess(S.context.registrationRequests.updateSuccess(label));
-        return { success: true };
-      } catch (err) {
-        console.error("API Update Registration Request Error:", err);
-        const msg = getErrorMessage(err, S.context.registrationRequests.updateFailed);
-        showError(msg);
-        return { error: msg };
       }
+      return { success: true, data };
+    } catch (err) {
+      console.error("API Update Registration Request Error:", err);
+      const msg = getErrorMessage(err, S.context.registrationRequests.updateFailed);
+      showError(msg);
+      return { error: msg };
     }
-
-    // demo mode
-    setRequests((prev) =>
-      prev.map((request) => (request.id === id ? { ...request, status } : request))
-    );
-    showSuccess(S.context.registrationRequests.updateDemoSuccess);
   };
 
   // ======================================================

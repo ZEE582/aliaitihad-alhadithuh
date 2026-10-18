@@ -16,7 +16,7 @@ export default function Navbar({ title = S.common.dashboard, onNavigate, onLogou
     user.roleType === "teacher"
       ? childrenList.filter((c) => c.classroom === user.classroom).map((c) => c.id)
       : user.roleType === "parent"
-      ? user.childIds || []
+      ? childrenList.map((c) => c.id)
       : [];
 
   const oppositeRole = user.roleType === "teacher" ? "parent" : "teacher";

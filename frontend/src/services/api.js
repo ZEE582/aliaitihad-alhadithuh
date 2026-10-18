@@ -27,7 +27,22 @@ export const apiFetch = async (endpoint, options = {}) => {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(data.message || `API Error: ${response.statusText}`);
+      const error = new Error(data.message || `API Error: ${response.statusText}`);
+      error.status = response.status;
+      error.code = data.code;
+
+      if (response.status === 403 && data.code === "PASSWORD_CHANGE_REQUIRED") {
+        window.dispatchEvent(new Event("auth:password-change-required"));
+      }
+
+      if (
+        response.status === 401 &&
+        path.indexOf("/auth/login") !== 0
+      ) {
+        window.dispatchEvent(new Event("auth:unauthorized"));
+      }
+
+      throw error;
     }
 
     return data;

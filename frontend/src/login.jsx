@@ -173,14 +173,6 @@ export default function LoginPage() {
                 {S.login.passwordLabel}
               </label>
 
-              <button
-                type="button"
-                className="text-xs font-medium"
-                style={{ color: "#4C8577" }}
-              >
-                {S.login.forgotPassword}
-              </button>
-
             </div>
 
             <div className="relative">

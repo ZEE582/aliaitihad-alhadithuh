@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { api } from "../services/api";
 import { useToast } from "./ToastContext";
+import { useUser } from "./UserContext";
 import { strings as S } from "../constants/strings";
 
 const AttendanceContext = createContext(null);
@@ -13,8 +14,6 @@ const initialRecords = [
   { id: 5, childId: 3, date: "2026-07-13", status: "absent_unexcused" },
 ];
 
-const initialTeacherRecords = [];
-
 const getErrorMessage = (err, fallback) => {
   if (err?.status === 403) return S.context.children.error403;
   if (err?.status === 404) return S.context.children.error404;
@@ -23,36 +22,75 @@ const getErrorMessage = (err, fallback) => {
   return err?.message || fallback;
 };
 
+const toDateOnly = (value) => {
+  if (value == null) return "";
+  if (value instanceof Date) {
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, "0");
+    const d = String(value.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return String(value).slice(0, 10);
+};
+
+const toChildStatusKey = (status, reason) => {
+  if (status === "Late") return "late";
+  if (status === "Excused") return "absent_excused";
+  if (status === "Absent") return reason ? "absent_excused" : "absent_unexcused";
+  return "present";
+};
+
+const normalizeAttendance = (record) => ({
+  ...record,
+  id: record.AttendanceID ?? record.id,
+  childId: record.child_PersonID ?? record.childId,
+  date: toDateOnly(record.AttendanceDate),
+  status: toChildStatusKey(record.Status, record.Reason),
+  excuse: record.Reason || "",
+});
+
+const toTeacherStatusKey = (status) => {
+  if (status === "Late") return "late";
+  if (status === "Absent") return "absent";
+  if (status === "Excused") return "excused";
+  return "present";
+};
+
+const normalizeTeacherAttendance = (record) => ({
+  id: record.AttendanceID ?? record.id,
+  teacherId: record.TeacherID,
+  teacherName: record.teacher
+    ? [record.teacher.F_name, record.teacher.S_name].filter(Boolean).join(" ")
+    : "",
+  date: toDateOnly(record.Date),
+  status: toTeacherStatusKey(record.Status),
+  excuse: record.Excuse || "",
+});
+
 export function AttendanceProvider({ children }) {
   const [records, setRecords] = useState(() => {
     const saved = localStorage.getItem("app_attendance_records");
     return saved ? JSON.parse(saved) : initialRecords;
   });
 
-  const [teacherRecords, setTeacherRecords] = useState(() => {
-    const saved = localStorage.getItem("app_teacher_attendance_records");
-    return saved ? JSON.parse(saved) : initialTeacherRecords;
-  });
+  const [teacherRecords, setTeacherRecords] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useToast();
+  const { user } = useUser();
 
   useEffect(() => {
     localStorage.setItem("app_attendance_records", JSON.stringify(records));
   }, [records]);
 
-  useEffect(() => {
-    localStorage.setItem("app_teacher_attendance_records", JSON.stringify(teacherRecords));
-  }, [teacherRecords]);
-
   const fetchAttendanceFromApi = useCallback(async () => {
     const token = localStorage.getItem("auth_token");
-    if (!token || token.startsWith("demo_token_")) return;
+    if (!token) return;
 
     setLoading(true);
     try {
       const data = await api.get("/attendance");
-      if (Array.isArray(data)) setRecords(data);
+      if (Array.isArray(data)) setRecords(data.map(normalizeAttendance));
     } catch (err) {
       console.error("API Fetch Attendance Error:", err);
       showError(getErrorMessage(err, S.context.attendance.fetchFailed));
@@ -61,9 +99,25 @@ export function AttendanceProvider({ children }) {
     }
   }, [showError]);
 
+  const fetchTeacherAttendanceFromApi = useCallback(async () => {
+    if (user?.roleType !== "admin") return;
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+
+    try {
+      const data = await api.get("/attendance/teachers/all");
+      if (Array.isArray(data)) setTeacherRecords(data.map(normalizeTeacherAttendance));
+    } catch (err) {
+      if (err?.status !== 403) {
+        console.error("API Fetch Teacher Attendance Error:", err);
+        showError(getErrorMessage(err, S.context.attendance.fetchFailed));
+      }
+    }
+  }, [showError, user?.roleType]);
+
   useEffect(() => {
-    fetchAttendanceFromApi();
-  }, [fetchAttendanceFromApi]);
+    Promise.all([fetchAttendanceFromApi(), fetchTeacherAttendanceFromApi()]);
+  }, [fetchAttendanceFromApi, fetchTeacherAttendanceFromApi]);
 
   // ====================================================
   // تسجيل حضور الأطفال
@@ -136,24 +190,45 @@ export function AttendanceProvider({ children }) {
     ).length;
 
   // ====================================================
-  // تسجيل حضور المعلمة
+  // تسجيل حضور المعلمة (للمدير فقط عبر API)
   // ====================================================
 
-  const recordTeacherAttendance = (teacherName, date, status) => {
-    setTeacherRecords((prev) => {
-      const filtered = prev.filter(
-        (record) => !(record.teacherName === teacherName && record.date === date)
-      );
-      return [...filtered, { id: `${Date.now()}-${teacherName}`, teacherName, date, status }];
-    });
+  const recordTeacherAttendance = async (teacherId, date, status) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      const msg = S.context.attendance.saveFailed;
+      showError(msg);
+      return { error: msg };
+    }
+
+    const statusMap = { present: "Present", late: "Late", absent: "Absent", excused: "Excused" };
+
+    try {
+      await api.post("/attendance/teachers", {
+        TeacherID: teacherId,
+        Date: date,
+        Status: statusMap[status] || "Present",
+      });
+      await fetchTeacherAttendanceFromApi();
+      showSuccess(S.context.attendance.saveSuccess);
+      return { success: true };
+    } catch (err) {
+      console.error("API Save Teacher Attendance Error:", err);
+      const msg = getErrorMessage(err, S.context.attendance.saveFailed);
+      showError(msg);
+      return { error: msg };
+    }
   };
 
   // ====================================================
   // جلب حضور معلمة
   // ====================================================
 
-  const getTeacherRecords = (teacherName) =>
-    teacherRecords.filter((record) => record.teacherName === teacherName);
+  const matchesTeacher = (record, teacherIdOrName) =>
+    record.teacherId === teacherIdOrName || record.teacherName === teacherIdOrName;
+
+  const getTeacherRecords = (teacherIdOrName) =>
+    teacherRecords.filter((record) => matchesTeacher(record, teacherIdOrName));
 
   // ====================================================
   // جلب حضور المعلمات في يوم معين
@@ -166,9 +241,9 @@ export function AttendanceProvider({ children }) {
   // آخر تسجيل حضور للمعلمة
   // ====================================================
 
-  const getTeacherAttendance = (teacherName, date) =>
+  const getTeacherAttendance = (teacherIdOrName, date) =>
     teacherRecords.find(
-      (record) => record.teacherName === teacherName && record.date === date
+      (record) => matchesTeacher(record, teacherIdOrName) && record.date === date
     );
 
   // ====================================================
@@ -177,10 +252,36 @@ export function AttendanceProvider({ children }) {
 
   const saveAttendanceToApi = async (date, attendanceMap) => {
     const token = localStorage.getItem("auth_token");
-    if (!token || token.startsWith("demo_token_")) return { success: true };
+    if (!token) return { success: true };
+
+    const childIds = Object.keys(attendanceMap).map(Number);
+    if (childIds.length === 0) return { success: true };
+
+    const statusMap = {
+      present: "Present",
+      late: "Late",
+      absent: "Absent",
+      absent_excused: "Excused",
+      absent_unexcused: "Absent",
+    };
 
     try {
-      await api.post("/attendance", { date, records: attendanceMap });
+      await Promise.all(
+        childIds.map((childId) => {
+          const entry = attendanceMap[childId] || {};
+          const statusKey = entry.status || "present";
+          return api.post("/attendance", {
+            child_PersonID: childId,
+            AttendanceDate: date,
+            Status: statusMap[statusKey] || "Present",
+            Reason: entry.excuse || "",
+          });
+        })
+      );
+
+      const data = await api.get("/attendance");
+      if (Array.isArray(data)) setRecords(data.map(normalizeAttendance));
+
       showSuccess(S.context.attendance.saveSuccess);
       return { success: true };
     } catch (err) {

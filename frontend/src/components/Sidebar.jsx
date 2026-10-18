@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Star,
   ClipboardList,
+  UserCog,
 } from "lucide-react";
 
 import { useUser } from "../context/UserContext";
@@ -54,6 +55,12 @@ const NAV_BY_ROLE = {
     },
 
     {
+      key: "users",
+      label: S.common.users,
+      icon: UserCog,
+    },
+
+    {
       key: "classes",
       label: S.common.classes,
       icon: BookOpen,
@@ -74,78 +81,6 @@ const NAV_BY_ROLE = {
     {
       key: "attendance",
       label: S.common.attendance,
-      icon: ClipboardCheck,
-    },
-
-    {
-      key: "notes",
-      label: S.common.notes,
-      icon: StickyNote,
-    },
-
-    {
-      key: "messages",
-      label: S.common.messages,
-      icon: MessageSquare,
-    },
-
-    {
-      key: "registration-requests",
-      label: S.common.registrationRequests,
-      icon: ClipboardList,
-    },
-
-    {
-      key: "reports",
-      label: S.common.reports,
-      icon: FileBarChart,
-    },
-  ],
-
-  // ====================================================
-  // السكرتيرة
-  // ====================================================
-
-  secretary: [
-    {
-      key: "dashboard",
-      label: S.common.dashboard,
-      icon: LayoutDashboard,
-    },
-
-    {
-      key: "children",
-      label: S.common.children,
-      icon: Baby,
-    },
-
-    {
-      key: "parents",
-      label: S.common.parents,
-      icon: Users,
-    },
-
-    {
-      key: "teachers",
-      label: S.common.teachers,
-      icon: GraduationCap,
-    },
-
-    {
-      key: "classes",
-      label: S.common.classes,
-      icon: BookOpen,
-    },
-
-    {
-      key: "sessions",
-      label: S.sidebar.sessionsSchedule,
-      icon: CalendarClock,
-    },
-
-    {
-      key: "attendance",
-      label: S.sidebar.attendanceAbsence,
       icon: ClipboardCheck,
     },
 
@@ -217,6 +152,66 @@ const NAV_BY_ROLE = {
   ],
 
   // ====================================================
+  // السكرتير
+  // ====================================================
+
+  secretary: [
+    {
+      key: "dashboard",
+      label: S.common.dashboard,
+      icon: LayoutDashboard,
+    },
+
+    {
+      key: "registration-requests",
+      label: S.common.registrationRequests,
+      icon: ClipboardList,
+    },
+
+    {
+      key: "children",
+      label: S.common.children,
+      icon: Baby,
+    },
+
+    {
+      key: "teachers",
+      label: S.common.teachers,
+      icon: GraduationCap,
+    },
+
+    {
+      key: "attendance",
+      label: S.common.attendance,
+      icon: ClipboardCheck,
+    },
+
+    {
+      key: "reports",
+      label: S.common.reports,
+      icon: FileBarChart,
+    },
+
+    {
+      key: "classes",
+      label: S.common.classes,
+      icon: BookOpen,
+    },
+
+    {
+      key: "subjects",
+      label: S.common.subjects,
+      icon: BookOpen,
+    },
+
+    {
+      key: "sessions",
+      label: S.common.sessions,
+      icon: CalendarClock,
+    },
+  ],
+
+  // ====================================================
   // ولي الأمر
   // ====================================================
 
@@ -282,9 +277,7 @@ export default function Sidebar({
 }) {
   const { user } = useUser();
 
-  const navItems =
-    NAV_BY_ROLE[user?.roleType] ||
-    NAV_BY_ROLE.admin;
+  const navItems = NAV_BY_ROLE[user?.roleType] || [];
 
   // ======================================================
   // Render Navigation Item
@@ -392,7 +385,7 @@ export default function Sidebar({
               color: "#A8B0AB",
             }}
           >
-            {user?.role ||
+            {user?.roleType ||
               S.sidebar.adminPanelFallback}
           </p>
         </div>

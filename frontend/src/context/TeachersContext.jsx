@@ -5,11 +5,32 @@ import { strings as S } from "../constants/strings";
 
 const TeachersContext = createContext(null);
 
-const initialTeachers = [
-  { id: 1, name: "أ. نور سلامة", phone: "059-1112223", subject: "التربية الفنية", classroom: "صف الفراشات", status: "نشط" },
-  { id: 2, name: "أ. سارة الحاج", phone: "059-4445556", subject: "اللغة العربية", classroom: "صف النجوم", status: "نشط" },
-  { id: 3, name: "أ. ريم عودة", phone: "056-7778889", subject: "الرياضيات", classroom: "صف القمر", status: "إجازة" },
-];
+const normalizeTeacher = (teacher) => {
+  const fullName =
+    teacher.person?.Name ||
+    [teacher.F_name, teacher.S_name, teacher.Th_name, teacher.L_name]
+      .filter(Boolean)
+      .join(" ");
+
+  const section = teacher.assignedSection?.SectionName || "";
+  const className = teacher.assignedSection?.classRoom?.className || "";
+
+  return {
+    ...teacher,
+    PersonID: teacher.PersonID,
+    name: fullName,
+    phone: teacher.user?.phone || "",
+    email: teacher.user?.email || "",
+    subjectId: teacher.subject_id ?? "",
+    subjectName: teacher.subject?.Subject_name || "",
+    specialty: teacher.specialty || "",
+    tNumber: teacher.T_Number || "",
+    yearsOfExperience: teacher.years_of_experience ?? "",
+    section,
+    className,
+    classroom: section || className,
+  };
+};
 
 const getErrorMessage = (err, fallback) => {
   if (err?.status === 403) return S.context.children.error403;
@@ -19,26 +40,30 @@ const getErrorMessage = (err, fallback) => {
   return err?.message || fallback;
 };
 
+const EDITABLE_FIELDS = [
+  "F_name",
+  "S_name",
+  "Th_name",
+  "L_name",
+  "T_Number",
+  "specialty",
+  "years_of_experience",
+  "subject_id",
+];
+
 export function TeachersProvider({ children }) {
-  const [teachersList, setTeachersList] = useState(() => {
-    const saved = localStorage.getItem("app_teachers_list");
-    return saved ? JSON.parse(saved) : initialTeachers;
-  });
+  const [teachersList, setTeachersList] = useState([]);
   const [loading, setLoading] = useState(false);
   const { showSuccess, showError } = useToast();
 
-  useEffect(() => {
-    localStorage.setItem("app_teachers_list", JSON.stringify(teachersList));
-  }, [teachersList]);
-
   const fetchTeachersFromApi = useCallback(async () => {
     const token = localStorage.getItem("auth_token");
-    if (!token || token.startsWith("demo_token_")) return;
+    if (!token) return;
 
     setLoading(true);
     try {
       const data = await api.get("/teachers");
-      if (Array.isArray(data)) setTeachersList(data);
+      if (Array.isArray(data)) setTeachersList(data.map(normalizeTeacher));
     } catch (err) {
       console.error("API Fetch Teachers Error:", err);
       showError(getErrorMessage(err, S.context.teachers.fetchFailed));
@@ -51,79 +76,52 @@ export function TeachersProvider({ children }) {
     fetchTeachersFromApi();
   }, [fetchTeachersFromApi]);
 
-  const addTeacher = async (formData) => {
+  const updateTeacher = async (personId, formData) => {
     const token = localStorage.getItem("auth_token");
+    if (!token) return { error: S.context.teachers.updateFailed };
 
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        const saved = await api.post("/teachers", formData);
-        setTeachersList((prev) => [...prev, saved]);
-        showSuccess(S.context.teachers.addSuccess);
-        return saved;
-      } catch (err) {
-        console.error("API Add Teacher Error:", err);
-        const msg = getErrorMessage(err, S.context.teachers.addFailed);
-        showError(msg);
-        return { error: msg };
-      }
+    const payload = {};
+    EDITABLE_FIELDS.forEach((field) => {
+      if (formData[field] !== undefined) payload[field] = formData[field];
+    });
+
+    try {
+      await api.put(`/teachers/${personId}`, payload);
+      await fetchTeachersFromApi();
+      showSuccess(S.context.teachers.updateSuccess);
+      return { success: true };
+    } catch (err) {
+      console.error("API Update Teacher Error:", err);
+      const msg = getErrorMessage(err, S.context.teachers.updateFailed);
+      showError(msg);
+      return { error: msg };
     }
-
-    // demo mode
-    const newTeacher = { id: Date.now(), status: "نشط", ...formData };
-    setTeachersList((prev) => [...prev, newTeacher]);
-    showSuccess(S.context.teachers.addDemoSuccess);
-    return newTeacher;
   };
 
-  const updateTeacher = async (id, formData) => {
+  const deleteTeacher = async (personId) => {
     const token = localStorage.getItem("auth_token");
+    if (!token) return { error: S.context.teachers.deleteFailed };
 
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        await api.put(`/teachers/${id}`, formData);
-        setTeachersList((prev) => prev.map((t) => (t.id === id ? { ...t, ...formData } : t)));
-        showSuccess(S.context.teachers.updateSuccess);
-        return { success: true };
-      } catch (err) {
-        console.error("API Update Teacher Error:", err);
-        const msg = getErrorMessage(err, S.context.teachers.updateFailed);
-        showError(msg);
-        return { error: msg };
-      }
+    try {
+      await api.delete(`/teachers/${personId}`);
+      setTeachersList((prev) => prev.filter((t) => t.PersonID !== personId));
+      showSuccess(S.context.teachers.deleteSuccess);
+      return { success: true };
+    } catch (err) {
+      console.error("API Delete Teacher Error:", err);
+      const msg =
+        err?.status === 409
+          ? S.context.teachers.deleteBlockedAssigned
+          : getErrorMessage(err, S.context.teachers.deleteFailed);
+      showError(msg);
+      return { error: msg };
     }
-
-    // demo mode
-    setTeachersList((prev) => prev.map((t) => (t.id === id ? { ...t, ...formData } : t)));
-    showSuccess(S.context.teachers.updateDemoSuccess);
-  };
-
-  const deleteTeacher = async (id) => {
-    const token = localStorage.getItem("auth_token");
-
-    if (token && !token.startsWith("demo_token_")) {
-      try {
-        await api.delete(`/teachers/${id}`);
-      } catch (err) {
-        console.error("API Delete Teacher Error:", err);
-        const msg = getErrorMessage(err, S.context.teachers.deleteFailed);
-        showError(msg);
-        return { error: msg };
-      }
-    }
-
-    setTeachersList((prev) => prev.filter((t) => t.id !== id));
-    showSuccess(S.context.teachers.deleteSuccess);
-    return { success: true };
-  };
-
-  const toggleTeacherStatus = (id) => {
-    setTeachersList((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: t.status === "نشط" ? "إجازة" : "نشط" } : t))
-    );
   };
 
   return (
-    <TeachersContext.Provider value={{ teachersList, loading, addTeacher, updateTeacher, deleteTeacher, toggleTeacherStatus }}>
+    <TeachersContext.Provider
+      value={{ teachersList, loading, refreshTeachers: fetchTeachersFromApi, updateTeacher, deleteTeacher }}
+    >
       {children}
     </TeachersContext.Provider>
   );

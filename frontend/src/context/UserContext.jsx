@@ -59,25 +59,66 @@ export function UserProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (err) {
+      console.error("Logout Error:", err.message);
+    }
     localStorage.removeItem("auth_token");
     setUser(null);
   };
 
-  const updateUser = (formData) => {
-    setUser((prev) => ({
-      ...prev,
-      ...formData,
-    }));
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
+      setUser(null);
+    };
+
+    const handlePasswordChangeRequired = () => {
+      setUser((prev) => (prev ? { ...prev, mustChangePassword: true } : prev));
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    window.addEventListener("auth:password-change-required", handlePasswordChangeRequired);
+    return () => {
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+      window.removeEventListener("auth:password-change-required", handlePasswordChangeRequired);
+    };
+  }, []);
+
+  const updateUser = async (formData) => {
+    if (!user) {
+      throw new Error(S.context.auth.loginFailedFallback);
+    }
+
+    const payload = {};
+    if (formData.fullName !== undefined) payload.fullName = formData.fullName;
+    if (formData.email !== undefined) payload.email = formData.email;
+    if (formData.phone !== undefined) payload.phone = formData.phone;
+    if (formData.avatar !== undefined) payload.avatar = formData.avatar;
+
+    const data = await api.put(`/users/${user.id}`, payload);
+    if (data && data.id) {
+      setUser((prev) => ({ ...prev, ...data }));
+    }
+    return data;
   };
 
-  const isFemale =
-    user?.gender === "female" ||
-    user?.roleType === "teacher" ||
-    (user?.roleType === "admin" && user?.name?.includes("سارة")) ||
-    user?.role?.includes("مديرة") ||
-    user?.role?.includes("معلمة") ||
-    user?.role?.includes("سكرتيرة");
+  const changePassword = async (currentPassword, newPassword) => {
+    if (!user) {
+      throw new Error(S.context.auth.loginFailedFallback);
+    }
+    const data = await api.put(`/users/${user.id}`, {
+      currentPassword,
+      newPassword,
+    });
+    if (data && data.id) {
+      setUser((prev) => ({ ...prev, ...data }));
+    }
+    return data;
+  };
 
   return (
     <UserContext.Provider
@@ -86,10 +127,10 @@ export function UserProvider({ children }) {
         initializing,
         loading,
         authError,
-        isFemale: !!isFemale,
         loginWithCredentials,
         logout,
         updateUser,
+        changePassword,
       }}
     >
       {initializing ? (

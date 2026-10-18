@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LoginPage from "./login";
 import ToastContainer from "./components/Toast";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ChangePasswordModal from "./components/ChangePasswordModal";
 import { ToastProvider } from "./context/ToastContext";
 
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -11,6 +12,7 @@ import MyChildPage from "./pages/children/MyChildPage";
 
 import ParentsList from "./pages/parents/ParentsList";
 import TeachersList from "./pages/teachers/TeachersList";
+import AdminUsersPage from "./pages/users/AdminUsersPage";
 import ClassesList from "./pages/classes/ClassesList";
 import SubjectsList from "./pages/subjects/SubjectsList";
 import SessionsList from "./pages/sessions/SessionsList";
@@ -41,7 +43,23 @@ import { AttendanceProvider } from "./context/AttendanceContext";
 import { NotesProvider } from "./context/NotesContext";
 import { TeacherRatingsProvider } from "./context/TeacherRatingsContext";
 import { RegistrationRequestsProvider } from "./context/RegistrationRequestsContext";
+import { SubjectsProvider } from "./context/SubjectsContext";
+import { SessionsProvider } from "./context/SessionsContext";
 import { UserProvider, useUser } from "./context/UserContext";
+
+const SECRETARY_PAGES = [
+  "dashboard",
+  "registration-requests",
+  "children",
+  "teachers",
+  "attendance",
+  "reports",
+  "classes",
+  "subjects",
+  "sessions",
+  "profile",
+  "settings",
+];
 
 // ==========================================
 // محتوى التطبيق بعد تسجيل الدخول
@@ -58,6 +76,15 @@ function AppContent() {
 
   const [activePage, setActivePage] = useState(getDefaultPage());
   const [selectedChild, setSelectedChild] = useState(null);
+
+  useEffect(() => {
+    if (
+      user.roleType === "secretary" &&
+      !SECRETARY_PAGES.includes(activePage)
+    ) {
+      setActivePage("dashboard");
+    }
+  }, [user.roleType, activePage]);
 
   const handleNavigate = (pageKey) => {
     setSelectedChild(null);
@@ -146,6 +173,29 @@ function AppContent() {
   if (activePage === "teachers") {
     return (
       <TeachersList
+        onNavigate={handleNavigate}
+        onLogout={logout}
+      />
+    );
+  }
+
+  // ==========================================
+  // Users (admin only)
+  // ==========================================
+
+  if (activePage === "users") {
+    if (user.roleType !== "admin") {
+      return (
+        <ComingSoon
+          pageKey={activePage}
+          onNavigate={handleNavigate}
+          onLogout={logout}
+        />
+      );
+    }
+
+    return (
+      <AdminUsersPage
         onNavigate={handleNavigate}
         onLogout={logout}
       />
@@ -324,6 +374,14 @@ function AppGate() {
   }
 
   // ==========================================
+  // إجبار تغيير كلمة المرور المؤقتة
+  // ==========================================
+
+  if (user.mustChangePassword) {
+    return <ChangePasswordModal />;
+  }
+
+  // ==========================================
   // بعد تسجيل الدخول
   // ==========================================
 
@@ -336,7 +394,11 @@ function AppGate() {
               <AttendanceProvider>
                 <NotesProvider>
                   <TeacherRatingsProvider>
-                    <AppContent />
+                    <SubjectsProvider>
+                      <SessionsProvider>
+                        <AppContent />
+                      </SessionsProvider>
+                    </SubjectsProvider>
                   </TeacherRatingsProvider>
                 </NotesProvider>
               </AttendanceProvider>
