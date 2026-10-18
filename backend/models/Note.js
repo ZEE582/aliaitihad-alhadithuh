@@ -24,16 +24,16 @@ const Note = sequelize.define('Note', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Persons',
-      key: 'PersonID'
+      model: 'Users',
+      key: 'id'
     }
   },
   ReceiverID: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Persons',
-      key: 'PersonID'
+      model: 'Users',
+      key: 'id'
     }
   }
 }, {
