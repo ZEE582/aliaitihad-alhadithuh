@@ -37,7 +37,7 @@ async function assertCanAccessChild(user, childId) {
     throw new Error(NOT_AUTHORIZED);
   }
 
-  if (user.roleType === 'admin') {
+  if (user.roleType === 'admin' || user.roleType === 'secretary') {
     return true;
   }
 

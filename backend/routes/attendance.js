@@ -1,13 +1,13 @@
 const express = require('express');
-const { Attendance, Child, ClassRoom, Guardian, Child_Guardian } = require('../models');
+const { Attendance, Child, ClassRoom, Guardian, Child_Guardian, Section } = require('../models');
 const { assertCanAccessChild } = require('../utils/access');
 const { auth, authorize } = require('../middleware/auth');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 
 const router = express.Router();
 
 // Get all attendance records
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, async (req, res, next) => {
   try {
     const { childId, child_PersonID, classId, classID, date, AttendanceDate, status, Status } = req.query;
     let where = {};
@@ -27,6 +27,21 @@ router.get('/', auth, async (req, res) => {
       } else {
         return res.json([]);
       }
+    }
+
+    // Teachers can only see attendance of children in their assigned section
+    if (req.user.roleType === 'teacher') {
+      const teacher = await Teacher.findOne({ where: { userId: req.user.id } });
+      if (!teacher) return res.json([]);
+      const section = await Section.findOne({ where: { assigned_teacher_id: teacher.PersonID } });
+      if (!section) return res.json([]);
+      const sectionChildren = await Child.findAll({
+        where: { section_id: section.section_id },
+        attributes: ['PersonID']
+      });
+      const childIds = sectionChildren.map(c => c.PersonID);
+      ownChildIds = childIds;
+      where.child_PersonID = { [Op.in]: childIds };
     }
 
     const targetChildId = childId || child_PersonID;
@@ -68,12 +83,14 @@ router.get('/', auth, async (req, res) => {
 
     res.json(attendance);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch attendance records', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to fetch attendance records';
+    return next(error);
   }
 });
 
 // Get attendance by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth, async (req, res, next) => {
   try {
     const attendance = await Attendance.findByPk(req.params.id, {
       include: [
@@ -94,28 +111,89 @@ router.get('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Attendance record not found' });
     }
 
+    await assertCanAccessChild(req.user, attendance.child_PersonID);
+
     res.json(attendance);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch attendance record', error: error.message });
+    if (error.message === 'Not authorized') {
+      error.status = 403;
+      return next(error);
+    }
+    error.status = 500;
+    error.publicMessage = 'Failed to fetch attendance record';
+    return next(error);
   }
 });
 
-// Create attendance record (admin and teacher only)
-router.post('/', auth, authorize('admin', 'teacher'), async (req, res) => {
+const CHILD_STATUS_MAP = {
+  present: 'Present',
+  late: 'Late',
+  absent: 'Absent',
+  absent_unexcused: 'Absent',
+  absent_excused: 'Excused',
+  excused: 'Excused',
+  Present: 'Present',
+  Absent: 'Absent',
+  Late: 'Late',
+  Excused: 'Excused'
+};
+
+function normalizeStatusKey(value) {
+  if (value == null) return null;
+  const key = String(value);
+  return CHILD_STATUS_MAP[key] !== undefined ? CHILD_STATUS_MAP[key] : null;
+}
+
+// Create attendance record (admin and teacher only) - upsert per child + day
+router.post('/', auth, authorize('admin', 'teacher'), async (req, res, next) => {
   try {
     const { child_PersonID, childId, classID, classId, AttendanceDate, date, Status, status, Reason, reason } = req.body;
 
     const targetChildId = child_PersonID || childId;
     await assertCanAccessChild(req.user, targetChildId);
 
-    const attendance = await Attendance.create({
-      child_PersonID: targetChildId,
-      classID: classID || classId || 1,
-      AttendanceDate: AttendanceDate || date || new Date(),
-      Status: Status || status || 'Present',
-      Reason: Reason || reason || ''
+    const child = await Child.findByPk(Number(targetChildId), {
+      attributes: ['PersonID', 'classID']
     });
-    
+    if (!child) {
+      return res.status(404).json({ message: 'Child not found' });
+    }
+
+    const statusKey = normalizeStatusKey(Status || status || 'Present');
+    if (!statusKey) {
+      return res.status(400).json({ message: 'Invalid attendance status' });
+    }
+
+    const childClassID = classID || classId || child.classID || 1;
+    const attDate = AttendanceDate || date || new Date();
+
+    const existing = await Attendance.findOne({
+      where: {
+        child_PersonID: child.PersonID,
+        [Op.and]: [
+          Sequelize.where(Sequelize.fn('DATE', Sequelize.col('AttendanceDate')), '=', attDate)
+        ]
+      }
+    });
+
+    let attendance;
+    if (existing) {
+      await existing.update({
+        classID: childClassID,
+        Status: statusKey,
+        Reason: reason !== undefined ? reason : (Reason !== undefined ? Reason : existing.Reason)
+      });
+      attendance = existing;
+    } else {
+      attendance = await Attendance.create({
+        child_PersonID: child.PersonID,
+        classID: childClassID,
+        AttendanceDate: attDate,
+        Status: statusKey,
+        Reason: Reason || reason || ''
+      });
+    }
+
     const newAttendance = await Attendance.findByPk(attendance.AttendanceID, {
       include: [
         {
@@ -130,18 +208,21 @@ router.post('/', auth, authorize('admin', 'teacher'), async (req, res) => {
         }
       ]
     });
-    
+
     res.status(201).json(newAttendance);
   } catch (error) {
     if (error.message === 'Not authorized') {
-      return res.status(403).json({ message: error.message });
+      error.status = 403;
+      return next(error);
     }
-    res.status(500).json({ message: 'Failed to create attendance record', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to create attendance record';
+    return next(error);
   }
 });
 
 // Update attendance
-router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res) => {
+router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res, next) => {
   try {
     const attendance = await Attendance.findByPk(req.params.id);
     if (!attendance) {
@@ -175,14 +256,17 @@ router.put('/:id', auth, authorize('admin', 'teacher'), async (req, res) => {
     res.json(updatedAttendance);
   } catch (error) {
     if (error.message === 'Not authorized') {
-      return res.status(403).json({ message: error.message });
+      error.status = 403;
+      return next(error);
     }
-    res.status(500).json({ message: 'Failed to update attendance', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to update attendance';
+    return next(error);
   }
 });
 
 // Delete attendance (admin only)
-router.delete('/:id', auth, authorize('admin'), async (req, res) => {
+router.delete('/:id', auth, authorize('admin'), async (req, res, next) => {
   try {
     const attendance = await Attendance.findByPk(req.params.id);
     if (!attendance) {
@@ -191,7 +275,9 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
     await attendance.destroy();
     res.json({ message: 'Attendance record deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to delete', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to delete';
+    return next(error);
   }
 });
 
@@ -202,7 +288,7 @@ router.delete('/:id', auth, authorize('admin'), async (req, res) => {
 const { TeacherAttendance, Teacher } = require('../models');
 
 // GET /api/attendance/teachers/all - List teacher attendance records
-router.get('/teachers/all', auth, authorize('admin'), async (req, res) => {
+router.get('/teachers/all', auth, authorize('admin'), async (req, res, next) => {
   try {
     const { teacherId, date, status } = req.query;
     let where = {};
@@ -223,12 +309,14 @@ router.get('/teachers/all', auth, authorize('admin'), async (req, res) => {
     });
     res.json(records);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch teacher attendance records', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to fetch teacher attendance records';
+    return next(error);
   }
 });
 
 // POST /api/attendance/teachers - Create teacher attendance record
-router.post('/teachers', auth, authorize('admin'), async (req, res) => {
+router.post('/teachers', auth, authorize('admin'), async (req, res, next) => {
   try {
     const { TeacherID, Date: attDate, Status, Excuse, ExcuseAttachment } = req.body;
     if (!TeacherID || !attDate || !Status) {
@@ -244,12 +332,14 @@ router.post('/teachers', auth, authorize('admin'), async (req, res) => {
     });
     res.status(201).json(record);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to create teacher attendance record', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to create teacher attendance record';
+    return next(error);
   }
 });
 
 // PUT /api/attendance/teachers/:id - Update teacher attendance record
-router.put('/teachers/:id', auth, authorize('admin'), async (req, res) => {
+router.put('/teachers/:id', auth, authorize('admin'), async (req, res, next) => {
   try {
     const record = await TeacherAttendance.findByPk(req.params.id);
     if (!record) {
@@ -264,12 +354,14 @@ router.put('/teachers/:id', auth, authorize('admin'), async (req, res) => {
     });
     res.json(record);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update teacher attendance record', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to update teacher attendance record';
+    return next(error);
   }
 });
 
 // DELETE /api/attendance/teachers/:id - Delete teacher attendance record
-router.delete('/teachers/:id', auth, authorize('admin'), async (req, res) => {
+router.delete('/teachers/:id', auth, authorize('admin'), async (req, res, next) => {
   try {
     const record = await TeacherAttendance.findByPk(req.params.id);
     if (!record) {
@@ -278,7 +370,9 @@ router.delete('/teachers/:id', auth, authorize('admin'), async (req, res) => {
     await record.destroy();
     res.json({ message: 'Attendance record deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to delete attendance record', error: error.message });
+    error.status = 500;
+    error.publicMessage = 'Failed to delete attendance record';
+    return next(error);
   }
 });
 

@@ -26,7 +26,8 @@ const storage = multer.diskStorage({
     // Unique safe filename
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    const ownerPrefix = `u${req.user ? req.user.id : '0'}-`;
+    cb(null, ownerPrefix + file.fieldname + '-' + uniqueSuffix + ext);
   }
 });
 

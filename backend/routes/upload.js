@@ -5,10 +5,11 @@ const { auth } = require('../middleware/auth');
 const path = require('path');
 
 // POST /api/upload/avatar - Upload avatar image (for child, teacher, or user)
-router.post('/avatar', auth, (req, res) => {
+router.post('/avatar', auth, (req, res, next) => {
   upload.single('avatar')(req, res, (err) => {
     if (err) {
-      return res.status(400).json({ message: err.message });
+      err.status = 400;
+      return next(err);
     }
     if (!req.file) {
       return res.status(400).json({ message: 'Please select an image to upload' });
@@ -24,10 +25,11 @@ router.post('/avatar', auth, (req, res) => {
 });
 
 // POST /api/upload/document - Upload document (medical excuse, report, form)
-router.post('/document', auth, (req, res) => {
+router.post('/document', auth, (req, res, next) => {
   upload.single('document')(req, res, (err) => {
     if (err) {
-      return res.status(400).json({ message: err.message });
+      err.status = 400;
+      return next(err);
     }
     if (!req.file) {
       return res.status(400).json({ message: 'Please select a file to upload' });
