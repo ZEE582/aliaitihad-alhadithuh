@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import ChangePasswordModal from "../../components/ChangePasswordModal";
 import { strings as S } from "../../constants/strings";
 
 function ToggleRow({
@@ -109,6 +110,7 @@ function SectionHeader({ icon: Icon, title, description }) {
 export default function SettingsPage({ onNavigate, onLogout }) {
   const [notifications, setNotifications] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   return (
     <DashboardLayout
@@ -206,6 +208,7 @@ export default function SettingsPage({ onNavigate, onLogout }) {
 
           <button
             type="button"
+            onClick={() => setShowChangePassword(true)}
             className="w-full flex items-center justify-between rounded-2xl p-3.5 transition-all hover:bg-[#FCFAF4]"
             style={{
               border: "1px solid #F0ECE2",
@@ -292,6 +295,10 @@ export default function SettingsPage({ onNavigate, onLogout }) {
           </div>
         </div>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal />
+      )}
     </DashboardLayout>
   );
 }

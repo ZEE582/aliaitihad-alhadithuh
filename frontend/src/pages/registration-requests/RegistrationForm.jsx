@@ -237,9 +237,14 @@ const initialForm = {
 
   // الأب
   fatherName: "",
+  fatherNationalId: "",
+  fatherEmail: "",
   fatherJob: "",
   fatherWorkplace: "",
   fatherPhone: "",
+
+  // أخوة الطفل (الإخوة / التوائم)
+  twins: [],
 
   // الأم
   motherName: "",
@@ -544,6 +549,64 @@ export default function RegistrationForm({
                 </div>
               </Section>
 
+              <Section title={S.registrationForm.sectionTwins}>
+                <p
+                  className="text-xs leading-5 mb-3"
+                  style={{ color: "#7A8580" }}
+                >
+                  {S.registrationForm.twinsHint}
+                </p>
+
+                {form.twins.map((twinName, index) => (
+                  <div
+                    key={index}
+                    className="flex items-end gap-2 mb-2"
+                  >
+                    <div className="flex-1">
+                      <TextField
+                        label={`${S.registrationForm.twinsLabel} ${index + 1}`}
+                        value={twinName}
+                        onChange={(value) => {
+                          const updated = [...form.twins];
+                          updated[index] = value;
+                          update("twins")(updated);
+                        }}
+                        placeholder={S.registrationForm.childFullNamePlaceholder}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = form.twins.filter((_, i) => i !== index);
+                        update("twins")(updated);
+                      }}
+                      className="px-3 py-2.5 rounded-xl text-xs font-semibold transition"
+                      style={{
+                        border: "1px solid #E2DCCC",
+                        backgroundColor: "#FFFFFF",
+                        color: "#C25B4A",
+                      }}
+                    >
+                      {S.registrationForm.twinsRemoveButton}
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => update("twins")([...form.twins, ""])}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                  style={{
+                    border: "1px solid #4C8577",
+                    backgroundColor: "#EAF2EF",
+                    color: "#4C8577",
+                  }}
+                >
+                  {S.registrationForm.twinsAddButton}
+                </button>
+              </Section>
+
               <Section title={S.registrationForm.sectionFatherData}>
                 <TextField
                   label={S.registrationForm.fatherNameLabel}
@@ -551,6 +614,23 @@ export default function RegistrationForm({
                   onChange={update("fatherName")}
                   required
                 />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <TextField
+                    label={S.registrationForm.fatherNationalIdLabel}
+                    value={form.fatherNationalId}
+                    onChange={update("fatherNationalId")}
+                    placeholder={S.registrationForm.fatherNationalIdPlaceholder}
+                  />
+
+                  <TextField
+                    label={S.registrationForm.fatherEmailLabel}
+                    type="email"
+                    value={form.fatherEmail}
+                    onChange={update("fatherEmail")}
+                    placeholder={S.registrationForm.fatherEmailPlaceholder}
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <TextField

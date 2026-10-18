@@ -1,94 +1,36 @@
 import { useState } from "react";
-import {
-  X,
-  BookOpen,
-  Users,
-  CalendarDays,
-  Clock,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { X, BookOpen } from "lucide-react";
 
 import { strings as S } from "../../constants/strings";
 
-const weekDays = [
-  S.seed.days.sunday,
-  S.seed.days.monday,
-  S.seed.days.tuesday,
-  S.seed.days.wednesday,
-  S.seed.days.thursday,
-];
-
-const teachers = [
-  S.seed.teachers.teacherSara,
-  S.seed.teachers.teacherNoor,
-  S.seed.teachers.teacherReem,
-  S.seed.teachers.teacherLayan,
-];
-
-export default function SubjectForm({
-  initialData = null,
-  onClose,
-  onSave,
-}) {
+export default function SubjectForm({ initialData = null, onClose, onSave }) {
   const isEdit = !!initialData;
 
   const [form, setForm] = useState({
-    name: initialData?.name || "",
-    weeklyClasses: initialData?.weeklyClasses || 1,
-    teachers: initialData?.teachers || [],
-    schedule: initialData?.schedule || [],
-  });
-
-  const [newClass, setNewClass] = useState({
-    day: S.seed.days.sunday,
-    from: "09:00",
-    to: "09:30",
-    teacher: teachers[0],
+    Subject_name: initialData?.Subject_name || initialData?.name || "",
+    level: initialData?.level || "",
+    semester: initialData?.semester || "",
   });
 
   const handleChange = (field) => (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
-  };
-
-  const handleTeacherToggle = (teacher) => {
-    setForm((prev) => ({
-      ...prev,
-      teachers: prev.teachers.includes(teacher)
-        ? prev.teachers.filter((t) => t !== teacher)
-        : [...prev.teachers, teacher],
-    }));
-  };
-
-  const handleAddClass = () => {
-    if (!newClass.day || !newClass.from || !newClass.to || !newClass.teacher) {
-      return;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      schedule: [...prev.schedule, { ...newClass, id: Date.now() }],
-    }));
-  };
-
-  const handleRemoveClass = (id) => {
-    setForm((prev) => ({
-      ...prev,
-      schedule: prev.schedule.filter((item) => item.id !== id),
-    }));
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    onSave &&
+    if (onSave) {
       onSave({
-        ...form,
-        weeklyClasses: Number(form.weeklyClasses),
+        Subject_name: form.Subject_name.trim(),
+        level: form.level.trim(),
+        semester: form.semester.trim(),
       });
+    }
+  };
+
+  const inputStyle = {
+    border: "1px solid #E2DCCC",
+    backgroundColor: "#FCFAF4",
+    color: "#2F3A36",
   };
 
   return (
@@ -98,13 +40,12 @@ export default function SubjectForm({
       style={{ backgroundColor: "#00000040" }}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl"
+        className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl"
         style={{
           backgroundColor: "#FFFFFF",
           boxShadow: "0 20px 60px rgba(47,58,54,0.15)",
         }}
       >
-        {/* Header */}
         <div
           className="p-6 sticky top-0 z-10"
           style={{
@@ -122,17 +63,11 @@ export default function SubjectForm({
               </div>
 
               <div>
-                <h3
-                  className="text-lg font-bold"
-                  style={{ color: "#2F3A36" }}
-                >
+                <h3 className="text-lg font-bold" style={{ color: "#2F3A36" }}>
                   {S.subjectForm.title(isEdit ? "edit" : "add")}
                 </h3>
 
-                <p
-                  className="text-xs mt-1"
-                  style={{ color: "#7A8580" }}
-                >
+                <p className="text-xs mt-1" style={{ color: "#7A8580" }}>
                   {S.subjectForm.subtitle}
                 </p>
               </div>
@@ -142,304 +77,73 @@ export default function SubjectForm({
               type="button"
               onClick={onClose}
               className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-70"
-              style={{
-                color: "#A8B0AB",
-                backgroundColor: "#FFFFFF",
-              }}
+              style={{ color: "#A8B0AB", backgroundColor: "#FFFFFF" }}
             >
               <X size={19} />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Basic Information */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen size={17} style={{ color: "#4C8577" }} />
-              <h4
-                className="text-sm font-bold"
-                style={{ color: "#2F3A36" }}
-              >
-                {S.subjectForm.sectionBasicInfo}
-              </h4>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label
-                  className="block text-sm font-semibold mb-1.5"
-                  style={{ color: "#2F3A36" }}
-                >
-                  {S.subjectForm.labelSubjectName}
-                </label>
-
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={handleChange("name")}
-                  required
-                  placeholder={S.subjectForm.subjectNamePlaceholder}
-                  className="w-full rounded-xl py-3 px-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FCFAF4",
-                    color: "#2F3A36",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label
-                  className="block text-sm font-semibold mb-1.5"
-                  style={{ color: "#2F3A36" }}
-                >
-                  {S.subjectForm.labelWeeklyClasses}
-                </label>
-
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={form.weeklyClasses}
-                  onChange={handleChange("weeklyClasses")}
-                  required
-                  className="w-full rounded-xl py-3 px-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FCFAF4",
-                    color: "#2F3A36",
-                  }}
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Teachers */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Users size={17} style={{ color: "#4C8577" }} />
-              <h4
-                className="text-sm font-bold"
-                style={{ color: "#2F3A36" }}
-              >
-                {S.subjectForm.sectionTeachers}
-              </h4>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {teachers.map((teacher) => {
-                const selected = form.teachers.includes(teacher);
-
-                return (
-                  <button
-                    key={teacher}
-                    type="button"
-                    onClick={() => handleTeacherToggle(teacher)}
-                    className="flex items-center gap-3 rounded-xl p-3 text-right transition-all"
-                    style={{
-                      backgroundColor: selected
-                        ? "#EAF2EF"
-                        : "#FCFAF4",
-                      border: selected
-                        ? "1px solid #4C8577"
-                        : "1px solid #E2DCCC",
-                      color: "#2F3A36",
-                    }}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{
-                        backgroundColor: selected
-                          ? "#4C8577"
-                          : "#E8ECEA",
-                        color: selected ? "#FFFFFF" : "#7A8580",
-                      }}
-                    >
-                      <Users size={15} />
-                    </div>
-
-                    <span className="text-sm font-medium">
-                      {teacher}
-                    </span>
-
-                    {selected && (
-                      <span
-                        className="mr-auto text-xs font-semibold"
-                        style={{ color: "#4C8577" }}
-                      >
-                        {S.subjectForm.teacherSelectedBadge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* Schedule */}
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <CalendarDays size={17} style={{ color: "#4C8577" }} />
-              <h4
-                className="text-sm font-bold"
-                style={{ color: "#2F3A36" }}
-              >
-                {S.subjectForm.sectionWeeklySchedule}
-              </h4>
-            </div>
-
-            <div
-              className="rounded-2xl p-4"
-              style={{
-                backgroundColor: "#F4F8F7",
-                border: "1px solid #E2ECE8",
-              }}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div>
+            <label
+              className="block text-sm font-semibold mb-1.5"
+              style={{ color: "#2F3A36" }}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <select
-                  value={newClass.day}
-                  onChange={(e) =>
-                    setNewClass((prev) => ({
-                      ...prev,
-                      day: e.target.value,
-                    }))
-                  }
-                  className="rounded-xl py-2.5 px-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FFFFFF",
-                    color: "#2F3A36",
-                  }}
-                >
-                  {weekDays.map((day) => (
-                    <option key={day}>{day}</option>
-                  ))}
-                </select>
+              {S.subjectForm.labelSubjectName}
+            </label>
 
-                <input
-                  type="time"
-                  value={newClass.from}
-                  onChange={(e) =>
-                    setNewClass((prev) => ({
-                      ...prev,
-                      from: e.target.value,
-                    }))
-                  }
-                  className="rounded-xl py-2.5 px-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FFFFFF",
-                    color: "#2F3A36",
-                  }}
-                />
+            <input
+              type="text"
+              value={form.Subject_name}
+              onChange={handleChange("Subject_name")}
+              required
+              placeholder={S.subjectForm.subjectNamePlaceholder}
+              className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+              style={inputStyle}
+            />
+          </div>
 
-                <input
-                  type="time"
-                  value={newClass.to}
-                  onChange={(e) =>
-                    setNewClass((prev) => ({
-                      ...prev,
-                      to: e.target.value,
-                    }))
-                  }
-                  className="rounded-xl py-2.5 px-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FFFFFF",
-                    color: "#2F3A36",
-                  }}
-                />
-
-                <select
-                  value={newClass.teacher}
-                  onChange={(e) =>
-                    setNewClass((prev) => ({
-                      ...prev,
-                      teacher: e.target.value,
-                    }))
-                  }
-                  className="rounded-xl py-2.5 px-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FFFFFF",
-                    color: "#2F3A36",
-                  }}
-                >
-                  {teachers.map((teacher) => (
-                    <option key={teacher}>{teacher}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleAddClass}
-                className="flex items-center gap-2 mt-3 rounded-xl px-4 py-2.5 text-sm font-semibold"
-                style={{
-                  backgroundColor: "#EAF2EF",
-                  color: "#4C8577",
-                }}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                className="block text-sm font-semibold mb-1.5"
+                style={{ color: "#2F3A36" }}
               >
-                <Plus size={16} />
-                {S.subjectForm.addClassToScheduleButton}
-              </button>
+                {S.subjectForm.labelLevel}
+              </label>
+
+              <input
+                type="text"
+                value={form.level}
+                onChange={handleChange("level")}
+                required
+                placeholder={S.subjectForm.levelPlaceholder}
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              />
             </div>
 
-            {/* Added Classes */}
-            {form.schedule.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {form.schedule.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-xl p-3"
-                    style={{
-                      backgroundColor: "#FFFFFF",
-                      border: "1px solid #EDE7D9",
-                    }}
-                  >
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: "#EAF2EF" }}
-                    >
-                      <Clock size={16} style={{ color: "#4C8577" }} />
-                    </div>
+            <div>
+              <label
+                className="block text-sm font-semibold mb-1.5"
+                style={{ color: "#2F3A36" }}
+              >
+                {S.subjectForm.labelSemester}
+              </label>
 
-                    <div className="flex-1">
-                      <p
-                        className="text-sm font-semibold"
-                        style={{ color: "#2F3A36" }}
-                      >
-                        {item.day}
-                      </p>
+              <input
+                type="text"
+                value={form.semester}
+                onChange={handleChange("semester")}
+                required
+                placeholder={S.subjectForm.semesterPlaceholder}
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              />
+            </div>
+          </div>
 
-                      <p
-                        className="text-xs mt-0.5"
-                        style={{ color: "#7A8580" }}
-                      >
-                        {S.subjectForm.scheduleItemDetail({
-                          from: item.from,
-                          to: item.to,
-                          teacher: item.teacher,
-                        })}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveClass(item.id)}
-                      className="p-2 rounded-lg hover:opacity-70"
-                      style={{ color: "#C25B4A" }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Buttons */}
           <div className="flex gap-3 pt-2">
             <button
               type="button"

@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   CalendarDays,
   GraduationCap,
+  Printer,
 } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -49,31 +50,6 @@ const STATUS_OPTIONS = [
   },
 ];
 
-// ======================================================
-// حالات حضور المعلمة
-// ======================================================
-
-const TEACHER_STATUS_OPTIONS = [
-  {
-    key: "present",
-    label: S.attendance.teacherStatusPresent,
-    icon: Check,
-    color: "#4C8577",
-  },
-  {
-    key: "absent",
-    label: S.attendance.teacherStatusAbsent,
-    icon: XIcon,
-    color: "#C25B4A",
-  },
-  {
-    key: "late",
-    label: S.attendance.teacherStatusLate,
-    icon: Clock3,
-    color: "#E8B24D",
-  },
-];
-
 export default function AttendancePage({
   onNavigate,
   onLogout,
@@ -89,9 +65,9 @@ export default function AttendancePage({
   const {
     records,
     recordDailyAttendance,
+    saveAttendanceToApi,
     getAbsenceCount,
 
-    recordTeacherAttendance,
     getTeacherAttendance,
   } = useAttendance();
 
@@ -108,14 +84,11 @@ export default function AttendancePage({
   const isAdmin =
     user?.roleType === "admin";
 
-  const isSecretary =
-    user?.roleType === "secretary";
-
   const canEditAttendance =
     isAdmin || isTeacher;
 
   const canManageTeacherAttendance =
-    isAdmin || isSecretary;
+    isAdmin;
 
   // ====================================================
   // الأطفال الذين يستطيع المستخدم رؤيتهم
@@ -123,9 +96,7 @@ export default function AttendancePage({
 
   const visibleChildren = useMemo(() => {
     if (isParent) {
-      return childrenList.filter((child) =>
-        user.childIds?.includes(child.id)
-      );
+      return childrenList;
     }
 
     if (isTeacher) {
@@ -182,16 +153,6 @@ export default function AttendancePage({
     useState([]);
 
   // ====================================================
-  // حالة حضور المعلمة
-  // ====================================================
-
-  const [teacherStatus, setTeacherStatus] =
-    useState("");
-
-  const [teacherSavedMessage, setTeacherSavedMessage] =
-    useState(false);
-
-  // ====================================================
   // الصف الافتراضي
   // ====================================================
 
@@ -237,18 +198,6 @@ export default function AttendancePage({
       day: "numeric",
     }
   );
-
-  // ====================================================
-  // حضور المعلمة المسجل اليوم
-  // ====================================================
-
-  const currentTeacherAttendance =
-    isTeacher
-      ? getTeacherAttendance(
-          user.name,
-          todayISO
-        )
-      : null;
 
   // ====================================================
   // تغيير حالة طفل
@@ -299,7 +248,7 @@ export default function AttendancePage({
   // حفظ حضور الأطفال
   // ====================================================
 
-  const handleSaveAttendance = () => {
+  const handleSaveAttendance = async () => {
     if (!canEditAttendance) return;
 
     const attendanceMap = {};
@@ -335,6 +284,11 @@ export default function AttendancePage({
         todayISO,
         attendanceMap
       );
+
+    await saveAttendanceToApi(
+      todayISO,
+      attendanceMap
+    );
 
     // -----------------------------------------------
     // بناء التنبيهات
@@ -385,28 +339,6 @@ export default function AttendancePage({
   };
 
   // ====================================================
-  // حفظ حضور المعلمة
-  // ====================================================
-
-  const handleSaveTeacherAttendance = () => {
-    if (!isTeacher) return;
-
-    if (!teacherStatus) return;
-
-    recordTeacherAttendance(
-      user.name,
-      todayISO,
-      teacherStatus
-    );
-
-    setTeacherSavedMessage(true);
-
-    setTimeout(() => {
-      setTeacherSavedMessage(false);
-    }, 3000);
-  };
-
-  // ====================================================
   // الغياب اليوم
   // ====================================================
 
@@ -431,10 +363,7 @@ export default function AttendancePage({
   // إذا لا يوجد أطفال
   // ====================================================
 
-  if (
-    children.length === 0 &&
-    !isSecretary
-  ) {
+  if (children.length === 0) {
     return (
       <DashboardLayout
         activePage="attendance"
@@ -515,37 +444,50 @@ export default function AttendancePage({
               ? S.attendance.headerSubtitleParent
               : isTeacher
               ? S.attendance.headerSubtitleTeacher(user.classroom)
-              : isSecretary
-              ? S.attendance.headerSubtitleSecretary
               : S.attendance.headerSubtitleAdmin}
           </p>
         </div>
 
-        <div
-          className="rounded-xl px-4 py-2.5 flex items-center gap-2"
-          style={{
-            backgroundColor: "#FFFFFF",
-            border:
-              "1px solid #EDE7D9",
-          }}
-        >
-          <span
-            className="text-sm font-bold"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.print()}
+            className="no-print rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold shrink-0"
             style={{
-              color: "#C25B4A",
+              backgroundColor: "#FFFFFF",
+              border: "1px solid #4C8577",
+              color: "#4C8577",
             }}
           >
-            {todayAbsences}
-          </span>
+            <Printer size={16} />
+            {S.reports.printButton}
+          </button>
 
-          <span
-            className="text-xs"
+          <div
+            className="rounded-xl px-4 py-2.5 flex items-center gap-2"
             style={{
-              color: "#7A8580",
+              backgroundColor: "#FFFFFF",
+              border:
+                "1px solid #EDE7D9",
             }}
           >
+            <span
+              className="text-sm font-bold"
+              style={{
+                color: "#C25B4A",
+              }}
+            >
+              {todayAbsences}
+            </span>
+
+            <span
+              className="text-xs"
+              style={{
+                color: "#7A8580",
+              }}
+            >
 {S.attendance.todayAbsenceCountLabel}
-          </span>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -607,99 +549,10 @@ export default function AttendancePage({
                   color: "#7A8580",
                 }}
               >
-                {user.name}
+                {user?.fullName || user?.username}
               </span>
             )}
           </div>
-
-          {/* ==========================================
-              المعلمة تسجل حضورها
-          ========================================== */}
-
-          {isTeacher && (
-            <div className="mt-5">
-              <div className="flex flex-wrap gap-2">
-                {TEACHER_STATUS_OPTIONS.map(
-                  ({
-                    key,
-                    label,
-                    icon: Icon,
-                    color,
-                  }) => {
-                    const isActive =
-                      teacherStatus ===
-                      key ||
-                      currentTeacherAttendance?.status ===
-                        key;
-
-                    return (
-                      <button
-                        key={key}
-                        onClick={() =>
-                          setTeacherStatus(
-                            key
-                          )
-                        }
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
-                        style={{
-                          backgroundColor:
-                            isActive
-                              ? `${color}20`
-                              : "#FFFFFF",
-
-                          color: isActive
-                            ? color
-                            : "#7A8580",
-
-                          border: `1px solid ${
-                            isActive
-                              ? color
-                              : "#EDE7D9"
-                          }`,
-                        }}
-                      >
-                        <Icon
-                          size={15}
-                        />
-
-                        {label}
-                      </button>
-                    );
-                  }
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 mt-4">
-                <button
-                  onClick={
-                    handleSaveTeacherAttendance
-                  }
-                  className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white"
-                  style={{
-                    backgroundColor:
-                      "#4C8577",
-                  }}
-                >
-                  <Save size={15} />
-                  {S.attendance.saveTeacherAttendanceBtn}
-                </button>
-
-                {teacherSavedMessage && (
-                  <span
-                    className="flex items-center gap-1.5 text-xs font-medium"
-                    style={{
-                      color: "#4C8577",
-                    }}
-                  >
-                    <CheckCircle2
-                      size={15}
-                    />
-                    {S.attendance.teacherSavedMessage}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* ==========================================
               المدير والسكرتيرة يشوفوا حالة المعلمات
@@ -722,14 +575,15 @@ export default function AttendancePage({
                     (teacher) => {
                       const record =
                         getTeacherAttendance(
-                          teacher.name,
+                          teacher.PersonID ?? teacher.id,
                           todayISO
                         );
 
                       return (
                         <div
                           key={
-                            teacher.id ||
+                            teacher.PersonID ??
+                            teacher.id ??
                             teacher.name
                           }
                           className="flex items-center justify-between gap-3 p-3 rounded-xl"

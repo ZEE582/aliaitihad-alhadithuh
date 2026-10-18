@@ -16,14 +16,17 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 import NoteForm from "../notes/NoteForm";
 import { useChildren } from "../../context/ChildrenContext";
 import { useUser } from "../../context/UserContext";
+import { useAttendance } from "../../context/AttendanceContext";
 import { strings as S } from "../../constants/strings";
 
-const defaultAttendance = [
-  { date: "2026-07-14", status: "حاضر" },
-  { date: "2026-07-13", status: "حاضر" },
-  { date: "2026-07-12", status: "غائب" },
-  { date: "2026-07-11", status: "حاضر" },
-];
+const attendanceLabel = (status) => {
+  if (status === "late") return S.attendance.latestStatusLate;
+  if (status === "absent_excused") return S.attendance.latestStatusExcused;
+  if (status === "absent_unexcused") return S.attendance.latestStatusUnexcused;
+  return S.attendance.latestStatusPresent;
+};
+
+const isPresentStatus = (status) => status === "present" || status === "late";
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -93,7 +96,7 @@ function BehaviorBadge({ type }) {
 
 function AttendanceSummary({ attendance }) {
   const presentCount = attendance.filter(
-    (item) => item.status === "حاضر"
+    (item) => item.present
   ).length;
 
   const absentCount =
@@ -207,15 +210,12 @@ export default function ChildDetails({
     useChildren();
 
   const { user } = useUser();
+  const { records } = useAttendance();
+  const isSecretary = user?.roleType === "secretary";
 
   const [tab, setTab] = useState("behavior");
   const [noteFormOpen, setNoteFormOpen] =
     useState(false);
-
-  const attendance = useMemo(
-    () => defaultAttendance,
-    []
-  );
 
   // نجيب النسخة الحالية من الطفل من الـ Context
   // حتى أي ملاحظة تنضاف من صفحة الحصص تظهر هنا
@@ -223,6 +223,22 @@ export default function ChildDetails({
     childrenList.find(
       (item) => item.id === child?.id
     ) || child;
+
+  const attendance = useMemo(() => {
+    if (!currentChild) return [];
+
+    return records
+      .filter(
+        (record) => record.childId === currentChild.id
+      )
+      .slice()
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .map((record) => ({
+        date: record.date,
+        status: attendanceLabel(record.status),
+        present: isPresentStatus(record.status),
+      }));
+  }, [records, currentChild]);
 
   if (!currentChild) {
     return (
@@ -271,7 +287,7 @@ export default function ChildDetails({
       });
 
     addChildNote(currentChild.id, {
-      author: user?.name || S.childDetails.noteAuthorFallback,
+      author: user?.fullName || S.childDetails.noteAuthorFallback,
       date: today,
       type: formData.type,
       text: formData.text,
@@ -560,17 +576,19 @@ export default function ChildDetails({
                   </p>
                 </div>
 
-                <button
-                  onClick={() => setNoteFormOpen(true)}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold hover:opacity-80"
-                  style={{
-                    backgroundColor: "#EAF2EF",
-                    color: "#4C8577",
-                  }}
-                >
-                  <Plus size={15} />
-                  {S.childDetails.addNoteButton}
-                </button>
+                {!isSecretary && (
+                  <button
+                    onClick={() => setNoteFormOpen(true)}
+                    className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold hover:opacity-80"
+                    style={{
+                      backgroundColor: "#EAF2EF",
+                      color: "#4C8577",
+                    }}
+                  >
+                    <Plus size={15} />
+                    {S.childDetails.addNoteButton}
+                  </button>
+                )}
               </div>
 
               {notes.length === 0 ? (
@@ -719,9 +737,17 @@ export default function ChildDetails({
               </div>
 
               <div className="space-y-2">
+                {attendance.length === 0 && (
+                  <p
+                    className="text-xs text-center py-3"
+                    style={{ color: "#A8B0AB" }}
+                  >
+                    {S.attendance.noRecordMessage}
+                  </p>
+                )}
+
                 {attendance.map((item) => {
-                  const isPresent =
-                    item.status === "حاضر";
+                  const isPresent = item.present;
 
                   return (
                     <div

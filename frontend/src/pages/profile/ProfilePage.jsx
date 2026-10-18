@@ -10,12 +10,22 @@ import {
 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useUser } from "../../context/UserContext";
+import { useToast } from "../../context/ToastContext";
 
 import { strings as S } from "../../constants/strings";
 
+const ROLE_LABELS = {
+  admin: S.login.roleAdmin,
+  secretary: S.login.roleSecretary,
+  teacher: S.login.roleTeacher,
+  parent: S.login.roleParent,
+};
+
 export default function ProfilePage({ onNavigate, onLogout }) {
   const { user, updateUser } = useUser();
+  const { showSuccess, showError } = useToast();
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(user);
 
   const handleChange = (field) => (e) =>
@@ -24,9 +34,18 @@ export default function ProfilePage({ onNavigate, onLogout }) {
       [field]: e.target.value,
     }));
 
-  const handleSave = () => {
-    updateUser(form);
-    setEditing(false);
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateUser(form);
+      setEditing(false);
+      showSuccess(S.profile.saveSuccess);
+    } catch (err) {
+      showError(err?.message || S.profile.saveFailed);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -94,7 +113,8 @@ export default function ProfilePage({ onNavigate, onLogout }) {
                       color: "#4C8577",
                     }}
                   >
-                    {user.role}
+                    {ROLE_LABELS[user?.roleType] ||
+                      user?.roleType || ""}
                   </span>
 
                   <span
@@ -301,8 +321,8 @@ export default function ProfilePage({ onNavigate, onLogout }) {
 
                         <input
                           type="text"
-                          value={form.name}
-                          onChange={handleChange("name")}
+                          value={form.fullName || ""}
+                          onChange={handleChange("fullName")}
                           className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
                           style={{
                             border: "1px solid #E2DCCC",

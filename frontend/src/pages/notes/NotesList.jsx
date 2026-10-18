@@ -15,7 +15,6 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 import NoteForm from "./NoteForm";
 import ConfirmModal from "../../components/ConfirmModal";
 
-import { useChildren } from "../../context/ChildrenContext";
 import { useUser } from "../../context/UserContext";
 import { useNotes } from "../../context/NotesContext";
 import { strings as S } from "../../constants/strings";
@@ -120,7 +119,6 @@ export default function NotesList({
   onNavigate,
   onLogout,
 }) {
-  const { childrenList } = useChildren();
   const { user } = useUser();
 
   const {
@@ -138,38 +136,17 @@ export default function NotesList({
     useState(null);
 
   // ==========================================
-  // أطفال المعلمة
-  // ==========================================
-
-  const allowedNames =
-    user?.roleType === "teacher"
-      ? childrenList
-          .filter(
-            (child) =>
-              child.classroom === user.classroom
-          )
-          .map((child) => child.name)
-      : user?.roleType === "parent"
-      ? childrenList
-          .filter((child) =>
-            user.childIds?.includes(child.id)
-          )
-          .map((child) => child.name)
-      : null;
-
-  // ==========================================
   // فلترة الملاحظات حسب الصلاحية
   // ==========================================
 
-  const roleFilteredNotes = allowedNames
-    ? notes.filter(
-        (note) =>
-          note.noteScope === "child" &&
-          allowedNames.includes(note.childName)
-      )
-    : notes.filter(
-        (note) => note.noteScope === "child"
-      );
+  const roleFilteredNotes =
+    user?.roleType === "admin"
+      ? notes
+      : notes.filter(
+          (note) =>
+            note.senderId === user?.id ||
+            note.receiverId === user?.id
+        );
 
   const filtered = roleFilteredNotes.filter(
     (note) => {
@@ -178,9 +155,9 @@ export default function NotesList({
       if (!query) return true;
 
       return (
-        note.childName.includes(query) ||
-        note.text.includes(query) ||
-        note.author.includes(query)
+        (note.childName || "").includes(query) ||
+        (note.text || "").includes(query) ||
+        (note.author || "").includes(query)
       );
     }
   );
@@ -199,13 +176,9 @@ export default function NotesList({
       return true;
     }
 
-    // المعلمة تستطيع تعديل/حذف ملاحظاتها
-    // الخاصة بأطفال صفها فقط
+    // المعلمة تستطيع تعديل/حذف ملاحظاتها التي أرسلتها
     if (user?.roleType === "teacher") {
-      return (
-        note.author === user.name &&
-        allowedNames?.includes(note.childName)
-      );
+      return note.senderId === user.id;
     }
 
     return false;
@@ -246,15 +219,6 @@ export default function NotesList({
   // ==========================================
 
   const handleSave = (formData) => {
-    // منع المعلمة من إضافة ملاحظة لطفل
-    // خارج صفها
-    if (
-      user?.roleType === "teacher" &&
-      !allowedNames?.includes(formData.childName)
-    ) {
-      return;
-    }
-
     if (editingNote) {
       if (!canManageNote(editingNote)) {
         return;
@@ -267,7 +231,9 @@ export default function NotesList({
     } else {
       addNote(
         formData,
-        user?.name || S.notes.defaultUserName
+        user?.fullName ||
+        user?.username ||
+        S.notes.defaultUserName
       );
     }
 

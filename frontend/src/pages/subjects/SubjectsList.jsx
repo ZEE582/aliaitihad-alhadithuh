@@ -5,53 +5,29 @@ import {
   Pencil,
   Trash2,
   BookOpen,
-  Users,
   Layers3,
 } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import SubjectForm from "./SubjectForm";
 import ConfirmModal from "../../components/ConfirmModal";
+import { useSubjects } from "../../context/SubjectsContext";
+import { useUser } from "../../context/UserContext";
 import { strings as S } from "../../constants/strings";
 
-const initialSubjects = [
-  {
-    id: 1,
-    name: "اللغة العربية",
-    teachersCount: 3,
-    color: "#4C8577",
-  },
-  {
-    id: 2,
-    name: "الرياضيات",
-    teachersCount: 2,
-    color: "#6E8FB0",
-  },
-  {
-    id: 3,
-    name: "التربية الفنية",
-    teachersCount: 1,
-    color: "#E8B24D",
-  },
-  {
-    id: 4,
-    name: "النشاط الحركي",
-    teachersCount: 2,
-    color: "#C25B4A",
-  },
-];
+export default function SubjectsList({ onNavigate, onLogout }) {
+  const { subjectsList, addSubject, updateSubject, deleteSubject } = useSubjects();
+  const { user } = useUser();
+  const canWrite = user?.roleType === "admin";
 
-export default function SubjectsList({
-  onNavigate,
-  onLogout,
-}) {
-  const [subjects, setSubjects] = useState(initialSubjects);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
 
-  const filtered = subjects.filter((s) =>
-    s.name.includes(search)
+  const filtered = subjectsList.filter((s) =>
+    (s.name || "").includes(search) ||
+    (s.level || "").includes(search) ||
+    (s.semester || "").includes(search)
   );
 
   const handleAddClick = () => {
@@ -64,42 +40,21 @@ export default function SubjectsList({
     setFormOpen(true);
   };
 
-  const handleSave = (formData) => {
-    if (editingSubject) {
-      setSubjects((prev) =>
-        prev.map((s) =>
-          s.id === editingSubject.id
-            ? { ...s, ...formData }
-            : s
-        )
-      );
-    } else {
-      setSubjects((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          teachersCount: 0,
-          color: "#4C8577",
-          ...formData,
-        },
-      ]);
+  const handleSave = async (formData) => {
+    const result = editingSubject
+      ? await updateSubject(editingSubject.id, formData)
+      : await addSubject(formData);
+
+    if (result && !result.error) {
+      setFormOpen(false);
+      setEditingSubject(null);
     }
-
-    setFormOpen(false);
-    setEditingSubject(null);
   };
 
-  const handleDelete = (id) => {
-    setDeleteTarget(id);
-  };
-
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteTarget) {
-      setSubjects((prev) =>
-        prev.filter((s) => s.id !== deleteTarget)
-      );
+      await deleteSubject(deleteTarget);
     }
-
     setDeleteTarget(null);
   };
 
@@ -111,13 +66,9 @@ export default function SubjectsList({
       pageTitle={S.subjects.pageTitle}
     >
       <div dir="rtl">
-        {/* Header */}
         <div
           className="rounded-3xl p-6 mb-5 relative overflow-hidden"
-          style={{
-            backgroundColor: "#F4F8F7",
-            border: "1px solid #E2ECE8",
-          }}
+          style={{ backgroundColor: "#F4F8F7", border: "1px solid #E2ECE8" }}
         >
           <div
             className="absolute -left-10 -top-10 w-28 h-28 rounded-full"
@@ -130,24 +81,15 @@ export default function SubjectsList({
                 className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
                 style={{ backgroundColor: "#EAF2EF" }}
               >
-                <Layers3
-                  size={25}
-                  style={{ color: "#4C8577" }}
-                />
+                <Layers3 size={25} style={{ color: "#4C8577" }} />
               </div>
 
               <div>
-                <h2
-                  className="text-lg font-bold"
-                  style={{ color: "#2F3A36" }}
-                >
+                <h2 className="text-lg font-bold" style={{ color: "#2F3A36" }}>
                   {S.subjects.headerTitle}
                 </h2>
 
-                <p
-                  className="text-xs mt-1"
-                  style={{ color: "#7A8580" }}
-                >
+                <p className="text-xs mt-1" style={{ color: "#7A8580" }}>
                   {S.subjects.headerDescription}
                 </p>
               </div>
@@ -155,27 +97,20 @@ export default function SubjectsList({
 
             <div
               className="hidden sm:flex items-center gap-2 rounded-xl px-3 py-2"
-              style={{
-                backgroundColor: "#FFFFFF",
-                border: "1px solid #E2ECE8",
-              }}
+              style={{ backgroundColor: "#FFFFFF", border: "1px solid #E2ECE8" }}
             >
-              <BookOpen
-                size={15}
-                style={{ color: "#4C8577" }}
-              />
+              <BookOpen size={15} style={{ color: "#4C8577" }} />
 
               <span
                 className="text-xs font-semibold"
                 style={{ color: "#4A5551" }}
               >
-                {S.subjects.subjectsCount(subjects.length)}
+                {S.subjects.subjectsCount(subjectsList.length)}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Search + Add */}
         <div className="flex items-center justify-between mb-5 gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search
@@ -198,22 +133,22 @@ export default function SubjectsList({
             />
           </div>
 
-          <button
-            type="button"
-            onClick={handleAddClick}
-            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0 hover:opacity-90"
-            style={{
-              backgroundColor: "#4C8577",
-              boxShadow:
-                "0 6px 16px rgba(76,133,119,0.14)",
-            }}
-          >
-            <Plus size={18} />
-            {S.subjects.addSubjectButton}
-          </button>
+          {canWrite && (
+            <button
+              type="button"
+              onClick={handleAddClick}
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0 hover:opacity-90"
+              style={{
+                backgroundColor: "#4C8577",
+                boxShadow: "0 6px 16px rgba(76,133,119,0.14)",
+              }}
+            >
+              <Plus size={18} />
+              {S.subjects.addSubjectButton}
+            </button>
+          )}
         </div>
 
-        {/* Subjects */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((s) => (
             <div
@@ -222,80 +157,60 @@ export default function SubjectsList({
               style={{
                 backgroundColor: "#FFFFFF",
                 border: "1px solid #EDE7D9",
-                boxShadow:
-                  "0 6px 20px rgba(47,58,54,0.04)",
+                boxShadow: "0 6px 20px rgba(47,58,54,0.04)",
               }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                  style={{
-                    backgroundColor: `${s.color}1A`,
-                  }}
+                  style={{ backgroundColor: "#4C85771A" }}
                 >
-                  <BookOpen
-                    size={21}
-                    style={{ color: s.color }}
-                  />
+                  <BookOpen size={21} style={{ color: "#4C8577" }} />
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleEditClick(s)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[#F4F8F7]"
-                    style={{ color: "#4C8577" }}
-                  >
-                    <Pencil size={15} />
-                  </button>
+                {canWrite && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleEditClick(s)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[#F4F8F7]"
+                      style={{ color: "#4C8577" }}
+                    >
+                      <Pencil size={15} />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(s.id)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[#FCF0EE]"
-                    style={{ color: "#C25B4A" }}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(s.id)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[#FCF0EE]"
+                      style={{ color: "#C25B4A" }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="mt-5">
-                <h3
-                  className="text-sm font-bold"
-                  style={{ color: "#2F3A36" }}
-                >
+                <h3 className="text-sm font-bold" style={{ color: "#2F3A36" }}>
                   {s.name}
                 </h3>
 
-                <div
-                  className="flex items-center gap-1.5 mt-2"
-                  style={{ color: "#A8B0AB" }}
-                >
-                  <Users size={13} />
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  <span
+                    className="text-xs rounded-lg px-2 py-1"
+                    style={{ backgroundColor: "#F4F8F7", color: "#4A5551" }}
+                  >
+                    {S.subjectForm.labelLevel}: {s.level}
+                  </span>
 
-                  <p className="text-xs">
-                    {S.subjects.teachersCount(s.teachersCount)}
-                  </p>
+                  <span
+                    className="text-xs rounded-lg px-2 py-1"
+                    style={{ backgroundColor: "#FCFAF4", color: "#7A8580" }}
+                  >
+                    {S.subjectForm.labelSemester}: {s.semester}
+                  </span>
                 </div>
-              </div>
-
-              <div
-                className="h-1 rounded-full mt-5"
-                style={{
-                  backgroundColor: `${s.color}30`,
-                }}
-              >
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${Math.max(
-                      25,
-                      Math.min(s.teachersCount * 25, 100)
-                    )}%`,
-                    backgroundColor: s.color,
-                  }}
-                />
               </div>
             </div>
           ))}
@@ -303,33 +218,23 @@ export default function SubjectsList({
           {filtered.length === 0 && (
             <div
               className="col-span-full rounded-2xl py-12 flex flex-col items-center justify-center"
-              style={{
-                backgroundColor: "#FFFFFF",
-                border: "1px solid #EDE7D9",
-              }}
+              style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
             >
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
                 style={{ backgroundColor: "#F4F8F7" }}
               >
-                <Search
-                  size={20}
-                  style={{ color: "#A8B0AB" }}
-                />
+                <Search size={20} style={{ color: "#A8B0AB" }} />
               </div>
 
-              <p
-                className="text-sm font-medium"
-                style={{ color: "#7A8580" }}
-              >
+              <p className="text-sm font-medium" style={{ color: "#7A8580" }}>
                 {S.subjects.noResultsFound}
               </p>
             </div>
           )}
         </div>
 
-        {/* Form */}
-        {formOpen && (
+        {canWrite && formOpen && (
           <SubjectForm
             initialData={editingSubject}
             onClose={() => {

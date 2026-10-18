@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Download,
   Printer,
@@ -11,6 +11,10 @@ import {
 import DashboardLayout from "../../layouts/DashboardLayout";
 
 import { strings as S } from "../../constants/strings";
+
+import { useUser } from "../../context/UserContext";
+import { useChildren } from "../../context/ChildrenContext";
+import { useAttendance } from "../../context/AttendanceContext";
 
 const reportTypes = [
   {
@@ -34,16 +38,113 @@ const reportTypes = [
 ];
 
 export default function ReportsPage({ onNavigate, onLogout }) {
+  const { user } = useUser();
+  const { childrenList } = useChildren();
+  const { records } = useAttendance();
+
   const [reportType, setReportType] = useState("attendance");
   const [classroom, setClassroom] = useState("الكل");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [reportData, setReportData] = useState(null);
+  const [reportMessage, setReportMessage] = useState("");
+  const [generatedAt, setGeneratedAt] = useState("");
+
+  const isParent = user?.roleType === "parent";
+  const isTeacher = user?.roleType === "teacher";
 
   const selectedReport = reportTypes.find(
     (report) => report.key === reportType
   );
 
   const SelectedIcon = selectedReport?.icon || FileBarChart;
+
+  const visibleChildren = useMemo(() => {
+    if (isTeacher) {
+      return childrenList.filter(
+        (child) => child.classroom === user.classroom
+      );
+    }
+    return childrenList;
+  }, [childrenList, isTeacher, user]);
+
+  const classrooms = useMemo(() => {
+    if (isParent || isTeacher) return [];
+    return [
+      ...new Set(
+        visibleChildren
+          .map((child) => child.classroom)
+          .filter(Boolean)
+      ),
+    ];
+  }, [visibleChildren, isParent, isTeacher]);
+
+  const filteredChildren = useMemo(() => {
+    if (isParent || isTeacher) return visibleChildren;
+    return classroom === "الكل"
+      ? visibleChildren
+      : visibleChildren.filter(
+          (child) => child.classroom === classroom
+        );
+  }, [visibleChildren, classroom, isParent, isTeacher]);
+
+  const inDateRange = (date) => {
+    if (fromDate && date < fromDate) return false;
+    if (toDate && date > toDate) return false;
+    return true;
+  };
+
+  const handleShowReport = () => {
+    setReportMessage("");
+
+    if (reportType === "behavior") {
+      setReportData(null);
+      setReportMessage(S.reports.reportBehaviorUnavailable);
+      return;
+    }
+
+    if (reportType === "children") {
+      const rows = filteredChildren.map((child) => ({
+        name: child.name,
+        classroom: child.classroom,
+        status: child.status,
+      }));
+      setReportData(rows);
+      setGeneratedAt(new Date().toLocaleDateString("ar-EG"));
+      return;
+    }
+
+    const rows = filteredChildren.map((child) => {
+      const childRecords = records.filter(
+        (record) =>
+          record.childId === child.id &&
+          inDateRange(record.date)
+      );
+
+      return {
+        name: child.name,
+        present: childRecords.filter(
+          (record) => record.status === "present"
+        ).length,
+        late: childRecords.filter(
+          (record) => record.status === "late"
+        ).length,
+        excused: childRecords.filter(
+          (record) => record.status === "absent_excused"
+        ).length,
+        unexcused: childRecords.filter(
+          (record) => record.status === "absent_unexcused"
+        ).length,
+      };
+    });
+
+    setReportData(rows);
+    setGeneratedAt(new Date().toLocaleDateString("ar-EG"));
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
 
   return (
     <DashboardLayout
@@ -52,6 +153,13 @@ export default function ReportsPage({ onNavigate, onLogout }) {
       onLogout={onLogout}
       pageTitle={S.reports.pageTitle}
     >
+      <style>{`
+        @media print {
+          .print-only { display: block !important; }
+          .print-table-caption { display: none; }
+        }
+      `}</style>
+
       {/* Header */}
       <div className="mb-6">
         <div
@@ -196,32 +304,33 @@ export default function ReportsPage({ onNavigate, onLogout }) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Classroom */}
-          <div>
-            <label
-              className="block text-xs font-semibold mb-1.5"
-              style={{ color: "#7A8580" }}
-            >
-              {S.reports.classroomLabel}
-            </label>
+          {/* Classroom (hidden for parent/teacher - always own scope) */}
+          {!isParent && !isTeacher && (
+            <div>
+              <label
+                className="block text-xs font-semibold mb-1.5"
+                style={{ color: "#7A8580" }}
+              >
+                {S.reports.classroomLabel}
+              </label>
 
-            <select
-              value={classroom}
-              onChange={(e) => setClassroom(e.target.value)}
-              className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
-              style={{
-                border: "1px solid #E2DCCC",
-                backgroundColor: "#FCFAF4",
-                color: "#2F3A36",
-              }}
-            >
-              <option>الكل</option>
-              <option>صف الفراشات</option>
-              <option>صف النجوم</option>
-              <option>صف القمر</option>
-              <option>صف الشمس</option>
-            </select>
-          </div>
+              <select
+                value={classroom}
+                onChange={(e) => setClassroom(e.target.value)}
+                className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
+                style={{
+                  border: "1px solid #E2DCCC",
+                  backgroundColor: "#FCFAF4",
+                  color: "#2F3A36",
+                }}
+              >
+                <option>الكل</option>
+                {classrooms.map((room) => (
+                  <option key={room}>{room}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* From */}
           <div>
@@ -269,9 +378,10 @@ export default function ReportsPage({ onNavigate, onLogout }) {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-3 mt-5 pt-5 border-t" style={{ borderColor: "#F1EDE3" }}>
+        <div className="no-print flex flex-wrap gap-3 mt-5 pt-5 border-t" style={{ borderColor: "#F1EDE3" }}>
           <button
             type="button"
+            onClick={handleShowReport}
             className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white"
             style={{
               backgroundColor: "#4C8577",
@@ -284,6 +394,7 @@ export default function ReportsPage({ onNavigate, onLogout }) {
 
           <button
             type="button"
+            onClick={handleExportPdf}
             className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-gray-50"
             style={{
               border: "1px solid #E2DCCC",
@@ -297,6 +408,7 @@ export default function ReportsPage({ onNavigate, onLogout }) {
 
           <button
             type="button"
+            onClick={() => window.print()}
             className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-gray-50"
             style={{
               border: "1px solid #E2DCCC",
@@ -311,39 +423,237 @@ export default function ReportsPage({ onNavigate, onLogout }) {
       </div>
 
       {/* Results Preview */}
-      <div
-        className="rounded-3xl p-10 min-h-[260px] flex flex-col items-center justify-center text-center"
-        style={{
-          backgroundColor: "#FFFFFF",
-          border: "1px solid #EDE7D9",
-        }}
-      >
+      {reportData === null ? (
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-          style={{ backgroundColor: "#F4F8F7" }}
+          className="rounded-3xl p-10 min-h-[260px] flex flex-col items-center justify-center text-center"
+          style={{
+            backgroundColor: "#FFFFFF",
+            border: "1px solid #EDE7D9",
+          }}
         >
-          <SelectedIcon size={27} style={{ color: "#4C8577" }} />
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+            style={{ backgroundColor: "#F4F8F7" }}
+          >
+            <SelectedIcon size={27} style={{ color: "#4C8577" }} />
+          </div>
+
+          <h3
+            className="text-sm font-bold"
+            style={{ color: "#2F3A36" }}
+          >
+            {selectedReport?.label}
+          </h3>
+
+          <p
+            className="text-xs mt-2 max-w-sm leading-6"
+            style={{ color: "#A8B0AB" }}
+          >
+            {reportMessage || S.reports.previewHintBefore}
+            {!reportMessage && (
+              <>
+                <span style={{ color: "#4C8577", fontWeight: 600 }}>
+                  {" "}
+                  {S.reports.previewHintAction}
+                </span>{" "}
+                {S.reports.previewHintAfter}
+              </>
+            )}
+          </p>
         </div>
-
-        <h3
-          className="text-sm font-bold"
-          style={{ color: "#2F3A36" }}
+      ) : (
+        <div
+          className="rounded-3xl p-6"
+          style={{
+            backgroundColor: "#FFFFFF",
+            border: "1px solid #EDE7D9",
+          }}
         >
-          {selectedReport?.label}
-        </h3>
+          <div className="print-only mb-4 hidden">
+            <h2 style={{ color: "#2F3A36", fontSize: 18, fontWeight: 700 }}>
+              {selectedReport?.label}
+            </h2>
+            <p style={{ color: "#7A8580", fontSize: 13 }}>
+              {generatedAt}
+            </p>
+          </div>
 
-        <p
-          className="text-xs mt-2 max-w-sm leading-6"
-          style={{ color: "#A8B0AB" }}
-        >
-          {S.reports.previewHintBefore}
-          <span style={{ color: "#4C8577", fontWeight: 600 }}>
-            {" "}
-            {S.reports.previewHintAction}
-          </span>{" "}
-          {S.reports.previewHintAfter}
-        </p>
-      </div>
+          {reportData.length === 0 ? (
+            <p
+              className="text-sm text-center py-10"
+              style={{ color: "#A8B0AB" }}
+            >
+              {S.reports.reportEmpty}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              {reportType === "children" ? (
+                <table
+                  className="w-full text-sm"
+                  style={{ borderCollapse: "collapse" }}
+                >
+                  <thead>
+                    <tr
+                      style={{
+                        backgroundColor: "#F4F8F7",
+                        color: "#2F3A36",
+                      }}
+                    >
+                      <th
+                        className="text-right py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colChild}
+                      </th>
+                      <th
+                        className="text-right py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colClassroom}
+                      </th>
+                      <th
+                        className="text-center py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colStatus}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.map((row, index) => (
+                      <tr
+                        key={index}
+                        style={{
+                          backgroundColor:
+                            index % 2 === 0 ? "#FFFFFF" : "#FBFDFC",
+                        }}
+                      >
+                        <td
+                          className="py-3 px-4"
+                          style={{ color: "#4A5551" }}
+                        >
+                          {row.name}
+                        </td>
+                        <td
+                          className="py-3 px-4"
+                          style={{ color: "#7A8580" }}
+                        >
+                          {row.classroom}
+                        </td>
+                        <td
+                          className="text-center py-3 px-4"
+                          style={{ color: "#4C8577" }}
+                        >
+                          {row.status}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table
+                  className="w-full text-sm"
+                  style={{ borderCollapse: "collapse" }}
+                >
+                  <thead>
+                    <tr
+                      style={{
+                        backgroundColor: "#F4F8F7",
+                        color: "#2F3A36",
+                      }}
+                    >
+                      <th
+                        className="text-right py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colChild}
+                      </th>
+                      <th
+                        className="text-center py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colPresent}
+                      </th>
+                      <th
+                        className="text-center py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colLate}
+                      </th>
+                      <th
+                        className="text-center py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colExcused}
+                      </th>
+                      <th
+                        className="text-center py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colUnexcused}
+                      </th>
+                      <th
+                        className="text-center py-3 px-4 font-semibold"
+                        style={{ borderBottom: "1px solid #E2ECE8" }}
+                      >
+                        {S.reports.colTotal}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.map((row, index) => (
+                      <tr
+                        key={index}
+                        style={{
+                          backgroundColor:
+                            index % 2 === 0 ? "#FFFFFF" : "#FBFDFC",
+                        }}
+                      >
+                        <td
+                          className="py-3 px-4"
+                          style={{ color: "#4A5551" }}
+                        >
+                          {row.name}
+                        </td>
+                        <td
+                          className="text-center py-3 px-4"
+                          style={{ color: "#4A5551" }}
+                        >
+                          {row.present}
+                        </td>
+                        <td
+                          className="text-center py-3 px-4"
+                          style={{ color: "#4A5551" }}
+                        >
+                          {row.late}
+                        </td>
+                        <td
+                          className="text-center py-3 px-4"
+                          style={{ color: "#4A5551" }}
+                        >
+                          {row.excused}
+                        </td>
+                        <td
+                          className="text-center py-3 px-4"
+                          style={{ color: "#4A5551" }}
+                        >
+                          {row.unexcused}
+                        </td>
+                        <td
+                          className="text-center py-3 px-4 font-semibold"
+                          style={{ color: "#C25B4A" }}
+                        >
+                          {row.excused + row.unexcused}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </DashboardLayout>
   );
 }

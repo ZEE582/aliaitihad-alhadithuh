@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { Search, Plus, Pencil, Eye, Trash2 } from "lucide-react";
+import { Search, Plus, Pencil, Eye, Trash2, Printer } from "lucide-react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import ChildForm from "./ChildForm";
 import ConfirmModal from "../../components/ConfirmModal";
 import { useChildren } from "../../context/ChildrenContext";
+import { useUser } from "../../context/UserContext";
 import { strings as S } from "../../constants/strings";
 function StatusBadge({ status, onClick }) {
   const isActive = status === "نشط";
+  const isButton = typeof onClick === "function";
 
-  return (
-    <button
-      onClick={onClick}
+  const content = (
+    <span
       className="text-xs font-medium px-2.5 py-1 rounded-full"
       style={{
         backgroundColor: isActive ? "#4C857720" : "#C25B4A20",
@@ -19,6 +20,14 @@ function StatusBadge({ status, onClick }) {
       title={S.children.toggleStatusTitle}
     >
       {status}
+    </span>
+  );
+
+  if (!isButton) return content;
+
+  return (
+    <button onClick={onClick} style={{ border: "none", background: "none", padding: 0 }}>
+      {content}
     </button>
   );
 }
@@ -29,8 +38,10 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
     addChild,
     updateChild,
     deleteChild,
-    toggleChildStatus,
   } = useChildren();
+
+  const { user } = useUser();
+  const isSecretary = user?.roleType === "secretary";
 
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
@@ -39,8 +50,8 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
 
   const filtered = childrenList.filter(
     (c) =>
-      c.name.includes(search) ||
-      c.classroom.includes(search)
+      (c.name || "").includes(search) ||
+      (c.classroom || "").includes(search)
   );
 
   const handleAddClick = () => {
@@ -53,15 +64,15 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
     setFormOpen(true);
   };
 
-  const handleSave = (formData) => {
-    if (editingChild) {
-      updateChild(editingChild.id, formData);
-    } else {
-      addChild(formData);
-    }
+  const handleSave = async (formData) => {
+    const result = editingChild
+      ? await updateChild(editingChild.id, formData)
+      : await addChild(formData);
 
-    setFormOpen(false);
-    setEditingChild(null);
+    if (result && !result.error) {
+      setFormOpen(false);
+      setEditingChild(null);
+    }
   };
 
   const handleDelete = (childId) => {
@@ -106,13 +117,28 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
         </div>
 
         <button
-          onClick={handleAddClick}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0"
-          style={{ backgroundColor: "#4C8577" }}
+          onClick={() => window.print()}
+          className="no-print flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shrink-0"
+          style={{
+            border: "1px solid #4C8577",
+            color: "#4C8577",
+            backgroundColor: "#FFFFFF",
+          }}
         >
-          <Plus size={18} />
-          {S.children.addChildButton}
+          <Printer size={18} />
+          {S.reports.printButton}
         </button>
+
+        {!isSecretary && (
+          <button
+            onClick={handleAddClick}
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0"
+            style={{ backgroundColor: "#4C8577" }}
+          >
+            <Plus size={18} />
+            {S.children.addChildButton}
+          </button>
+        )}
       </div>
 
       <div
@@ -209,10 +235,7 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
                 </td>
 
                 <td className="px-5 py-3">
-                  <StatusBadge
-                    status={child.status}
-                    onClick={() => toggleChildStatus(child.id)}
-                  />
+                  <StatusBadge status={child.status} />
                 </td>
 
                 <td className="px-5 py-3">
@@ -227,21 +250,25 @@ export default function ChildrenList({ onNavigate, onOpenChild, onLogout }) {
                       <Eye size={16} />
                     </button>
 
-                    <button
-                      onClick={() => handleEditClick(child)}
-                      className="p-1.5 rounded-lg hover:opacity-70"
-                      style={{ color: "#4C8577" }}
-                    >
-                      <Pencil size={16} />
-                    </button>
+                    {!isSecretary && (
+                      <>
+                        <button
+                          onClick={() => handleEditClick(child)}
+                          className="p-1.5 rounded-lg hover:opacity-70"
+                          style={{ color: "#4C8577" }}
+                        >
+                          <Pencil size={16} />
+                        </button>
 
-                    <button
-                      onClick={() => handleDelete(child.id)}
-                      className="p-1.5 rounded-lg hover:opacity-70"
-                      style={{ color: "#C25B4A" }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                        <button
+                          onClick={() => handleDelete(child.id)}
+                          className="p-1.5 rounded-lg hover:opacity-70"
+                          style={{ color: "#C25B4A" }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>

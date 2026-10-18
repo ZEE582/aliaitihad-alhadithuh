@@ -34,9 +34,7 @@ export default function MyChildPage({
   const { teachersList } = useTeachers();
   const { getAbsenceCount } = useAttendance();
 
-  const myChildren = childrenList.filter((child) =>
-    user.childIds?.includes(child.id)
-  );
+  const myChildren = childrenList;
 
   if (myChildren.length === 0) {
     return (
@@ -107,7 +105,7 @@ export default function MyChildPage({
           className="text-2xl font-bold"
           style={{ color: "#2F3A36" }}
         >
-          {S.myChild.welcomeMessage(user.name?.split(" ")[0])}
+                    {S.myChild.welcomeMessage((user.fullName || user.username || "").split(" ")[0])}
         </h1>
 
         <p
@@ -130,11 +128,7 @@ export default function MyChildPage({
         }`}
       >
         {myChildren.map((child) => {
-          const teacher = teachersList.find(
-            (teacherItem) =>
-              teacherItem.classroom ===
-              child.classroom
-          );
+          const teacher = teachersList[0];
 
           const absenceCount =
             getAbsenceCount(child.id);
@@ -327,9 +321,21 @@ export default function MyChildPage({
                             color: "#2F3A36",
                           }}
                         >
-                          {teacher?.name ||
+                          {teacher?.person?.Name ||
+                            [teacher?.F_name, teacher?.L_name].filter(Boolean).join(" ") ||
                             S.myChild.teacherFallback}
                         </p>
+
+                        {teacher?.subject?.Subject_name && (
+                          <p
+                            className="text-xs mt-0.5"
+                            style={{
+                              color: "#A8B0AB",
+                            }}
+                          >
+                            {teacher.subject.Subject_name}
+                          </p>
+                        )}
                       </div>
                     </div>
 

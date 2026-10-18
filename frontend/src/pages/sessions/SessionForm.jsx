@@ -1,66 +1,90 @@
 import { useState } from "react";
-import {
-  X,
-  CalendarDays,
-  Clock,
-  BookOpen,
-  School,
-  UserRound,
-} from "lucide-react";
+import { X, CalendarClock } from "lucide-react";
 
+import { useSubjects } from "../../context/SubjectsContext";
+import { useClasses } from "../../context/ClassesContext";
+import { useTeachers } from "../../context/TeachersContext";
 import { strings as S } from "../../constants/strings";
 
-const days = [
-  "الأحد",
-  "الاثنين",
-  "الثلاثاء",
-  "الأربعاء",
-  "الخميس",
+const WEEKDAYS = [
+  S.sessions.days.sunday,
+  S.sessions.days.monday,
+  S.sessions.days.tuesday,
+  S.sessions.days.wednesday,
+  S.sessions.days.thursday,
+  S.sessions.days.friday,
+  S.sessions.days.saturday,
 ];
 
-export default function SessionForm({
-  initialData = null,
-  onClose,
-  onSave,
-}) {
+const dayNameFromDate = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
+  return WEEKDAYS[d.getDay()] || "";
+};
+
+export default function SessionForm({ initialData = null, onClose, onSave }) {
   const isEdit = !!initialData;
 
+  const { subjectsList } = useSubjects();
+  const { sectionsList } = useClasses();
+  const { teachersList } = useTeachers();
+
   const [form, setForm] = useState({
-    day: initialData?.day || days[0],
-    time: initialData?.time || "",
-    subject: initialData?.subject || "",
-    classroom: initialData?.classroom || "",
-    teacher: initialData?.teacher || "",
+    SubjectID: initialData?.subjectId ?? "",
+    section_id: initialData?.sectionId ?? "",
+    teacher_PersonID: initialData?.teacherId ?? "",
+    Date: initialData?.date || "",
+    Period: initialData?.period || "",
+    Duration: initialData?.duration || "",
+    Notes: initialData?.notes || "",
   });
 
   const handleChange = (field) => (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave && onSave(form);
+    if (!form.SubjectID || !form.section_id || !form.Date || !form.Period) return;
+
+    if (onSave) {
+      onSave({
+        SubjectID: Number(form.SubjectID),
+        section_id: Number(form.section_id),
+        teacher_PersonID:
+          form.teacher_PersonID === "" ? null : Number(form.teacher_PersonID),
+        Date: form.Date,
+        day: dayNameFromDate(form.Date),
+        Period: form.Period.trim(),
+        Duration: form.Duration.trim() || null,
+        Notes: form.Notes.trim() || null,
+      });
+    }
   };
+
+  const inputStyle = {
+    border: "1px solid #E2DCCC",
+    backgroundColor: "#FCFAF4",
+    color: "#2F3A36",
+  };
+  const labelStyle = { color: "#2F3A36" };
 
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "#00000040" }}
     >
       <div
-        className="w-full max-w-lg rounded-3xl overflow-hidden"
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl"
         style={{
           backgroundColor: "#FFFFFF",
           boxShadow: "0 20px 60px rgba(47,58,54,0.15)",
         }}
       >
-        {/* Header */}
         <div
-          className="p-6"
+          className="p-6 sticky top-0 z-10"
           style={{
             backgroundColor: "#FCFAF4",
             borderBottom: "1px solid #EDE7D9",
@@ -72,288 +96,164 @@ export default function SessionForm({
                 className="w-12 h-12 rounded-2xl flex items-center justify-center"
                 style={{ backgroundColor: "#EAF2EF" }}
               >
-                <CalendarDays
-                  size={22}
-                  style={{ color: "#4C8577" }}
-                />
+                <CalendarClock size={22} style={{ color: "#4C8577" }} />
               </div>
 
               <div>
-                <h3
-                  className="text-lg font-bold"
-                  style={{ color: "#2F3A36" }}
-                >
+                <h3 className="text-lg font-bold" style={{ color: "#2F3A36" }}>
                   {isEdit
                     ? S.sessionForm.headerTitleEdit
                     : S.sessionForm.headerTitleAdd}
                 </h3>
 
-                <p
-                  className="text-xs mt-1"
-                  style={{ color: "#7A8580" }}
-                >
+                <p className="text-xs mt-1" style={{ color: "#7A8580" }}>
                   {S.sessionForm.headerSubtitle}
                 </p>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={onClose}
               className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-70"
-              style={{
-                color: "#A8B0AB",
-                backgroundColor: "#FFFFFF",
-              }}
+              style={{ color: "#A8B0AB", backgroundColor: "#FFFFFF" }}
             >
               <X size={19} />
             </button>
           </div>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="p-6"
-        >
-          {/* Preview */}
-          <div
-            className="rounded-2xl p-4 mb-5"
-            style={{
-              backgroundColor: "#F4F8F7",
-              border: "1px solid #E2ECE8",
-            }}
-          >
-            <p
-              className="text-[11px] font-semibold mb-3"
-              style={{ color: "#7A8580" }}
-            >
-              {S.sessionForm.previewLabel}
-            </p>
-
-            <div className="flex items-center gap-3">
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-                style={{
-                  backgroundColor: "#EAF2EF",
-                  color: "#4C8577",
-                }}
-              >
-                <BookOpen size={19} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-sm font-bold truncate"
-                  style={{ color: "#2F3A36" }}
-                >
-                  {form.subject || S.sessionForm.previewSubjectFallback}
-                </p>
-
-                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                  <span
-                    className="text-xs"
-                    style={{ color: "#7A8580" }}
-                  >
-                    {form.day}
-                  </span>
-
-                  <span
-                    className="text-xs"
-                    style={{ color: "#7A8580" }}
-                  >
-                    {form.time || S.sessionForm.previewTimeFallback}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                  <span
-                    className="text-xs"
-                    style={{ color: "#7A8580" }}
-                  >
-                    {form.classroom || S.sessionForm.previewClassroomFallback}
-                  </span>
-
-                  <span
-                    className="text-xs"
-                    style={{ color: "#7A8580" }}
-                  >
-                    {form.teacher || S.sessionForm.previewTeacherFallback}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {/* Day */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label
-                className="block text-sm font-semibold mb-1.5"
-                style={{ color: "#2F3A36" }}
-              >
-                {S.sessionForm.labelDay}
-              </label>
-
-              <div className="relative">
-                <CalendarDays
-                  size={16}
-                  className="absolute top-1/2 -translate-y-1/2 right-3 pointer-events-none"
-                  style={{ color: "#A8B0AB" }}
-                />
-
-                <select
-                  value={form.day}
-                  onChange={handleChange("day")}
-                  className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none appearance-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FCFAF4",
-                    color: "#2F3A36",
-                  }}
-                >
-                  {days.map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Time */}
-            <div>
-              <label
-                className="block text-sm font-semibold mb-1.5"
-                style={{ color: "#2F3A36" }}
-              >
-                {S.sessionForm.labelTime}
-              </label>
-
-              <div className="relative">
-                <Clock
-                  size={16}
-                  className="absolute top-1/2 -translate-y-1/2 right-3"
-                  style={{ color: "#A8B0AB" }}
-                />
-
-                <input
-                  type="text"
-                  placeholder={S.sessionForm.placeholderTime}
-                  value={form.time}
-                  onChange={handleChange("time")}
-                  required
-                  className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FCFAF4",
-                    color: "#2F3A36",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Subject */}
-            <div>
-              <label
-                className="block text-sm font-semibold mb-1.5"
-                style={{ color: "#2F3A36" }}
-              >
+              <label className="block text-sm font-semibold mb-1.5" style={labelStyle}>
                 {S.sessionForm.labelSubject}
               </label>
 
-              <div className="relative">
-                <BookOpen
-                  size={16}
-                  className="absolute top-1/2 -translate-y-1/2 right-3"
-                  style={{ color: "#A8B0AB" }}
-                />
-
-                <input
-                  type="text"
-                  value={form.subject}
-                  onChange={handleChange("subject")}
-                  required
-                  placeholder={S.sessionForm.placeholderSubject}
-                  className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FCFAF4",
-                    color: "#2F3A36",
-                  }}
-                />
-              </div>
+              <select
+                value={form.SubjectID}
+                onChange={handleChange("SubjectID")}
+                required
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              >
+                <option value="">{S.sessionForm.placeholderSubjectSelect}</option>
+                {subjectsList.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Classroom */}
             <div>
-              <label
-                className="block text-sm font-semibold mb-1.5"
-                style={{ color: "#2F3A36" }}
-              >
-                {S.sessionForm.labelClassroom}
+              <label className="block text-sm font-semibold mb-1.5" style={labelStyle}>
+                {S.sessionForm.labelSection}
               </label>
 
-              <div className="relative">
-                <School
-                  size={16}
-                  className="absolute top-1/2 -translate-y-1/2 right-3"
-                  style={{ color: "#A8B0AB" }}
-                />
-
-                <input
-                  type="text"
-                  value={form.classroom}
-                  onChange={handleChange("classroom")}
-                  required
-                  placeholder={S.sessionForm.placeholderClassroom}
-                  className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FCFAF4",
-                    color: "#2F3A36",
-                  }}
-                />
-              </div>
+              <select
+                value={form.section_id}
+                onChange={handleChange("section_id")}
+                required
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              >
+                <option value="">{S.sessionForm.placeholderSectionSelect}</option>
+                {sectionsList.map((sec) => (
+                  <option key={sec.id} value={sec.id}>
+                    {sec.className ? `${sec.name} — ${sec.className}` : sec.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Teacher */}
             <div>
-              <label
-                className="block text-sm font-semibold mb-1.5"
-                style={{ color: "#2F3A36" }}
-              >
+              <label className="block text-sm font-semibold mb-1.5" style={labelStyle}>
                 {S.sessionForm.labelTeacher}
               </label>
 
-              <div className="relative">
-                <UserRound
-                  size={16}
-                  className="absolute top-1/2 -translate-y-1/2 right-3"
-                  style={{ color: "#A8B0AB" }}
-                />
+              <select
+                value={form.teacher_PersonID}
+                onChange={handleChange("teacher_PersonID")}
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              >
+                <option value="">{S.sessionForm.placeholderTeacherSelect}</option>
+                {teachersList.map((t) => (
+                  <option key={t.PersonID} value={t.PersonID}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                <input
-                  type="text"
-                  value={form.teacher}
-                  onChange={handleChange("teacher")}
-                  required
-                  placeholder={S.sessionForm.placeholderTeacher}
-                  className="w-full rounded-xl py-3 pr-10 pl-3 text-sm outline-none"
-                  style={{
-                    border: "1px solid #E2DCCC",
-                    backgroundColor: "#FCFAF4",
-                    color: "#2F3A36",
-                  }}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={labelStyle}>
+                {S.sessionForm.labelDate}
+              </label>
+
+              <input
+                type="date"
+                value={form.Date}
+                onChange={handleChange("Date")}
+                required
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={labelStyle}>
+                {S.sessionForm.labelTime}
+              </label>
+
+              <input
+                type="text"
+                value={form.Period}
+                onChange={handleChange("Period")}
+                required
+                placeholder={S.sessionForm.placeholderTime}
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={labelStyle}>
+                {S.sessionForm.labelDuration}
+              </label>
+
+              <input
+                type="text"
+                value={form.Duration}
+                onChange={handleChange("Duration")}
+                placeholder={S.sessionForm.placeholderDuration}
+                className="w-full rounded-xl py-3 px-3 text-sm outline-none"
+                style={inputStyle}
+              />
             </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-6">
+          <div>
+            <label className="block text-sm font-semibold mb-1.5" style={labelStyle}>
+              {S.sessionForm.labelNotes}
+            </label>
+
+            <textarea
+              value={form.Notes}
+              onChange={handleChange("Notes")}
+              rows={3}
+              placeholder={S.sessionForm.placeholderNotes}
+              className="w-full rounded-xl py-3 px-3 text-sm outline-none resize-none"
+              style={inputStyle}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl py-3 text-sm font-semibold transition-all hover:opacity-80"
+              className="flex-1 rounded-xl py-3 text-sm font-semibold"
               style={{
                 border: "1px solid #E2DCCC",
                 color: "#4A5551",
@@ -365,12 +265,10 @@ export default function SessionForm({
 
             <button
               type="submit"
-              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white transition-all hover:opacity-90"
+              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white"
               style={{ backgroundColor: "#4C8577" }}
             >
-              {isEdit
-                ? S.sessionForm.submitEdit
-                : S.sessionForm.submitAdd}
+              {isEdit ? S.sessionForm.submitEdit : S.sessionForm.submitAdd}
             </button>
           </div>
         </form>

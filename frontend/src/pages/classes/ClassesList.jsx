@@ -8,33 +8,36 @@ import {
   Users,
   UserRound,
   School,
+  Layers,
+  Printer,
+  Shuffle,
 } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import ClassForm from "./ClassForm";
+import SectionForm from "./SectionForm";
 import ConfirmModal from "../../components/ConfirmModal";
 
 import { useClasses } from "../../context/ClassesContext";
 import { useChildren } from "../../context/ChildrenContext";
+import { useTeachers } from "../../context/TeachersContext";
 import { useToast } from "../../context/ToastContext";
+import { useUser } from "../../context/UserContext";
 import { strings as S } from "../../constants/strings";
 
 function CapacityBadge({ current, capacity }) {
-  const percentage =
-    capacity > 0
-      ? Math.round((current / capacity) * 100)
-      : 0;
+  const percentage = capacity > 0 ? Math.round((current / capacity) * 100) : 0;
 
-  let label = S.classes.capacityBadgeAvailable;
+  let label = S.sections.capacityBadgeAvailable;
   let bgColor = "#4C857720";
   let textColor = "#4C8577";
 
   if (percentage >= 100) {
-    label = S.classes.capacityBadgeFull;
+    label = S.sections.capacityBadgeFull;
     bgColor = "#C25B4A20";
     textColor = "#C25B4A";
   } else if (percentage >= 80) {
-    label = S.classes.capacityBadgeAlmostFull;
+    label = S.sections.capacityBadgeAlmostFull;
     bgColor = "#D99A2020";
     textColor = "#B27A00";
   }
@@ -43,154 +46,130 @@ function CapacityBadge({ current, capacity }) {
     <div className="flex flex-col gap-1">
       <span
         className="w-fit text-xs font-medium px-2.5 py-1 rounded-full"
-        style={{
-          backgroundColor: bgColor,
-          color: textColor,
-        }}
+        style={{ backgroundColor: bgColor, color: textColor }}
       >
         {label}
       </span>
 
-      <span
-        className="text-xs"
-        style={{ color: "#7A8580" }}
-      >
-        {S.classes.capacityCount({ current, capacity })}
+      <span className="text-xs" style={{ color: "#7A8580" }}>
+        {S.sections.capacityCount({ current, capacity })}
       </span>
     </div>
   );
 }
 
-export default function ClassesList({
-  onNavigate,
-  onLogout,
-}) {
+const thStyle = { color: "#7A8580" };
+
+export default function ClassesList({ onNavigate, onLogout }) {
   const {
     classesList,
+    sectionsList,
     addClass,
     updateClass,
     deleteClass,
+    addSection,
+    updateSection,
+    deleteSection,
+    placeChild,
   } = useClasses();
 
   const { childrenList } = useChildren();
+  const { teachersList } = useTeachers();
   const { showWarning } = useToast();
 
+  const { user } = useUser();
+  const isSecretary = user?.roleType === "secretary";
+  const canWrite = !isSecretary;
+
+  const [activeTab, setActiveTab] = useState("sections");
   const [search, setSearch] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
+
+  const [classFormOpen, setClassFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
-  const [selectedClass, setSelectedClass] = useState(null);
+
+  const [sectionFormOpen, setSectionFormOpen] = useState(false);
+  const [editingSection, setEditingSection] = useState(null);
+
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [distributeTarget, setDistributeTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // ======================================================
-  // عدد الأطفال داخل الصف
-  // ======================================================
+  const childrenOfSection = (sectionId) =>
+    childrenList.filter((child) => child.section_id === sectionId);
 
-  const getChildrenForClass = (className) => {
-    return childrenList.filter(
-      (child) =>
-        child.classroom === className &&
-        child.status === "نشط"
-    );
-  };
+  const childrenOfClass = (classId) =>
+    childrenList.filter((child) => child.classID === classId);
 
-  // ======================================================
-  // البحث
-  // ======================================================
+  const sectionsOfClass = (classId) =>
+    sectionsList.filter((section) => section.classID === classId);
 
-  const filtered = classesList.filter((item) => {
-    const query = search.trim().toLowerCase();
+  const query = search.trim().toLowerCase();
 
+  const filteredClasses = classesList.filter((item) => {
     if (!query) return true;
+    return item.name?.toLowerCase().includes(query);
+  });
 
+  const filteredSections = sectionsList.filter((item) => {
+    if (!query) return true;
     return (
       item.name?.toLowerCase().includes(query) ||
-      item.teacher?.toLowerCase().includes(query)
+      item.className?.toLowerCase().includes(query) ||
+      item.teacherName?.toLowerCase().includes(query)
     );
   });
 
-  // ======================================================
-  // إضافة
-  // ======================================================
+  const totalSeats = sectionsList.reduce((total, section) => {
+    const capacity = Number(section.capacity) || 0;
+    return total + Math.max(0, capacity - childrenOfSection(section.id).length);
+  }, 0);
 
-  const handleAddClick = () => {
-    setEditingClass(null);
-    setFormOpen(true);
-  };
-
-  // ======================================================
-  // تعديل
-  // ======================================================
-
-  const handleEditClick = (classItem) => {
-    setEditingClass(classItem);
-    setFormOpen(true);
-  };
-
-  // ======================================================
-  // حفظ
-  // ======================================================
-
-  const handleSave = (formData) => {
-    const cleanedData = {
-      ...formData,
-      capacity: Number(formData.capacity),
-    };
-
+  const handleSaveClass = async (formData) => {
     if (editingClass) {
-      updateClass(
-        editingClass.id,
-        cleanedData
-      );
+      await updateClass(editingClass.id, formData);
     } else {
-      addClass(cleanedData);
+      await addClass(formData);
     }
-
-    setFormOpen(false);
+    setClassFormOpen(false);
     setEditingClass(null);
   };
 
-  // ======================================================
-  // حذف
-  // ======================================================
-
-  const handleDelete = (classId) => {
-    const classItem = classesList.find(
-      (item) => item.id === classId
-    );
-
-    if (!classItem) return;
-
-    const classChildren =
-      getChildrenForClass(classItem.name);
-
-    if (classChildren.length > 0) {
-      showWarning(
-        S.classes.deleteBlockedWarning(classItem.name)
-      );
-      return;
+  const handleSaveSection = async (payload) => {
+    if (editingSection) {
+      await updateSection(editingSection.id, payload);
+    } else {
+      await addSection(payload);
     }
-
-    setDeleteTarget(classItem);
+    setSectionFormOpen(false);
+    setEditingSection(null);
   };
 
-  const confirmDelete = () => {
+  const handleDeleteRequest = (type, item) => {
+    if (type === "class") {
+      const classSections = sectionsOfClass(item.classID);
+      const classChildren = childrenOfClass(item.classID);
+      if (classSections.length > 0 || classChildren.length > 0) {
+        showWarning(S.classes.deleteBlockedWarning(item.name));
+        return;
+      }
+    }
+    setDeleteTarget({ type, item });
+  };
+
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
 
-    deleteClass(deleteTarget.id);
+    if (deleteTarget.type === "class") {
+      await deleteClass(deleteTarget.item.id);
+    } else {
+      await deleteSection(deleteTarget.item.id);
+    }
 
-    if (selectedClass?.id === deleteTarget.id) {
-      setSelectedClass(null);
+    if (selectedSection?.id === deleteTarget.item.id) {
+      setSelectedSection(null);
     }
 
     setDeleteTarget(null);
-  };
-
-  // ======================================================
-  // فتح تفاصيل الصف
-  // ======================================================
-
-  const handleViewClass = (classItem) => {
-    setSelectedClass(classItem);
   };
 
   return (
@@ -198,35 +177,25 @@ export default function ClassesList({
       activePage="classes"
       onNavigate={onNavigate}
       onLogout={onLogout}
-      pageTitle={S.classes.pageTitle}
+      pageTitle={S.sections.pageTitle}
     >
-      {/* ==================================================
-          Header
-      ================================================== */}
-
-      <div className="flex items-center justify-between mb-5 gap-3">
+      <div className="flex flex-wrap items-center justify-between mb-5 gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search
             size={16}
             className="absolute top-1/2 -translate-y-1/2 right-3"
-            style={{
-              color: "#A8B0AB",
-            }}
+            style={{ color: "#A8B0AB" }}
           />
 
           <input
             type="text"
             value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            placeholder={S.classes.searchPlaceholder}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={S.sections.searchPlaceholder}
             className="w-full rounded-xl py-2.5 pr-9 pl-3 text-sm outline-none"
             style={{
-              border:
-                "1px solid #E2DCCC",
-              backgroundColor:
-                "#FFFFFF",
+              border: "1px solid #E2DCCC",
+              backgroundColor: "#FFFFFF",
               color: "#2F3A36",
             }}
           />
@@ -234,64 +203,58 @@ export default function ClassesList({
 
         <button
           type="button"
-          onClick={handleAddClick}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0"
+          onClick={() => window.print()}
+          className="no-print flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shrink-0"
           style={{
-            backgroundColor:
-              "#4C8577",
+            border: "1px solid #4C8577",
+            color: "#4C8577",
+            backgroundColor: "#FFFFFF",
           }}
         >
-          <Plus size={18} />
-          {S.classes.addClassButton}
+          <Printer size={18} />
+          {S.reports.printButton}
         </button>
+
+        {canWrite && (
+          <button
+            type="button"
+            onClick={() => {
+              if (activeTab === "sections") {
+                setEditingSection(null);
+                setSectionFormOpen(true);
+              } else {
+                setEditingClass(null);
+                setClassFormOpen(true);
+              }
+            }}
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shrink-0"
+            style={{ backgroundColor: "#4C8577" }}
+          >
+            <Plus size={18} />
+            {activeTab === "sections"
+              ? S.sections.addSectionButton
+              : S.sections.addClassButton}
+          </button>
+        )}
       </div>
 
-      {/* ==================================================
-          Summary Cards
-      ================================================== */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
         <div
           className="rounded-2xl p-4"
-          style={{
-            backgroundColor:
-              "#FFFFFF",
-            border:
-              "1px solid #EDE7D9",
-          }}
+          style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
         >
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{
-                backgroundColor:
-                  "#EAF2EF",
-              }}
+              style={{ backgroundColor: "#EAF2EF" }}
             >
-              <School
-                size={19}
-                style={{
-                  color: "#4C8577",
-                }}
-              />
+              <School size={19} style={{ color: "#4C8577" }} />
             </div>
-
             <div>
-              <p
-                className="text-xs"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                {S.classes.totalClassesLabel}
+              <p className="text-xs" style={{ color: "#7A8580" }}>
+                {S.sections.totalClassesLabel}
               </p>
-
-              <p
-                className="text-xl font-bold mt-1"
-                style={{
-                  color: "#2F3A36",
-                }}
-              >
+              <p className="text-xl font-bold mt-1" style={{ color: "#2F3A36" }}>
                 {classesList.length}
               </p>
             </div>
@@ -300,52 +263,21 @@ export default function ClassesList({
 
         <div
           className="rounded-2xl p-4"
-          style={{
-            backgroundColor:
-              "#FFFFFF",
-            border:
-              "1px solid #EDE7D9",
-          }}
+          style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
         >
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{
-                backgroundColor:
-                  "#F0F4F8",
-              }}
+              style={{ backgroundColor: "#EAF2EF" }}
             >
-              <Users
-                size={19}
-                style={{
-                  color: "#6E8FB0",
-                }}
-              />
+              <Layers size={19} style={{ color: "#4C8577" }} />
             </div>
-
             <div>
-              <p
-                className="text-xs"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                {S.classes.registeredChildrenLabel}
+              <p className="text-xs" style={{ color: "#7A8580" }}>
+                {S.sections.totalSectionsLabel}
               </p>
-
-              <p
-                className="text-xl font-bold mt-1"
-                style={{
-                  color: "#2F3A36",
-                }}
-              >
-                {
-                  childrenList.filter(
-                    (child) =>
-                      child.status ===
-                      "نشط"
-                  ).length
-                }
+              <p className="text-xl font-bold mt-1" style={{ color: "#2F3A36" }}>
+                {sectionsList.length}
               </p>
             </div>
           </div>
@@ -353,649 +285,460 @@ export default function ClassesList({
 
         <div
           className="rounded-2xl p-4"
-          style={{
-            backgroundColor:
-              "#FFFFFF",
-            border:
-              "1px solid #EDE7D9",
-          }}
+          style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
         >
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{
-                backgroundColor:
-                  "#FFF6E8",
-              }}
+              style={{ backgroundColor: "#F0F4F8" }}
             >
-              <UserRound
-                size={19}
-                style={{
-                  color: "#B27A00",
-                }}
-              />
+              <Users size={19} style={{ color: "#6E8FB0" }} />
             </div>
-
             <div>
-              <p
-                className="text-xs"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                {S.classes.availableSeatsSummaryLabel}
+              <p className="text-xs" style={{ color: "#7A8580" }}>
+                {S.sections.registeredChildrenLabel}
               </p>
+              <p className="text-xl font-bold mt-1" style={{ color: "#2F3A36" }}>
+                {childrenList.length}
+              </p>
+            </div>
+          </div>
+        </div>
 
-              <p
-                className="text-xl font-bold mt-1"
-                style={{
-                  color: "#2F3A36",
-                }}
-              >
-                {classesList.reduce(
-                  (total, classItem) => {
-                    const count =
-                      getChildrenForClass(
-                        classItem.name
-                      ).length;
-
-                    return (
-                      total +
-                      Math.max(
-                        0,
-                        Number(
-                          classItem.capacity
-                        ) - count
-                      )
-                    );
-                  },
-                  0
-                )}
+        <div
+          className="rounded-2xl p-4"
+          style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: "#FFF6E8" }}
+            >
+              <UserRound size={19} style={{ color: "#B27A00" }} />
+            </div>
+            <div>
+              <p className="text-xs" style={{ color: "#7A8580" }}>
+                {S.sections.availableSeatsSummaryLabel}
+              </p>
+              <p className="text-xl font-bold mt-1" style={{ color: "#2F3A36" }}>
+                {totalSeats}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ==================================================
-          Classes Table
-      ================================================== */}
-
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          backgroundColor:
-            "#FFFFFF",
-          border:
-            "1px solid #EDE7D9",
-        }}
-      >
-        <table className="w-full text-sm">
-          <thead>
-            <tr
+      <div className="flex items-center gap-2 mb-4">
+        {["sections", "classes"].map((tab) => {
+          const active = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className="rounded-xl px-4 py-2 text-sm font-semibold"
               style={{
-                backgroundColor:
-                  "#FCFAF4",
-                borderBottom:
-                  "1px solid #EDE7D9",
+                backgroundColor: active ? "#4C8577" : "#FFFFFF",
+                color: active ? "#FFFFFF" : "#4A5551",
+                border: "1px solid " + (active ? "#4C8577" : "#E2DCCC"),
               }}
             >
-              <th
-                className="text-right px-5 py-3 font-medium"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                {S.classForm.labelClassName}
-              </th>
+              {tab === "sections" ? S.sections.tabSections : S.sections.tabClasses}
+            </button>
+          );
+        })}
+      </div>
 
-              <th
-                className="text-right px-5 py-3 font-medium"
+      {activeTab === "classes" ? (
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
+        >
+          <table className="w-full text-sm">
+            <thead>
+              <tr
                 style={{
-                  color: "#7A8580",
+                  backgroundColor: "#FCFAF4",
+                  borderBottom: "1px solid #EDE7D9",
                 }}
               >
-                {S.classForm.labelTeacher}
-              </th>
-
-              <th
-                className="text-right px-5 py-3 font-medium"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-{S.classes.childrenDetailLabel}
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.classForm.labelClassName}
                 </th>
-
-              <th
-                className="text-right px-5 py-3 font-medium"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-{S.classes.capacityDetailLabel}
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.sections.sectionsCountLabel}
                 </th>
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.sections.childrenCountLabel}
+                </th>
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.common.tableHeaderActions}
+                </th>
+              </tr>
+            </thead>
 
-              <th
-                className="text-right px-5 py-3 font-medium"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                {S.common.tableHeaderStatus}
-              </th>
-
-              <th
-                className="text-right px-5 py-3 font-medium"
-                style={{
-                  color: "#7A8580",
-                }}
-              >
-                {S.common.tableHeaderActions}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filtered.map((classItem) => {
-              const classChildren =
-                getChildrenForClass(
-                  classItem.name
-                );
-
-              const capacity =
-                Number(
-                  classItem.capacity
-                ) || 0;
-
-              const availableSeats =
-                Math.max(
-                  0,
-                  capacity -
-                    classChildren.length
-                );
-
-              return (
+            <tbody>
+              {filteredClasses.map((classItem) => (
                 <tr
                   key={classItem.id}
-                  style={{
-                    borderBottom:
-                      "1px solid #F3EFE3",
-                  }}
+                  style={{ borderBottom: "1px solid #F3EFE3" }}
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div
                         className="w-9 h-9 rounded-xl flex items-center justify-center"
-                        style={{
-                          backgroundColor:
-                            "#EAF2EF",
-                        }}
+                        style={{ backgroundColor: "#EAF2EF" }}
                       >
-                        <School
-                          size={17}
-                          style={{
-                            color:
-                              "#4C8577",
-                          }}
-                        />
+                        <School size={17} style={{ color: "#4C8577" }} />
                       </div>
-
-                      <span
-                        className="font-semibold"
-                        style={{
-                          color:
-                            "#2F3A36",
-                        }}
-                      >
+                      <span className="font-semibold" style={{ color: "#2F3A36" }}>
                         {classItem.name}
                       </span>
                     </div>
                   </td>
 
-                  <td
-                    className="px-5 py-4"
-                    style={{
-                      color:
-                        "#4A5551",
-                    }}
-                  >
-                    {classItem.teacher}
+                  <td className="px-5 py-4" style={{ color: "#4A5551" }}>
+                    <div className="flex items-center gap-2">
+                      <Layers size={15} />
+                      <span>{sectionsOfClass(classItem.classID).length}</span>
+                    </div>
                   </td>
 
-                  <td
-                    className="px-5 py-4"
-                    style={{
-                      color:
-                        "#4A5551",
-                    }}
-                  >
+                  <td className="px-5 py-4" style={{ color: "#4A5551" }}>
                     <div className="flex items-center gap-2">
                       <Users size={15} />
-
-                      <span>
-                        {classChildren.length}
-                      </span>
+                      <span>{childrenOfClass(classItem.classID).length}</span>
                     </div>
-                  </td>
-
-                  <td
-                    className="px-5 py-4"
-                    style={{
-                      color:
-                        "#4A5551",
-                    }}
-                  >
-                    <div>
-                      <span>
-                        {classChildren.length} /{" "}
-                        {capacity}
-                      </span>
-
-                      <p
-                        className="text-xs mt-1"
-                        style={{
-                          color:
-                            "#A8B0AB",
-                        }}
-                      >
-                        {availableSeats > 0
-                          ? S.classes.seatsAvailable(availableSeats)
-                          : S.classes.noSeats}
-                      </p>
-                    </div>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <CapacityBadge
-                      current={
-                        classChildren.length
-                      }
-                      capacity={capacity}
-                    />
                   </td>
 
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      {/* عرض */}
                       <button
                         type="button"
-                        onClick={() =>
-                          handleViewClass(
-                            classItem
-                          )
-                        }
+                        onClick={() => setActiveTab("sections")}
                         className="p-1.5 rounded-lg hover:opacity-70"
-                        style={{
-                          color:
-                            "#6E8FB0",
-                        }}
-                        title={S.classes.viewClassDetailsTitle}
+                        style={{ color: "#6E8FB0" }}
+                        title={S.sections.viewClassTitle}
                       >
                         <Eye size={16} />
                       </button>
 
-                      {/* تعديل */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleEditClick(
-                            classItem
-                          )
-                        }
-                        className="p-1.5 rounded-lg hover:opacity-70"
-                        style={{
-                          color:
-                            "#4C8577",
-                        }}
-                        title={S.classes.editClassTitle}
-                      >
-                        <Pencil size={16} />
-                      </button>
+                      {canWrite && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingClass(classItem);
+                            setClassFormOpen(true);
+                          }}
+                          className="p-1.5 rounded-lg hover:opacity-70"
+                          style={{ color: "#4C8577" }}
+                          title={S.sections.editClassTitle}
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      )}
 
-                      {/* حذف */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleDelete(
-                            classItem.id
-                          )
-                        }
-                        className="p-1.5 rounded-lg hover:opacity-70"
-                        style={{
-                          color:
-                            "#C25B4A",
-                        }}
-                        title={S.classes.deleteClassTitle}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {canWrite && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRequest("class", classItem)}
+                          className="p-1.5 rounded-lg hover:opacity-70"
+                          style={{ color: "#C25B4A" }}
+                          title={S.sections.deleteClassTitle}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
 
-        {filtered.length === 0 && (
-          <p
-            className="text-center text-sm py-8"
-            style={{
-              color: "#A8B0AB",
-            }}
-          >
-            {S.classes.noClassesFound}
-          </p>
-        )}
-      </div>
+          {filteredClasses.length === 0 && (
+            <p className="text-center text-sm py-8" style={{ color: "#A8B0AB" }}>
+              {S.sections.noClassesFound}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ backgroundColor: "#FFFFFF", border: "1px solid #EDE7D9" }}
+        >
+          <table className="w-full text-sm">
+            <thead>
+              <tr
+                style={{
+                  backgroundColor: "#FCFAF4",
+                  borderBottom: "1px solid #EDE7D9",
+                }}
+              >
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.sections.sectionColumn}
+                </th>
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.sections.classColumn}
+                </th>
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.sections.teacherColumn}
+                </th>
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.sections.childrenCountLabel}
+                </th>
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.sections.capacityColumn}
+                </th>
+                <th className="text-right px-5 py-3 font-medium" style={thStyle}>
+                  {S.common.tableHeaderActions}
+                </th>
+              </tr>
+            </thead>
 
-      {/* ==================================================
-          تفاصيل الصف
-      ================================================== */}
+            <tbody>
+              {filteredSections.map((section) => {
+                const sectionChildren = childrenOfSection(section.id);
+                const capacity = Number(section.capacity) || 0;
 
-      {selectedClass && (
+                return (
+                  <tr
+                    key={section.id}
+                    style={{ borderBottom: "1px solid #F3EFE3" }}
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: "#EAF2EF" }}
+                        >
+                          <Layers size={17} style={{ color: "#4C8577" }} />
+                        </div>
+                        <span className="font-semibold" style={{ color: "#2F3A36" }}>
+                          {section.name}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4" style={{ color: "#4A5551" }}>
+                      {section.className || S.sections.noClass}
+                    </td>
+
+                    <td className="px-5 py-4" style={{ color: "#4A5551" }}>
+                      {section.teacherName || S.sections.noTeacher}
+                    </td>
+
+                    <td className="px-5 py-4" style={{ color: "#4A5551" }}>
+                      <div className="flex items-center gap-2">
+                        <Users size={15} />
+                        <span>{sectionChildren.length}</span>
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <CapacityBadge
+                        current={sectionChildren.length}
+                        capacity={capacity}
+                      />
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSection(section)}
+                          className="p-1.5 rounded-lg hover:opacity-70"
+                          style={{ color: "#6E8FB0" }}
+                          title={S.sections.viewSectionTitle}
+                        >
+                          <Eye size={16} />
+                        </button>
+
+                        {canWrite && (
+                          <button
+                            type="button"
+                            onClick={() => setDistributeTarget(section)}
+                            className="p-1.5 rounded-lg hover:opacity-70"
+                            style={{ color: "#B27A00" }}
+                            title={S.sections.distributeButton}
+                          >
+                            <Shuffle size={16} />
+                          </button>
+                        )}
+
+                        {canWrite && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingSection(section);
+                              setSectionFormOpen(true);
+                            }}
+                            className="p-1.5 rounded-lg hover:opacity-70"
+                            style={{ color: "#4C8577" }}
+                            title={S.sections.editSectionTitle}
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        )}
+
+                        {canWrite && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRequest("section", section)}
+                            className="p-1.5 rounded-lg hover:opacity-70"
+                            style={{ color: "#C25B4A" }}
+                            title={S.sections.deleteSectionTitle}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {filteredSections.length === 0 && (
+            <p className="text-center text-sm py-8" style={{ color: "#A8B0AB" }}>
+              {S.sections.noSectionsFound}
+            </p>
+          )}
+        </div>
+      )}
+
+      {selectedSection && (
         <div
           dir="rtl"
           className="fixed inset-0 flex items-center justify-center p-4 z-50"
-          style={{
-            backgroundColor:
-              "#00000040",
-          }}
+          style={{ backgroundColor: "#00000040" }}
         >
           <div
             className="w-full max-w-2xl rounded-3xl overflow-hidden"
             style={{
-              backgroundColor:
-                "#FFFFFF",
-              boxShadow:
-                "0 20px 60px rgba(47,58,54,0.15)",
+              backgroundColor: "#FFFFFF",
+              boxShadow: "0 20px 60px rgba(47,58,54,0.15)",
             }}
           >
             <div
               className="p-6"
               style={{
-                backgroundColor:
-                  "#FCFAF4",
-                borderBottom:
-                  "1px solid #EDE7D9",
+                backgroundColor: "#FCFAF4",
+                borderBottom: "1px solid #EDE7D9",
               }}
             >
               <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-11 h-11 rounded-2xl flex items-center justify-center"
-                      style={{
-                        backgroundColor:
-                          "#EAF2EF",
-                      }}
-                    >
-                      <School
-                        size={20}
-                        style={{
-                          color:
-                            "#4C8577",
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <h3
-                        className="text-lg font-bold"
-                        style={{
-                          color:
-                            "#2F3A36",
-                        }}
-                      >
-                        {selectedClass.name}
-                      </h3>
-
-                      <p
-                        className="text-xs mt-1"
-                        style={{
-                          color:
-                            "#7A8580",
-                        }}
-                      >
-                        {S.classes.teacherDetail(selectedClass.teacher)}
-                      </p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                    style={{ backgroundColor: "#EAF2EF" }}
+                  >
+                    <Layers size={20} style={{ color: "#4C8577" }} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold" style={{ color: "#2F3A36" }}>
+                      {selectedSection.name}
+                    </h3>
+                    <p className="text-xs mt-1" style={{ color: "#7A8580" }}>
+                      {S.sections.classDetail(selectedSection.className || S.sections.noClass)}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: "#7A8580" }}>
+                      {S.sections.teacherDetail(
+                        selectedSection.teacherName || S.sections.noTeacher
+                      )}
+                    </p>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setSelectedClass(null)
-                  }
+                  onClick={() => setSelectedSection(null)}
                   className="px-3 py-2 rounded-xl text-sm"
                   style={{
-                    color:
-                      "#7A8580",
-                    backgroundColor:
-                      "#FFFFFF",
-                    border:
-                      "1px solid #E2DCCC",
+                    color: "#7A8580",
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid #E2DCCC",
                   }}
                 >
-                  {S.classes.closeButton}
+                  {S.sections.closeButton}
                 </button>
               </div>
             </div>
 
             <div className="p-6">
               {(() => {
-                const classChildren =
-                  getChildrenForClass(
-                    selectedClass.name
-                  );
+                const sectionChildren = childrenOfSection(selectedSection.id);
 
                 return (
                   <>
-                    <div className="grid grid-cols-3 gap-3 mb-5">
-                      <div
-                        className="rounded-2xl p-4 text-center"
-                        style={{
-                          backgroundColor:
-                            "#F4F8F7",
-                        }}
-                      >
-                        <p
-                          className="text-xl font-bold"
-                          style={{
-                            color:
-                              "#2F3A36",
-                          }}
-                        >
-                          {
-                            classChildren.length
-                          }
-                        </p>
-
-                        <p
-                          className="text-xs mt-1"
-                          style={{
-                            color:
-                              "#7A8580",
-                          }}
-                        >
-                          {S.classes.childrenDetailLabel}
-                        </p>
-                      </div>
-
-                      <div
-                        className="rounded-2xl p-4 text-center"
-                        style={{
-                          backgroundColor:
-                            "#F4F8F7",
-                        }}
-                      >
-                        <p
-                          className="text-xl font-bold"
-                          style={{
-                            color:
-                              "#2F3A36",
-                          }}
-                        >
-                          {
-                            selectedClass.capacity
-                          }
-                        </p>
-
-                        <p
-                          className="text-xs mt-1"
-                          style={{
-                            color:
-                              "#7A8580",
-                          }}
-                        >
-                          {S.classes.capacityDetailLabel}
-                        </p>
-                      </div>
-
-                      <div
-                        className="rounded-2xl p-4 text-center"
-                        style={{
-                          backgroundColor:
-                            "#F4F8F7",
-                        }}
-                      >
-                        <p
-                          className="text-xl font-bold"
-                          style={{
-                            color:
-                              "#4C8577",
-                          }}
-                        >
-                          {Math.max(
-                            0,
-                            Number(
-                              selectedClass.capacity
-                            ) -
-                              classChildren.length
-                          )}
-                        </p>
-
-                        <p
-                          className="text-xs mt-1"
-                          style={{
-                            color:
-                              "#7A8580",
-                          }}
-                        >
-                          {S.classes.availableSeatsDetailLabel}
-                        </p>
-                      </div>
-                    </div>
-
                     <h4
                       className="text-sm font-bold mb-3"
-                      style={{
-                        color:
-                          "#2F3A36",
-                      }}
+                      style={{ color: "#2F3A36" }}
                     >
-                      {S.classes.classChildrenTitle}
+                      {S.sections.sectionChildrenTitle}
                     </h4>
 
-                    {classChildren.length >
-                    0 ? (
+                    {sectionChildren.length > 0 ? (
                       <div className="space-y-2">
-                        {classChildren.map(
-                          (child) => (
-                            <div
-                              key={child.id}
-                              className="flex items-center justify-between rounded-2xl p-3"
-                              style={{
-                                backgroundColor:
-                                  "#FCFAF4",
-                                border:
-                                  "1px solid #EDE7D9",
-                              }}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                                  style={{
-                                    backgroundColor:
-                                      "#EAF2EF",
-                                  }}
+                        {sectionChildren.map((child) => (
+                          <div
+                            key={child.id}
+                            className="flex items-center justify-between rounded-2xl p-3"
+                            style={{
+                              backgroundColor: "#FCFAF4",
+                              border: "1px solid #EDE7D9",
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                                style={{ backgroundColor: "#EAF2EF" }}
+                              >
+                                <Users size={16} style={{ color: "#4C8577" }} />
+                              </div>
+                              <div>
+                                <p
+                                  className="text-sm font-semibold"
+                                  style={{ color: "#2F3A36" }}
                                 >
-                                  <Users
-                                    size={16}
-                                    style={{
-                                      color:
-                                        "#4C8577",
-                                    }}
-                                  />
-                                </div>
-
-                                <div>
-                                  <p
-                                    className="text-sm font-semibold"
-                                    style={{
-                                      color:
-                                        "#2F3A36",
-                                    }}
-                                  >
-                                    {child.name}
-                                  </p>
-
+                                  {child.name}
+                                </p>
+                                {child.age !== "" && (
                                   <p
                                     className="text-xs mt-0.5"
-                                    style={{
-                                      color:
-                                        "#7A8580",
-                                    }}
+                                    style={{ color: "#7A8580" }}
                                   >
-                                    {S.classes.childAge(child.age)}
+                                    {S.sections.childAge(child.age)}
                                   </p>
-                                </div>
+                                )}
                               </div>
-
-                              <span
-                                className="text-xs px-2.5 py-1 rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    "#4C857720",
-                                  color:
-                                    "#4C8577",
-                                }}
-                              >
-                                {S.common.statusActive}
-                              </span>
                             </div>
-                          )
-                        )}
+
+                            <span
+                              className="text-xs px-2.5 py-1 rounded-full"
+                              style={{ backgroundColor: "#4C857720", color: "#4C8577" }}
+                            >
+                              {S.common.statusActive}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <div
                         className="text-center rounded-2xl py-8"
                         style={{
-                          backgroundColor:
-                            "#FCFAF4",
-                          border:
-                            "1px solid #EDE7D9",
+                          backgroundColor: "#FCFAF4",
+                          border: "1px solid #EDE7D9",
                         }}
                       >
                         <Users
                           size={28}
                           className="mx-auto mb-2"
-                          style={{
-                            color:
-                              "#A8B0AB",
-                          }}
+                          style={{ color: "#A8B0AB" }}
                         />
-
-                        <p
-                          className="text-sm"
-                          style={{
-                            color:
-                              "#7A8580",
-                          }}
-                        >
-                          {S.classes.noChildrenInClass}
+                        <p className="text-sm" style={{ color: "#7A8580" }}>
+                          {S.sections.noChildrenInSection}
                         </p>
                       </div>
                     )}
@@ -1007,30 +750,154 @@ export default function ClassesList({
         </div>
       )}
 
-      {/* ==================================================
-          Add / Edit Form
-      ================================================== */}
+      {distributeTarget && (
+        <div
+          dir="rtl"
+          className="fixed inset-0 flex items-center justify-center p-4 z-50"
+          style={{ backgroundColor: "#00000040" }}
+        >
+          <div
+            className="w-full max-w-xl rounded-3xl overflow-hidden max-h-[85vh] flex flex-col"
+            style={{
+              backgroundColor: "#FFFFFF",
+              boxShadow: "0 20px 60px rgba(47,58,54,0.15)",
+            }}
+          >
+            <div
+              className="p-6"
+              style={{
+                backgroundColor: "#FCFAF4",
+                borderBottom: "1px solid #EDE7D9",
+              }}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold" style={{ color: "#2F3A36" }}>
+                    {S.sections.distributeTitle(distributeTarget.name)}
+                  </h3>
+                  <p className="text-xs mt-1" style={{ color: "#7A8580" }}>
+                    {S.sections.distributeHint}
+                  </p>
+                </div>
 
-      {formOpen && (
+                <button
+                  type="button"
+                  onClick={() => setDistributeTarget(null)}
+                  className="px-3 py-2 rounded-xl text-sm"
+                  style={{
+                    color: "#7A8580",
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid #E2DCCC",
+                  }}
+                >
+                  {S.sections.closeButton}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-2">
+              {childrenList.length === 0 && (
+                <p className="text-center text-sm py-8" style={{ color: "#A8B0AB" }}>
+                  {S.sections.noChildrenToAssign}
+                </p>
+              )}
+
+              {childrenList.map((child) => (
+                <div
+                  key={child.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl p-3"
+                  style={{
+                    backgroundColor: "#FCFAF4",
+                    border: "1px solid #EDE7D9",
+                  }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: "#EAF2EF" }}
+                    >
+                      <Users size={16} style={{ color: "#4C8577" }} />
+                    </div>
+                    <p
+                      className="text-sm font-semibold truncate"
+                      style={{ color: "#2F3A36" }}
+                    >
+                      {child.name}
+                    </p>
+                  </div>
+
+                  <select
+                    value={
+                      child.section_id === null || child.section_id === undefined
+                        ? ""
+                        : String(child.section_id)
+                    }
+                    onChange={(e) => placeChild(child.id, e.target.value)}
+                    className="rounded-xl py-2 px-3 text-sm outline-none shrink-0"
+                    style={{
+                      border: "1px solid #E2DCCC",
+                      backgroundColor: "#FFFFFF",
+                      color: "#2F3A36",
+                      maxWidth: "55%",
+                    }}
+                  >
+                    <option value="">{S.sections.assignEmptyOption}</option>
+                    {classesList.map((classItem) => (
+                      <optgroup key={classItem.id} label={classItem.name}>
+                        {sectionsOfClass(classItem.classID).map((section) => (
+                          <option key={section.id} value={section.id}>
+                            {section.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {classFormOpen && (
         <ClassForm
           initialData={editingClass}
           onClose={() => {
-            setFormOpen(false);
+            setClassFormOpen(false);
             setEditingClass(null);
           }}
-          onSave={handleSave}
+          onSave={handleSaveClass}
+        />
+      )}
+
+      {sectionFormOpen && (
+        <SectionForm
+          initialData={editingSection}
+          classes={classesList}
+          teachers={teachersList}
+          onClose={() => {
+            setSectionFormOpen(false);
+            setEditingSection(null);
+          }}
+          onSave={handleSaveSection}
         />
       )}
 
       <ConfirmModal
         isOpen={!!deleteTarget}
-        title={S.classes.confirmDeleteTitle}
+        title={
+          deleteTarget?.type === "class"
+            ? S.sections.confirmDeleteClassTitle
+            : S.sections.confirmDeleteSectionTitle
+        }
         message={
           deleteTarget
-            ? S.classes.confirmDeleteMessage(deleteTarget.name)
+            ? deleteTarget.type === "class"
+              ? S.sections.confirmDeleteClassMessage(deleteTarget.item.name)
+              : S.sections.confirmDeleteSectionMessage(deleteTarget.item.name)
             : ""
         }
-        confirmLabel={S.classes.confirmDeleteLabel}
+        confirmLabel={S.sections.deleteLabel}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />

@@ -14,15 +14,16 @@ import {
   ShieldCheck,
   FileText,
   Users,
+  Printer,
 } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import ConfirmModal from "../../components/ConfirmModal";
+import TempPasswordModal from "../../components/TempPasswordModal";
 
 import { strings as S } from "../../constants/strings";
 
 import { useRegistrationRequests } from "../../context/RegistrationRequestsContext";
-import { useChildren } from "../../context/ChildrenContext";
 
 // ======================================================
 // Status Badge
@@ -602,13 +603,13 @@ export default function RegistrationRequestsPage({
     updateRequestStatus,
   } = useRegistrationRequests();
 
-  const { addChild } =
-    useChildren();
-
   const [filter, setFilter] =
     useState("pending");
 
   const [rejectTarget, setRejectTarget] =
+    useState(null);
+
+  const [approvedTemp, setApprovedTemp] =
     useState(null);
 
   // ======================================================
@@ -649,83 +650,24 @@ export default function RegistrationRequestsPage({
   // Approve
   // ======================================================
 
-  const handleApprove = (request) => {
-    const parentName =
-      request.fatherName ||
-      request.motherName ||
-      "ولي أمر";
+  const handleApprove = async (request) => {
+    let twinNames = [];
+    if (request.twins && Array.isArray(request.twins)) {
+      twinNames = request.twins.filter(Boolean).slice(0, 10);
+    }
 
-    const parentPhone =
-      request.fatherPhone ||
-      request.motherPhone ||
-      "";
-
-    const calculatedAge =
-      request.age ?? "";
-
-    addChild({
-      name:
-        request.childName ||
-        "طفل جديد",
-
-      classroom:
-        "بانتظار توزيع الصف",
-
-      age: calculatedAge,
-
-      parent: parentName,
-
-      parentPhone: parentPhone,
-
-      gender:
-        request.gender || "",
-
-      birthDate:
-        request.birthDate || "",
-
-      fatherName:
-        request.fatherName || "",
-
-      fatherPhone:
-        request.fatherPhone || "",
-
-      motherName:
-        request.motherName || "",
-
-      motherPhone:
-        request.motherPhone || "",
-
-      parentsStatus:
-        request.parentsStatus || "",
-
-      emergencyContact:
-        request.emergencyContact || "",
-
-      healthConditions:
-        Array.isArray(
-          request.healthConditions
-        )
-          ? request.healthConditions
-          : [],
-
-      specialNeeds:
-        Array.isArray(
-          request.specialNeeds
-        )
-          ? request.specialNeeds
-          : [],
-
-      registrationRequestId:
-        request.id,
-
-      registrationDate:
-        request.submittedAt,
-    });
-
-    updateRequestStatus(
+    const res = await updateRequestStatus(
       request.id,
-      "approved"
+      "approved",
+      { twinNames: twinNames }
     );
+
+    if (res?.data?.tempPassword) {
+      setApprovedTemp({
+        username: res.data.username,
+        tempPassword: res.data.tempPassword,
+      });
+    }
   };
 
   // ======================================================
@@ -846,21 +788,38 @@ export default function RegistrationRequestsPage({
             </p>
           </div>
 
-          <div
-            className="hidden sm:flex w-16 h-16 rounded-3xl items-center justify-center"
-            style={{
-              backgroundColor:
-                "#FFFFFF90",
-              border:
-                "1px solid #FFFFFF",
-            }}
-          >
-            <FileText
-              size={27}
+          <div className="flex items-center gap-3">
+            <div
+              className="hidden sm:flex w-16 h-16 rounded-3xl items-center justify-center"
               style={{
+                backgroundColor:
+                  "#FFFFFF90",
+                border:
+                  "1px solid #FFFFFF",
+              }}
+            >
+              <FileText
+                size={27}
+                style={{
+                  color: "#4C8577",
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => window.print()}
+              className="no-print flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shrink-0"
+              style={{
+                backgroundColor:
+                  "#FFFFFF",
+                border:
+                  "1px solid #4C8577",
                 color: "#4C8577",
               }}
-            />
+            >
+              <Printer size={16} />
+              {S.reports.printButton}
+            </button>
           </div>
         </div>
       </div>
@@ -1136,6 +1095,13 @@ export default function RegistrationRequestsPage({
         confirmLabel={S.registrationRequests.confirmRejectLabel}
         onConfirm={confirmReject}
         onCancel={() => setRejectTarget(null)}
+      />
+
+      <TempPasswordModal
+        isOpen={!!approvedTemp}
+        username={approvedTemp?.username}
+        tempPassword={approvedTemp?.tempPassword}
+        onClose={() => setApprovedTemp(null)}
       />
     </DashboardLayout>
   );

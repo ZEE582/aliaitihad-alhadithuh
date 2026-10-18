@@ -21,7 +21,14 @@ export default function NoteForm({
     childrenList[0]?.name ||
     "";
 
+  const defaultChildId =
+    initialData?.childId ||
+    childrenList.find((child) => child.name === defaultChild)?.id ||
+    childrenList[0]?.id ||
+    "";
+
   const [form, setForm] = useState({
+    childId: defaultChildId,
     childName: defaultChild,
     type: initialData?.type || noteTypes[0],
     text: initialData?.text || "",
@@ -40,7 +47,6 @@ export default function NoteForm({
     if (!form.childName || !form.text.trim()) {
       return;
     }
-
     onSave && onSave(form);
   };
 
@@ -108,8 +114,17 @@ export default function NoteForm({
               </p>
             ) : (
               <select
-                value={form.childName}
-                onChange={handleChange("childName")}
+                value={form.childId}
+                onChange={(e) => {
+                  const child = childrenList.find(
+                    (item) => String(item.id) === e.target.value
+                  );
+                  setForm((prev) => ({
+                    ...prev,
+                    childId: child?.id,
+                    childName: child?.name || "",
+                  }));
+                }}
                 className="w-full rounded-xl py-2.5 px-3 text-sm outline-none"
                 style={{
                   border: "1px solid #E2DCCC",
@@ -120,7 +135,7 @@ export default function NoteForm({
                 {childrenList.map((child) => (
                   <option
                     key={child.id}
-                    value={child.name}
+                    value={child.id}
                   >
                     {child.name} — {child.classroom}
                   </option>

@@ -102,6 +102,10 @@ function RatingCard({
   );
 }
 
+const getTeacherName = (teacher) =>
+  teacher?.person?.Name ||
+  [teacher?.F_name, teacher?.L_name].filter(Boolean).join(" ");
+
 export default function TeacherRating({
   onNavigate,
   onLogout,
@@ -134,25 +138,7 @@ export default function TeacherRating({
    * ================================
    */
 
-  const myChildren = childrenList.filter(
-    (child) =>
-      child.parent === user?.name
-  );
-
-  /*
-   * إذا كان UserContext يحتوي childIds
-   * نستخدمها أيضًا كربط إضافي.
-   */
-
-  const childrenById = childrenList.filter(
-    (child) =>
-      user?.childIds?.includes(child.id)
-  );
-
-  const parentChildren =
-    childrenById.length > 0
-      ? childrenById
-      : myChildren;
+  const parentChildren = childrenList;
 
   /*
    * ================================
@@ -163,11 +149,7 @@ export default function TeacherRating({
   const teacherConnections =
     parentChildren
       .map((child) => {
-        const teacher = teachersList.find(
-          (teacher) =>
-            teacher.classroom ===
-            child.classroom
-        );
+        const teacher = teachersList[0];
 
         if (!teacher) return null;
 
@@ -314,12 +296,12 @@ export default function TeacherRating({
 
     addRating({
       parentId: user.id || user.email,
-      parentName: user.name,
+      parentName: user.fullName || user.username,
       childId: child.id,
       childName: child.name,
-      teacherId: teacher.id,
-      teacherName: teacher.name,
-      teacherClassroom: teacher.classroom,
+      teacherId: teacher.PersonID,
+      teacherName: getTeacherName(teacher),
+      teacherClassroom: child.classroom,
       ratings,
       comment: comment.trim(),
     });
@@ -432,14 +414,14 @@ export default function TeacherRating({
             const existingRating =
               getParentRating(
                 user.id || user.email,
-                teacher.id,
+                teacher.PersonID,
                 child.id
               );
 
             if (existingRating) {
               return (
                 <div
-                  key={`${teacher.id}-${child.id}`}
+                  key={`${teacher.PersonID}-${child.id}`}
                   className="rounded-2xl p-5"
                   style={{
                     backgroundColor:
@@ -471,7 +453,7 @@ export default function TeacherRating({
                           color: "#2F3A36",
                         }}
                       >
-                        {teacher.name}
+                        {getTeacherName(teacher)}
                       </p>
 
                       <p
@@ -481,7 +463,7 @@ export default function TeacherRating({
                         }}
                       >
                         {S.rating.teacherClassChild(
-                          teacher.classroom,
+                          child.classroom,
                           child.name
                         )}
                       </p>
@@ -517,7 +499,7 @@ export default function TeacherRating({
 
             return (
               <div
-                key={`${teacher.id}-${child.id}`}
+                key={`${teacher.PersonID}-${child.id}`}
                 className="rounded-2xl p-5"
                 style={{
                   backgroundColor: "#FFFFFF",
@@ -551,7 +533,7 @@ export default function TeacherRating({
                           color: "#2F3A36",
                         }}
                       >
-                        {teacher.name}
+                        {getTeacherName(teacher)}
                       </p>
 
                       <p
@@ -560,7 +542,7 @@ export default function TeacherRating({
                           color: "#A8B0AB",
                         }}
                       >
-                        {teacher.classroom}
+                        {teacher.subject?.Subject_name || child.classroom}
                       </p>
 
                       <p

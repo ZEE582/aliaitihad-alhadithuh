@@ -712,6 +712,8 @@ export default function MessagesPage({
             c.classroom ===
             user.classroom
         )
+      : user.roleType === "parent"
+      ? childrenList
       : childrenList.filter(
           (c) =>
             user.childIds?.includes(
@@ -814,7 +816,7 @@ export default function MessagesPage({
             currentRoleType="parent"
 
             currentName={
-              user.name
+              user.fullName || user.username
             }
           />
         </div>
@@ -1010,7 +1012,7 @@ export default function MessagesPage({
               currentRoleType="teacher"
 
               currentName={
-                user.name
+                user?.fullName || user?.username
               }
             />
           )}
@@ -1030,7 +1032,7 @@ export default function MessagesPage({
           )}
 
           fromName={
-            user.name
+            user?.fullName || user?.username
           }
 
           onClose={() =>
